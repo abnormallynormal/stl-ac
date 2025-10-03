@@ -41,7 +41,7 @@ export function DataTable<TData, TValue>({
                 return (
                   <TableHead 
                     key={header.id} 
-                    className={header.column.id === "actions" ? "text-right" : ""}
+                    className={header.column.id === "actions" ? "text-right px-4" : "px-4"}
                   >
                     {header.isPlaceholder
                       ? null
@@ -65,7 +65,7 @@ export function DataTable<TData, TValue>({
                 {row.getVisibleCells().map((cell) => (
                   <TableCell 
                     key={cell.id} 
-                    className={cell.column.id === "actions" ? "text-end pr-6" : ""}
+                    className={cell.column.id === "actions" ? "text-end px-4" : " px-4"}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
