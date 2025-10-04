@@ -2,15 +2,17 @@
 import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
 import { Pencil, ArrowUpDown } from "lucide-react";
-import { redirect } from "next/navigation";
 export type Team = {
-  id: string;
+  id: number;
   sport: string;
   gender: "Boys" | "Girls" | "Co-ed";
   grade: "Jr." | "Sr." | "Varsity";
   season: "Winter" | "Spring" | "Fall";
   teachers: string[];
   points: number;
+  year: string;
+  seasonHighlights?: string;
+  yearbookMessage?: string;
 };
 export const columns: ColumnDef<Team>[] = [
   {
@@ -56,16 +58,17 @@ export const columns: ColumnDef<Team>[] = [
     },
     cell: ({ row }) => {
       return (
-        <Button
-          variant="link"
-          size="icon"
-          onClick={() => {
-            console.log(row.original);
-            redirect(`/teams/${row.original.id}`);
-          }}
-        >
-          <Pencil />
-        </Button>
+        <a href={`/teams/${row.original.id}`}>
+          <Button
+            variant="link"
+            size="icon"
+            onClick={()=>{
+              console.log(row.original)
+            }}
+          >
+            <Pencil />
+          </Button>
+        </a>
       );
     },
   },

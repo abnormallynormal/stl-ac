@@ -77,7 +77,7 @@ export async function signup(
   if (!authData.session) {
     return {
       success: true,
-      error:wwwwww
+      error:
         "Please check your email to confirm your account before logging in.",
     };
   }
