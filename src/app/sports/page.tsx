@@ -1,5 +1,5 @@
 "use client";
-import { selectData, updateData, insertData } from "../functions/sports";
+import { selectData, updateData, insertData, deleteData } from "../functions/sports";
 import { createColumns, Team } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -34,14 +34,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
-
-const editFormSchema = z.object({
-  name: z.string().min(1, {
-    message: "Enter a sport name",
-  }),
-  points: z.number().int().min(0),
-});
-
 export default function Teams() {
   const [editIsOpen, setEditIsOpen] = useState(false);
   const [addIsOpen, setAddIsOpen] = useState(false);
@@ -63,16 +55,33 @@ export default function Teams() {
         setLoading(false);
       }
     };
-    
+
     loadData();
   }, []);
-
+  const createEditFormSchema = (data: Team[], currentTeamId?: number) =>
+    z
+      .object({
+        name: z.string().min(1, {
+          message: "Enter a sport name",
+        }),
+        points: z.number().int().min(1),
+      })
+      .superRefine((values, ctx) => {
+        const existingTeam = data.find((team) => team.sport === values.name);
+        if (existingTeam && existingTeam.id !== currentTeamId) {
+          ctx.addIssue({
+            code: "custom",
+            message: "Sport already exists",
+            path: ["name"],
+          });
+        }
+      });
   const addFormSchema = z
     .object({
       name: z.string().min(1, {
         message: "Enter a sport name",
       }),
-      points: z.number().int().min(0),
+      points: z.number().int().min(1),
     })
     .superRefine((values, ctx) => {
       if (data.find((team) => team.sport === values.name)) {
@@ -83,7 +92,7 @@ export default function Teams() {
         });
       }
     });
-  
+
   const addForm = useForm<z.infer<typeof addFormSchema>>({
     resolver: zodResolver(addFormSchema),
     defaultValues: {
@@ -91,11 +100,12 @@ export default function Teams() {
       points: undefined,
     },
   });
+  const editFormSchema = createEditFormSchema(data, teamId);
   const editForm = useForm<z.infer<typeof editFormSchema>>({
     resolver: zodResolver(editFormSchema),
     defaultValues: {
       name: data.find((item) => item.id === teamId)?.sport || "",
-      points: data.find((item) => item.id === teamId)?.points || 0,
+      points: data.find((item) => item.id === teamId)?.points || undefined,
     },
   });
   const addOnSubmit = async (values: z.infer<typeof addFormSchema>) => {
@@ -104,17 +114,13 @@ export default function Teams() {
         sport: values.name,
         points: values.points,
       });
-      
-      // Reload data to get the new entry with its ID
       const result = await selectData();
       if (result) {
         setData(result);
       }
-      
-      // Close the dialog
+
       setAddIsOpen(false);
-      
-      // Reset the form
+
       addForm.reset();
     } catch (error) {
       console.error("Error adding data:", error);
@@ -122,35 +128,46 @@ export default function Teams() {
   };
   const editOnSubmit = async (values: z.infer<typeof editFormSchema>) => {
     if (teamId === undefined) return;
-    
+
     try {
       await updateData({
         id: teamId,
         sport: values.name,
         points: values.points,
       });
-      
+
       // Update local state
-      setData(prevData => 
-        prevData.map(team => 
-          team.id === teamId 
+      setData((prevData) =>
+        prevData.map((team) =>
+          team.id === teamId
             ? { ...team, sport: values.name, points: values.points }
             : team
         )
       );
-      
+
       // Close the dialog
       setEditIsOpen(false);
-      
+
       // Reset the form
       editForm.reset();
     } catch (error) {
       console.error("Error updating data:", error);
     }
   };
-  function deleteOnSubmit(teamId: number | undefined) {
-    console.log(teamId);
-  }
+  const deleteOnSubmit = async (teamId: number | undefined) => {
+    if (teamId === undefined) return;
+    try {
+      await deleteData({
+        id: teamId,
+      });
+      // Update local state
+      setData((prevData) => prevData.filter((team) => team.id !== teamId));
+      // Close the dialog
+      setDeleteIsOpen(false);
+    } catch (error) {
+      console.error("Error deleting data:", error);
+    }
+  };
   const handleEdit = (team: Team) => {
     setTeamId(team.id);
     editForm.setValue("name", team.sport);
@@ -223,14 +240,10 @@ export default function Teams() {
                           <FormControl>
                             <Input
                               type="number"
+                              value={field.value ?? ""}
                               placeholder="10"
-                              {...field}
                               onChange={(e) =>
-                                field.onChange(
-                                  e.target.value === ""
-                                    ? undefined
-                                    : Number(e.target.value)
-                                )
+                                field.onChange(e.target.valueAsNumber)
                               }
                             />
                           </FormControl>
@@ -286,7 +299,14 @@ export default function Teams() {
                         <FormItem>
                           <FormLabel>Points</FormLabel>
                           <FormControl>
-                            <Input type="number" placeholder="10" {...field} />
+                            <Input
+                              type="number"
+                              placeholder="10"
+                              value={field.value ?? ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.valueAsNumber)
+                              }
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
