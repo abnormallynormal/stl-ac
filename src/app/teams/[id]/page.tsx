@@ -1,6 +1,17 @@
-"use client"
+"use client";
 import { Team } from "../columns";
-import { Player, columns } from "./columns";
+import { Player, createColumns } from "./columns";
+import { DataTable } from "./data-table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -29,12 +40,24 @@ const editSportSchema = z.object({
   grade: z.string().min(1, "Grade is required"),
   season: z.string().min(1, "Season is required"),
   year: z.string().min(1, "Year is required"),
-  teachers: z.array(z.email("Invalid email address")).min(1, "At least one teacher is required"),
+  teachers: z
+    .array(z.email("Invalid email address"))
+    .min(1, "At least one teacher is required"),
   points: z.number().int().min(0, "Points must be a non-negative integer"),
   seasonHighlights: z.string().optional(),
   yearbookMessage: z.string().optional(),
 });
-export default function TeamPage({ params }: { params: Promise<{ id: string }> }) {
+export default function TeamPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const columns = createColumns({
+    onDelete: (player) => {
+      setToBeDeleted(player);
+      setDeleteIsOpen(true);
+    },
+  });
   const data: Team[] = [
     {
       id: 1,
@@ -430,7 +453,17 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
       year: "2025-26",
     },
   ];
-
+  const players: Player[] = [
+    {
+      id: 1,
+      name: "Player 1",
+      grade: 10,
+      champs: true,
+      MVP: true,
+      LDA: false,
+      paid: false,
+    },
+  ];
   const resolvedParams = use(params);
   const team = data.find((item) => item.id === Number(resolvedParams.id));
   if (!team) {
@@ -438,7 +471,7 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
   }
   const editSportForm = useForm<z.infer<typeof editSportSchema>>({
     resolver: zodResolver(editSportSchema),
-    defaultValues:{
+    defaultValues: {
       sport: team.sport,
       gender: team.gender,
       grade: team.grade,
@@ -447,12 +480,14 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
       points: team.points,
       year: team.year,
       seasonHighlights: team.seasonHighlights || "",
-      yearbookMessage: team.yearbookMessage || ""
-    }
+      yearbookMessage: team.yearbookMessage || "",
+    },
   });
-  function onEditSportSave(values: z.infer<typeof editSportSchema>){
-    console.log(values)
+  function onEditSportSave(values: z.infer<typeof editSportSchema>) {
+    console.log(values);
   }
+  const [deleteIsOpen, setDeleteIsOpen] = useState(false);
+  const [toBeDeleted, setToBeDeleted] = useState<Player | null>(null);
   return (
     <div className="px-16 py-24">
       <div className="font-bold text-3xl mb-4">
@@ -582,10 +617,7 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
                   <FormItem>
                     <FormLabel>Coaches</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Enter season highlights"
-                        {...field}
-                      />
+                      <Input placeholder="Enter season highlights" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -633,7 +665,32 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
           </Form>
         </div>
         <div>
-          <div className="text-xl font-semibold">Manage Players</div>
+          <div className="flex justify-between items-center mb-4 ">
+            <div className="text-xl font-semibold">Manage Players</div>
+            <Button>Add Player</Button>
+          </div>
+          <DataTable columns={columns} data={players} />
+          <AlertDialog>
+            <AlertDialog open={deleteIsOpen} onOpenChange={setDeleteIsOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Are you absolutely sure you want to delete{" "}
+                    {toBeDeleted?.name}?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => console.log(toBeDeleted)}>
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </AlertDialog>
         </div>
       </div>
     </div>

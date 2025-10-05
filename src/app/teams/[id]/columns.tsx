@@ -1,15 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
-import { Ellipsis } from "lucide-react";
+import { Trash } from "lucide-react";
 export type Player = {
   id: number;
   name: string;
   grade: number;
+  champs: boolean;
   MVP: boolean;
   LDA: boolean;
   paid: boolean;
 };
-export const columns: ColumnDef<Player>[] = [
+
+export interface ColumnActions{
+  onDelete: (player: Player) => void;
+}
+
+export const createColumns = (actions: ColumnActions): ColumnDef<Player>[] => [
   {
     accessorKey: "name",
     header: "Name",
@@ -17,6 +23,10 @@ export const columns: ColumnDef<Player>[] = [
   {
     accessorKey: "grade",
     header: "Grade",
+  },
+  {
+    accessorKey: "champs",
+    header: "Champs",
   },
   {
     accessorKey: "MVP",
@@ -37,18 +47,20 @@ export const columns: ColumnDef<Player>[] = [
     },
     cell: ({ row }) => {
       return (
-        <a href={`/teams/${row.original.id}`}>
-          <Button
-            variant="link"
-            size="icon"
-            onClick={()=>{
-              console.log(row.original)
-            }}
-          >
-            <Ellipsis />
-          </Button>
-        </a>
+        <Button
+          variant="link"
+          size="icon"
+          onClick={() => {
+            actions.onDelete(row.original);
+          }}
+        >
+          <Trash />
+        </Button>
       );
     },
   },
 ];
+
+export const columns = createColumns({
+  onDelete: (player) => console.log('Delete player:', player)
+})

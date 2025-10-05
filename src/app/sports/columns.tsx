@@ -61,9 +61,3 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Team>[] => [
     }
   }
 ];
-
-// Backward compatibility - you can remove this if you update all usages
-export const columns = createColumns({
-  onEdit: (team) => console.log('Edit team:', team),
-  onDelete: (team) => console.log('Delete team:', team)
-});
