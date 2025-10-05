@@ -1,4 +1,5 @@
 "use client";
+import { selectData, updateData, insertData } from "../functions/sports";
 import { createColumns, Team } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -32,120 +33,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
-const data: Team[] = [
-  {
-    id: "badminton",
-    sport: "Badminton",
-    points: 10,
-  },
-  {
-    id: "baseball",
-    sport: "Baseball",
-    points: 10,
-  },
-  {
-    id: "basketball",
-    sport: "Basketball",
-    points: 10,
-  },
-  {
-    id: "cross-country",
-    sport: "Cross-Country",
-    points: 5,
-  },
-  {
-    id: "curling",
-    sport: "Curling",
-    points: 10,
-  },
-  {
-    id: "field-hockey",
-    sport: "Field Hockey",
-    points: 10,
-  },
-  {
-    id: "golf",
-    sport: "Golf",
-    points: 5,
-  },
-  {
-    id: "hockey",
-    sport: "Hockey",
-    points: 10,
-  },
-  {
-    id: "rock-climbing",
-    sport: "Rock Climbing",
-    points: 5,
-  },
-  {
-    id: "rugby-fifteens",
-    sport: "Rugby Fifteens",
-    points: 10,
-  },
-  {
-    id: "rugby-sevens",
-    sport: "Rugby Sevens",
-    points: 10,
-  },
-  {
-    id: "slo-pitch",
-    sport: "Slo Pitch",
-    points: 10,
-  },
-  {
-    id: "soccer",
-    sport: "Soccer",
-    points: 10,
-  },
-  {
-    id: "swimming",
-    sport: "Swimming",
-    points: 10,
-  },
-  {
-    id: "table-tennis",
-    sport: "Table Tennis",
-    points: 5,
-  },
-  {
-    id: "tennis",
-    sport: "Tennis",
-    points: 5,
-  },
-  {
-    id: "track-and-field",
-    sport: "Track and Field",
-    points: 10,
-  },
-  {
-    id: "ultimate-frisbee",
-    sport: "Ultimate Frisbee",
-    points: 10,
-  },
-  {
-    id: "volleyball",
-    sport: "Volleyball",
-    points: 10,
-  },
-];
-const addFormSchema = z
-  .object({
-    name: z.string().min(1, {
-      message: "Enter a sport name",
-    }),
-    points: z.number().int().min(0),
-  })
-  .superRefine((values, ctx) => {
-    if (data.find((team) => team.sport === values.name)) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Sport already exists",
-        path: ["name"],
-      });
-    }
-  });
+import { useState, useEffect } from "react";
 
 const editFormSchema = z.object({
   name: z.string().min(1, {
@@ -158,12 +46,49 @@ export default function Teams() {
   const [editIsOpen, setEditIsOpen] = useState(false);
   const [addIsOpen, setAddIsOpen] = useState(false);
   const [deleteIsOpen, setDeleteIsOpen] = useState(false);
-  const [teamId, setTeamId] = useState<string>("");
+  const [teamId, setTeamId] = useState<number>();
+  const [data, setData] = useState<Team[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const result = await selectData();
+        if (result) {
+          setData(result);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, []);
+
+  const addFormSchema = z
+    .object({
+      name: z.string().min(1, {
+        message: "Enter a sport name",
+      }),
+      points: z.number().int().min(0),
+    })
+    .superRefine((values, ctx) => {
+      if (data.find((team) => team.sport === values.name)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Sport already exists",
+          path: ["name"],
+        });
+      }
+    });
+  
   const addForm = useForm<z.infer<typeof addFormSchema>>({
     resolver: zodResolver(addFormSchema),
     defaultValues: {
       name: "",
-      points: 0,
+      points: undefined,
     },
   });
   const editForm = useForm<z.infer<typeof editFormSchema>>({
@@ -173,20 +98,59 @@ export default function Teams() {
       points: data.find((item) => item.id === teamId)?.points || 0,
     },
   });
-  function addOnSubmit(values: z.infer<typeof addFormSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
-  }
-  function editOnSubmit(values: z.infer<typeof editFormSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
-  }
-  function deleteOnSubmit(teamId: string) {
+  const addOnSubmit = async (values: z.infer<typeof addFormSchema>) => {
+    try {
+      await insertData({
+        sport: values.name,
+        points: values.points,
+      });
+      
+      // Reload data to get the new entry with its ID
+      const result = await selectData();
+      if (result) {
+        setData(result);
+      }
+      
+      // Close the dialog
+      setAddIsOpen(false);
+      
+      // Reset the form
+      addForm.reset();
+    } catch (error) {
+      console.error("Error adding data:", error);
+    }
+  };
+  const editOnSubmit = async (values: z.infer<typeof editFormSchema>) => {
+    if (teamId === undefined) return;
+    
+    try {
+      await updateData({
+        id: teamId,
+        sport: values.name,
+        points: values.points,
+      });
+      
+      // Update local state
+      setData(prevData => 
+        prevData.map(team => 
+          team.id === teamId 
+            ? { ...team, sport: values.name, points: values.points }
+            : team
+        )
+      );
+      
+      // Close the dialog
+      setEditIsOpen(false);
+      
+      // Reset the form
+      editForm.reset();
+    } catch (error) {
+      console.error("Error updating data:", error);
+    }
+  };
+  function deleteOnSubmit(teamId: number | undefined) {
     console.log(teamId);
   }
-
   const handleEdit = (team: Team) => {
     setTeamId(team.id);
     editForm.setValue("name", team.sport);
@@ -203,6 +167,18 @@ export default function Teams() {
     onEdit: handleEdit,
     onDelete: handleDelete,
   });
+
+  if (loading) {
+    return (
+      <div className="px-16 py-24">
+        <div className="max-w-4xl justify-self-center w-full">
+          <div className="flex justify-center items-center h-32">
+            <div>Loading...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-16 py-24">
@@ -247,8 +223,15 @@ export default function Teams() {
                           <FormControl>
                             <Input
                               type="number"
-                              placeholder="shadcn"
+                              placeholder="10"
                               {...field}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value === ""
+                                    ? undefined
+                                    : Number(e.target.value)
+                                )
+                              }
                             />
                           </FormControl>
                           <FormMessage />
@@ -303,11 +286,7 @@ export default function Teams() {
                         <FormItem>
                           <FormLabel>Points</FormLabel>
                           <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="shadcn"
-                              {...field}
-                            />
+                            <Input type="number" placeholder="10" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

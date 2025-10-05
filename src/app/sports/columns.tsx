@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,10 +9,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ColumnDef } from "@tanstack/react-table";
-import { Ellipsis } from "lucide-react";
+import { ArrowUpDown, Ellipsis } from "lucide-react";
 
 export type Team = {
-  id: string;
+  id: number;
   sport: string;
   points: number;
 };
@@ -24,7 +25,17 @@ export interface ColumnActions {
 export const createColumns = (actions: ColumnActions): ColumnDef<Team>[] => [
   {
     accessorKey: "sport",
-    header: "Sport",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Season
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
   },
   {
     accessorKey: "points",
@@ -37,7 +48,7 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Team>[] => [
     },
     cell: ({ row }) => {
       const team = row.original;
-      
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger>
@@ -49,7 +60,7 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Team>[] => [
             <DropdownMenuItem onClick={() => actions.onEdit(team)}>
               Edit Sport
             </DropdownMenuItem>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="text-destructive focus:text-destructive focus:bg-destructive/10"
               onClick={() => actions.onDelete(team)}
             >
@@ -58,6 +69,6 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Team>[] => [
           </DropdownMenuContent>
         </DropdownMenu>
       );
-    }
-  }
+    },
+  },
 ];
