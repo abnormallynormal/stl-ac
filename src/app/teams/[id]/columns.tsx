@@ -49,6 +49,7 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Player>[] => [
       return (
         <Button
           variant="link"
+          className="text-destructive"
           size="icon"
           onClick={() => {
             actions.onDelete(row.original);

@@ -20,8 +20,13 @@ export const columns: ColumnDef<Team>[] = [
     header: "Team",
     cell: ({ row }) => {
       const team = row.original;
-      return ` ${team.sport} ${team.grade} ${team.gender}`;
+      return (
+        <a href={`/teams/${team.id}`}>
+          {`${team.sport} ${team.grade} ${team.gender}`}
+        </a>
+      );
     },
+
   },
   {
     accessorKey: "teachers",
@@ -45,9 +50,11 @@ export const columns: ColumnDef<Team>[] = [
       );
     },
     sortingFn: (rowA, rowB) => {
-      const seasonOrder = { "Fall": 0, "Winter": 1, "Spring": 2 };
-      const seasonA = seasonOrder[rowA.original.season as keyof typeof seasonOrder];
-      const seasonB = seasonOrder[rowB.original.season as keyof typeof seasonOrder];
+      const seasonOrder = { Fall: 0, Winter: 1, Spring: 2 };
+      const seasonA =
+        seasonOrder[rowA.original.season as keyof typeof seasonOrder];
+      const seasonB =
+        seasonOrder[rowB.original.season as keyof typeof seasonOrder];
       return seasonA - seasonB;
     },
   },
@@ -62,8 +69,8 @@ export const columns: ColumnDef<Team>[] = [
           <Button
             variant="link"
             size="icon"
-            onClick={()=>{
-              console.log(row.original)
+            onClick={() => {
+              console.log(row.original);
             }}
           >
             <Pencil />

@@ -6,6 +6,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+
 import {
   Table,
   TableBody,
@@ -31,17 +32,14 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="overflow-hidden rounded-md border-2">
+    <div className="overflow-hidden rounded-md border">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
                 return (
-                  <TableHead 
-                    key={header.id} 
-                    className={header.column.id === "actions" ? "text-right px-4" : "px-4"}
-                  >
+                  <TableHead key={header.id} className="px-4 py-2">
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -62,10 +60,7 @@ export function DataTable<TData, TValue>({
                 data-state={row.getIsSelected() && "selected"}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell 
-                    key={cell.id} 
-                    className={cell.column.id === "actions" ? "text-right px-4" : " px-4"}
-                  >
+                  <TableCell key={cell.id} className="px-4 py-2">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}

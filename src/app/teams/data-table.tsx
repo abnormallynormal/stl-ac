@@ -53,7 +53,7 @@ export function DataTable<TData, TValue>({
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
                 return (
-                  <TableHead key={header.id} className="py-4 px-4">
+                  <TableHead key={header.id} className="py-2 px-4">
                     {header.isPlaceholder
                       ? null
                       : flexRender(

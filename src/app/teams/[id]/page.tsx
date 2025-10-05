@@ -34,6 +34,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, use } from "react";
 import { Button } from "@/components/ui/button";
+import { CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandSeparator } from "@/components/ui/command";
+import { DialogTitle } from "@/components/ui/dialog";
+import { Calendar, Smile, Calculator, User, CreditCard, Settings } from "lucide-react";
 const editSportSchema = z.object({
   sport: z.string().min(1, "Sport is required"),
   gender: z.string().min(1, "Gender is required"),
@@ -488,6 +491,7 @@ export default function TeamPage({
   }
   const [deleteIsOpen, setDeleteIsOpen] = useState(false);
   const [toBeDeleted, setToBeDeleted] = useState<Player | null>(null);
+  const [addPlayerOpen, setAddPlayerOpen] = useState(false);
   return (
     <div className="px-16 py-24">
       <div className="font-bold text-3xl mb-4">
@@ -667,7 +671,7 @@ export default function TeamPage({
         <div>
           <div className="flex justify-between items-center mb-4 ">
             <div className="text-xl font-semibold">Manage Players</div>
-            <Button>Add Player</Button>
+            <Button onClick={() => setAddPlayerOpen(true)}>Add Player</Button>
           </div>
           <DataTable columns={columns} data={players} />
           <AlertDialog>
@@ -691,6 +695,14 @@ export default function TeamPage({
               </AlertDialogContent>
             </AlertDialog>
           </AlertDialog>
+          <CommandDialog open={addPlayerOpen} onOpenChange={setAddPlayerOpen}>
+            <DialogTitle className="sr-only">Add Player</DialogTitle>
+            <CommandInput placeholder="Search for a player to add..." />
+            <CommandList>
+              <CommandEmpty>No results found.</CommandEmpty>
+              
+            </CommandList>
+          </CommandDialog>
         </div>
       </div>
     </div>
