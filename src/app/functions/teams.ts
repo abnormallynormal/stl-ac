@@ -6,7 +6,20 @@ export const selectData = async () => {
   const { data, error } = await supabase.from("teams").select();
   if (!error) {
     console.log(data);
-    return data as Team[];
+    // Sort the data alphabetically by sport, then grade, then gender
+    const sortedData = (data as Team[]).sort((a, b) => {
+      // First sort by sport
+      if (a.sport !== b.sport) {
+        return a.sport.localeCompare(b.sport);
+      }
+      // Then by grade
+      if (a.grade !== b.grade) {
+        return a.grade.localeCompare(b.grade);
+      }
+      // Finally by gender
+      return a.gender.localeCompare(b.gender);
+    });
+    return sortedData;
   } else {
     console.log(error);
   }
