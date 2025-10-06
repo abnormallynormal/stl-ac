@@ -12,6 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -30,431 +31,109 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useState, use } from "react";
+import { useState, use, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandSeparator } from "@/components/ui/command";
+import {
+  CommandDialog,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+} from "@/components/ui/command";
 import { DialogTitle } from "@/components/ui/dialog";
-const editSportSchema = z.object({
-  sport: z.string().min(1, "Sport is required"),
-  gender: z.string().min(1, "Gender is required"),
-  grade: z.string().min(1, "Grade is required"),
-  season: z.string().min(1, "Season is required"),
-  year: z.string().min(1, "Year is required"),
-  teachers: z
-    .array(z.email("Invalid email address"))
-    .min(1, "At least one teacher is required"),
-  points: z.number().int().min(0, "Points must be a non-negative integer"),
-  seasonHighlights: z.string().optional(),
-  yearbookMessage: z.string().optional(),
-});
+import { X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { selectData, selectSports, updateSport, deleteSport } from "../../functions/teams";
+const createEditSportSchema = (
+  existingTeams: Team[] = [],
+  currentTeamId?: number
+) =>
+  z
+    .object({
+      sport: z.string().min(1, "Sport is required"),
+      gender: z.string().min(1, "Gender is required"),
+      grade: z.string().min(1, "Grade is required"),
+      season: z.string().min(1, "Season is required"),
+      year: z.string().min(1, "Year is required"),
+      teachers: z
+        .array(z.email("Invalid email address"))
+        .min(1, "At least one teacher is required"),
+      points: z.number().int().min(0, "Points must be a non-negative integer"),
+      seasonHighlights: z.string().optional(),
+      yearbookMessage: z.string().optional(),
+    })
+    .superRefine((values, ctx) => {
+      const existingTeam = existingTeams.find(
+        (team) =>
+          team.id !== currentTeamId &&
+          team.sport === values.sport &&
+          team.gender === values.gender &&
+          team.grade === values.grade
+      );
+
+      if (existingTeam && existingTeam.id !== currentTeamId) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "A team with this sport, gender, and grade combination already exists",
+          path: ["sport"],
+        });
+      }
+    });
 export default function TeamPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const [data, setData] = useState<Team[]>([]);
+  const [sports, setSports] = useState<{ sport: string; points: number }[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [deleteIsOpen, setDeleteIsOpen] = useState(false);
+  const [toBeDeleted, setToBeDeleted] = useState<Player | null>(null);
+  const [addPlayerOpen, setAddPlayerOpen] = useState(false);
+  const [teacherSearchOpen, setTeacherSearchOpen] = useState(false);
+  const [selectedTeachers, setSelectedTeachers] = useState<string[]>([]);
+  const [deleteTeamIsOpen, setDeleteTeamIsOpen] = useState(false);
+  const router = useRouter();
   const columns = createColumns({
     onDelete: (player) => {
       setToBeDeleted(player);
       setDeleteIsOpen(true);
     },
   });
-  const data: Team[] = [
-    {
-      id: 1,
-      sport: "Badminton",
-      gender: "Co-ed",
-      grade: "Jr.",
-      season: "Winter",
-      teachers: ["martin.nicholls@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 2,
-      sport: "Badminton",
-      gender: "Co-ed",
-      grade: "Sr.",
-      season: "Winter",
-      teachers: ["richard.ow@ycdsbk12.ca", "tiziana.hayhoe@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 3,
-      sport: "Baseball",
-      gender: "Boys",
-      grade: "Varsity",
-      season: "Spring",
-      teachers: ["michael.morrison@ycdsbk12.ca", "domenico.coccia@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 4,
-      sport: "Basketball",
-      gender: "Boys",
-      grade: "Jr.",
-      season: "Winter",
-      teachers: [
-        "jordan.caruso@ycdsbk12.ca",
-        "adam.dandrea@ycdsbk12.ca",
-        "anthony.petrone@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 5,
-      sport: "Basketball",
-      gender: "Boys",
-      grade: "Sr.",
-      season: "Fall",
-      teachers: [
-        "alexander.dasilva@ycdsbk12.ca",
-        "michele.petrone@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 6,
-      sport: "Basketball",
-      gender: "Girls",
-      grade: "Jr.",
-      season: "Fall",
-      teachers: ["brian.villavazera@ycdsbk12.ca", "david.beck@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 7,
-      sport: "Basketball",
-      gender: "Girls",
-      grade: "Sr.",
-      season: "Fall",
-      teachers: [
-        "alexander.dasilva@ycdsbk12.ca",
-        "daniela.bonello@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 8,
-      sport: "Cross-Country",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Fall",
-      teachers: [
-        "jennifer.hickey@ycdsbk12.ca",
-        "sabrina.buffa@ycdsbk12.ca",
-        "paola.amoroso@ycdsbk12.ca",
-      ],
-      points: 5,
-      year: "2025-26",
-    },
-    {
-      id: 9,
-      sport: "Curling",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Winter",
-      teachers: [
-        "alexandra.carvier@ycdsbk12.ca",
-        "michael.onorati@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 10,
-      sport: "Golf",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Fall",
-      teachers: ["tiziana.hayhoe@ycdsbk12.ca", "martin.nicholls@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 11,
-      sport: "Hockey",
-      gender: "Boys",
-      grade: "Varsity",
-      season: "Winter",
-      teachers: [
-        "dan.nero@ycdsbk12.ca",
-        "mark.johnson@ycdsbk12.ca",
-        "michael.morrison@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 12,
-      sport: "Hockey",
-      gender: "Girls",
-      grade: "Varsity",
-      season: "Winter",
-      teachers: [
-        "michael.stevan@ycdsbk12.ca",
-        "michael.merlocco@ycdsbk12.ca",
-        "rocky.savoia@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 13,
-      sport: "Rock Climbing",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Winter",
-      teachers: ["michael.onorati@ycdsbk12.ca", "george.azar@ycdsbk12.ca"],
-      points: 5,
-      year: "2025-26",
-    },
-    {
-      id: 14,
-      sport: "Rugby",
-      gender: "Boys",
-      grade: "Jr.",
-      season: "Spring",
-      teachers: [
-        "george.azar@ycdsbk12.ca",
-        "michael.onorati@ycdsbk12.ca",
-        "mark.johnson@ycdsbk12.ca",
-        "rocky.savoia@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 15,
-      sport: "Rugby",
-      gender: "Boys",
-      grade: "Sr.",
-      season: "Spring",
-      teachers: [
-        "george.azar@ycdsbk12.ca",
-        "michael.onorati@ycdsbk12.ca",
-        "mark.johnson@ycdsbk12.ca",
-        "rocky.savoia@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 16,
-      sport: "Rugby Sevens",
-      gender: "Boys",
-      grade: "Jr.",
-      season: "Fall",
-      teachers: [
-        "michael.onorati@ycdsbk12.ca",
-        "george.azar@ycdsbk12.ca",
-        "rocky.savoia@ycdsbk12.ca",
-        "mark.johnson@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 17,
-      sport: "Rugby Sevens",
-      gender: "Boys",
-      grade: "Sr.",
-      season: "Fall",
-      teachers: [
-        "george.azar@ycdsbk12.ca",
-        "michael.onorati@ycdsbk12.ca",
-        "mark.johnson@ycdsbk12.ca",
-        "rocky.savoia@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 18,
-      sport: "Rugby Sevens",
-      gender: "Girls",
-      grade: "Varsity",
-      season: "Fall",
-      teachers: ["stephanie.veitch@ycdsbk12.ca", "michael.onorati@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 19,
-      sport: "Slow Pitch",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Spring",
-      teachers: [
-        "tiziana.hayhoe@ycdsbk12.ca",
-        "melina.tedesco@ycdsbk12.ca",
-        "natalie.ligato@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 20,
-      sport: "Soccer",
-      gender: "Boys",
-      grade: "Jr.",
-      season: "Fall",
-      teachers: ["michele.petrone@ycdsbk12.ca", "domenico.coccia@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 21,
-      sport: "Soccer",
-      gender: "Boys",
-      grade: "Sr.",
-      season: "Fall",
-      teachers: [
-        "steven.sedran@ycdsbk12.ca",
-        "michal.kirejczyk@ycdsbk12.ca",
-        "anthony.petrone@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 22,
-      sport: "Soccer",
-      gender: "Girls",
-      grade: "Jr.",
-      season: "Spring",
-      teachers: ["jordan.caruso@ycdsbk12.ca", "anthony.petrone@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 23,
-      sport: "Soccer",
-      gender: "Girls",
-      grade: "Sr.",
-      season: "Spring",
-      teachers: [
-        "alessia.landolfi@ycdsbk12.ca",
-        "michal.kirejczyk@ycdsbk12.ca",
-        "steven.sedran@ycdsbk12.ca",
-        "michele.petrone@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 24,
-      sport: "Swimming",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Winter",
-      teachers: [
-        "manuel.decompa@ycdsbk12.ca",
-        "antonette.montanaro@ycdsbk12.ca",
-        "alaa.al-shaikh@ycdsbk12.ca",
-        "vanessa.vitale@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 25,
-      sport: "Table Tennis",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Fall",
-      teachers: ["david.beck@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 26,
-      sport: "Tennis",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Fall",
-      teachers: ["raimondo.pupolo@ycdsbk12.ca", "victoria.ah-chin@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 27,
-      sport: "Track(Outdoor)",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Spring",
-      teachers: [
-        "roberto.rizzo@ycdsbk12.ca",
-        "daniela.bonello@ycdsbk12.ca",
-        "sabrina.buffa@ycdsbk12.ca",
-        "julia.loschiavo@ycdsbk12.ca",
-        "lori.gentile@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 28,
-      sport: "Ultimate Frisbee",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Spring",
-      teachers: ["david.west@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 29,
-      sport: "Volleyball",
-      gender: "Boys",
-      grade: "Jr.",
-      season: "Fall",
-      teachers: ["adam.dandrea@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 30,
-      sport: "Volleyball",
-      gender: "Boys",
-      grade: "Sr.",
-      season: "Fall",
-      teachers: ["michael.morrison@ycdsbk12.ca", "david.west@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 31,
-      sport: "Volleyball",
-      gender: "Girls",
-      grade: "Jr.",
-      season: "Fall",
-      teachers: ["david.beck@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 32,
-      sport: "Volleyball",
-      gender: "Girls",
-      grade: "Sr.",
-      season: "Winter",
-      teachers: [
-        "stephanie.veitch@ycdsbk12.ca",
-        "kasia.bak@ycdsbk12.ca",
-        "lucy.araujo@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-  ];
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [teamsResult, sportsResult] = await Promise.all([
+          selectData(),
+          selectSports(),
+        ]);
+        console.log("Fetched teams data:", teamsResult);
+        console.log("Fetched sports data:", sportsResult);
+
+        if (teamsResult) {
+          setData(teamsResult);
+          console.log("Teams data set to state:", teamsResult);
+        }
+        if (sportsResult) {
+          setSports(sportsResult);
+          console.log("Sports data set to state:", sportsResult);
+        }
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError(err instanceof Error ? err.message : "Failed to load data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
   const players: Player[] = [
     {
       id: 1,
@@ -466,31 +145,168 @@ export default function TeamPage({
       paid: false,
     },
   ];
+
+  const availableTeachers = [
+    "martin.nicholls@ycdsbk12.ca",
+    "richard.ow@ycdsbk12.ca",
+    "tiziana.hayhoe@ycdsbk12.ca",
+    "michael.morrison@ycdsbk12.ca",
+    "domenico.coccia@ycdsbk12.ca",
+    "jordan.caruso@ycdsbk12.ca",
+    "adam.dandrea@ycdsbk12.ca",
+    "anthony.petrone@ycdsbk12.ca",
+    "alexander.dasilva@ycdsbk12.ca",
+    "michele.petrone@ycdsbk12.ca",
+    "brian.villavazera@ycdsbk12.ca",
+    "david.beck@ycdsbk12.ca",
+    "daniela.bonello@ycdsbk12.ca",
+    "jennifer.hickey@ycdsbk12.ca",
+    "sabrina.buffa@ycdsbk12.ca",
+    "paola.amoroso@ycdsbk12.ca",
+    "alexandra.carvier@ycdsbk12.ca",
+    "michael.onorati@ycdsbk12.ca",
+    "dan.nero@ycdsbk12.ca",
+    "mark.johnson@ycdsbk12.ca",
+    "manuel.decompa@ycdsbk12.ca",
+    "antonette.montanaro@ycdsbk12.ca",
+    "alaa.al-shaikh@ycdsbk12.ca",
+    "vanessa.vitale@ycdsbk12.ca",
+    "raimondo.pupolo@ycdsbk12.ca",
+    "victoria.ah-chin@ycdsbk12.ca",
+    "roberto.rizzo@ycdsbk12.ca",
+    "julia.loschiavo@ycdsbk12.ca",
+    "lori.gentile@ycdsbk12.ca",
+    "david.west@ycdsbk12.ca",
+    "stephanie.veitch@ycdsbk12.ca",
+    "kasia.bak@ycdsbk12.ca",
+    "lucy.araujo@ycdsbk12.ca",
+  ];
+
   const resolvedParams = use(params);
   const team = data.find((item) => item.id === Number(resolvedParams.id));
-  if (!team) {
-    return <div>Team not found</div>;
-  }
+  const editSportSchema = createEditSportSchema(data, team?.id);
   const editSportForm = useForm<z.infer<typeof editSportSchema>>({
     resolver: zodResolver(editSportSchema),
     defaultValues: {
-      sport: team.sport,
-      gender: team.gender,
-      grade: team.grade,
-      season: team.season,
-      teachers: team.teachers,
-      points: team.points,
-      year: team.year,
-      seasonHighlights: team.seasonHighlights || "",
-      yearbookMessage: team.yearbookMessage || "",
+      sport: "",
+      gender: "",
+      grade: "",
+      season: "",
+      teachers: [],
+      points: 0,
+      year: "",
+      seasonHighlights: "",
+      yearbookMessage: "",
     },
   });
-  function onEditSportSave(values: z.infer<typeof editSportSchema>) {
-    console.log(values);
+
+  const [formInitialized, setFormInitialized] = useState(false);
+
+  useEffect(() => {
+    if (team && !formInitialized) {
+      setSelectedTeachers(team.teachers);
+      console.log("Setting form values with team data:", team);
+
+      editSportForm.reset({
+        sport: team.sport,
+        gender: team.gender,
+        grade: team.grade,
+        season: team.season,
+        teachers: team.teachers,
+        points: team.points,
+        year: team.year,
+        seasonHighlights: team.seasonHighlights || "",
+        yearbookMessage: team.yearbookMessage || "",
+      });
+
+      setFormInitialized(true);
+      console.log("Form values after reset:", editSportForm.getValues());
+    }
+  }, [team, formInitialized]);
+
+  if (loading || !formInitialized) {
+    return <div className="px-16 py-24">Loading team data...</div>;
   }
-  const [deleteIsOpen, setDeleteIsOpen] = useState(false);
-  const [toBeDeleted, setToBeDeleted] = useState<Player | null>(null);
-  const [addPlayerOpen, setAddPlayerOpen] = useState(false);
+
+  if (error) {
+    return <div className="px-16 py-24">Error loading team data: {error}</div>;
+  }
+
+  if (!team) {
+    return <div className="px-16 py-24">Team not found</div>;
+  }
+
+  const addTeacher = (teacher: string) => {
+    if (!selectedTeachers.includes(teacher)) {
+      const newTeachers = [...selectedTeachers, teacher];
+      setSelectedTeachers(newTeachers);
+      editSportForm.setValue("teachers", newTeachers);
+    }
+    setTeacherSearchOpen(false);
+  };
+
+  const removeTeacher = (teacher: string) => {
+    const newTeachers = selectedTeachers.filter((t) => t !== teacher);
+    setSelectedTeachers(newTeachers);
+    editSportForm.setValue("teachers", newTeachers);
+  };
+
+  const getTeacherDisplayName = (email: string) => {
+    const name = email.split("@")[0];
+    return name
+      .split(".")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  };
+  const onEditSportSave = async (values: z.infer<typeof editSportSchema>) => {
+    try {
+      console.log("Updating team with values:", values);
+
+      const result = await updateSport({
+        id: team.id,
+        sport: values.sport,
+        points: values.points,
+        year: values.year,
+        season: values.season,
+        grade: values.grade,
+        gender: values.gender,
+        teachers: values.teachers,
+        seasonHighlights: values.seasonHighlights || "",
+        yearbookMessage: values.yearbookMessage || "",
+      });
+
+      if (result) {
+        console.log("Team updated successfully:", result);
+        // Refresh the team data
+        const refreshedData = await selectData();
+        if (refreshedData) {
+          setData(refreshedData);
+        }
+        alert("Team updated successfully!");
+      }
+    } catch (error) {
+      console.error("Error updating team:", error);
+      alert("Failed to update team. Please try again.");
+    }
+  };
+
+  const onDeleteTeam = async () => {
+    try {
+      console.log("Deleting team with id:", team.id);
+      
+      const result = await deleteSport({ id: team.id });
+      
+      if (result) {
+        console.log("Team deleted successfully:", result);
+        // Navigate back to teams page
+        router.push("/teams");
+      }
+    } catch (error) {
+      console.error("Error deleting team:", error);
+      alert("Failed to delete team. Please try again.");
+    }
+  };
+
   return (
     <div className="px-16 py-24">
       <div className="font-bold text-3xl mb-4">
@@ -511,10 +327,36 @@ export default function TeamPage({
                 name="sport"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sport Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter sport name" {...field} />
-                    </FormControl>
+                    <FormLabel>Sport</FormLabel>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        // Find the selected sport and set its points
+                        const selectedSport = sports.find(
+                          (s) => s.sport === value
+                        );
+                        if (selectedSport) {
+                          editSportForm.setValue(
+                            "points",
+                            selectedSport.points
+                          );
+                        }
+                      }}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select sport" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {sports.map(({ sport, points }) => (
+                          <SelectItem key={sport} value={sport}>
+                            {sport} ({points} points)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -525,10 +367,7 @@ export default function TeamPage({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Gender</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select gender" />
@@ -540,6 +379,7 @@ export default function TeamPage({
                         <SelectItem value="Co-ed">Co-ed</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -549,10 +389,7 @@ export default function TeamPage({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Grade</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select grade level" />
@@ -564,6 +401,7 @@ export default function TeamPage({
                         <SelectItem value="Varsity">Varsity</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -573,10 +411,7 @@ export default function TeamPage({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Season</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select season" />
@@ -588,6 +423,7 @@ export default function TeamPage({
                         <SelectItem value="Spring">Spring</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -597,10 +433,7 @@ export default function TeamPage({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Year</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select year" />
@@ -610,6 +443,7 @@ export default function TeamPage({
                         <SelectItem value="2025-26">2025-26</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -618,9 +452,41 @@ export default function TeamPage({
                 name="teachers"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Coaches</FormLabel>
+                    <div className="flex justify-between items-center">
+                      <FormLabel>Coaches</FormLabel>
+                      <Button
+                        type="button"
+                        className="p-0 h-auto text-gray-500"
+                        variant="link"
+                        onClick={() => setTeacherSearchOpen(true)}
+                      >
+                        Add Coaches
+                      </Button>
+                    </div>
                     <FormControl>
-                      <Input placeholder="Enter season highlights" {...field} />
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap gap-2 min-h-[2.5rem] px-3 py-2 border rounded-md">
+                          {selectedTeachers.length === 0 ? (
+                            <div className="text-muted-foreground text-sm">
+                              No coaches selected
+                            </div>
+                          ) : (
+                            selectedTeachers.map((teacher) => (
+                              <Badge
+                                key={teacher}
+                                variant="secondary"
+                                className="flex items-center gap-1"
+                              >
+                                {getTeacherDisplayName(teacher)}
+                                <X
+                                  className="h-3 w-3 cursor-pointer rounded-full"
+                                  onClick={() => removeTeacher(teacher)}
+                                />
+                              </Badge>
+                            ))
+                          )}
+                        </div>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -658,11 +524,20 @@ export default function TeamPage({
                   </FormItem>
                 )}
               />
-              <div className="gap-2 flex justify-self-end">
-                <Button type="button" variant="secondary">
-                  Cancel
+              <div className="flex justify-between">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setDeleteTeamIsOpen(true)}
+                >
+                  Delete Team
                 </Button>
-                <Button type="submit">Save</Button>
+                <div className="gap-2 flex">
+                  <Button type="button" variant="secondary">
+                    Cancel
+                  </Button>
+                  <Button type="submit">Save</Button>
+                </div>
               </div>
             </form>
           </Form>
@@ -694,12 +569,67 @@ export default function TeamPage({
               </AlertDialogContent>
             </AlertDialog>
           </AlertDialog>
+          <AlertDialog>
+            <AlertDialog
+              open={deleteTeamIsOpen}
+              onOpenChange={setDeleteTeamIsOpen}
+            >
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Are you absolutely sure you want to delete {team.grade}{" "}
+                    {team.gender} {team.sport}?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={onDeleteTeam}>
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </AlertDialog>
           <CommandDialog open={addPlayerOpen} onOpenChange={setAddPlayerOpen}>
             <DialogTitle className="sr-only">Add Player</DialogTitle>
             <CommandInput placeholder="Search for a player to add..." />
             <CommandList>
               <CommandEmpty>No results found.</CommandEmpty>
-              
+            </CommandList>
+          </CommandDialog>
+
+          <CommandDialog
+            open={teacherSearchOpen}
+            onOpenChange={setTeacherSearchOpen}
+          >
+            <DialogTitle className="sr-only">Search Teachers</DialogTitle>
+            <CommandInput placeholder="Search for a teacher to add..." />
+            <CommandList>
+              <CommandEmpty>No teachers found.</CommandEmpty>
+              <CommandGroup>
+                {availableTeachers
+                  .filter((teacher) => !selectedTeachers.includes(teacher))
+                  .map((teacher) => (
+                    <CommandItem
+                      key={teacher}
+                      value={teacher}
+                      onSelect={() => addTeacher(teacher)}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {getTeacherDisplayName(teacher)}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {teacher}
+                        </span>
+                      </div>
+                    </CommandItem>
+                  ))}
+              </CommandGroup>
             </CommandList>
           </CommandDialog>
         </div>

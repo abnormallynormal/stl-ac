@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 import { Team, columns } from "./columns";
 import { DataTable } from "./data-table";
 import { Button } from "@/components/ui/button";
@@ -15,16 +16,15 @@ import { selectData } from "../functions/teams";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 export default function TeamList() {
   const [data, setData] = useState<Team[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedYear, setSelectedYear] = useState<string>("2025-26");
   const [addFormOpen, setAddFormOpen] = useState(false);
+  const [teacherSearchActive, setTeacherSearchActive] = useState(false);
   const filteredData = data.filter((team) => team.year === selectedYear);
 
   useEffect(() => {
@@ -76,10 +76,26 @@ export default function TeamList() {
       </div>
       <DataTable columns={columns} data={filteredData} />
       <Dialog open={addFormOpen} onOpenChange={setAddFormOpen}>
-        <DialogContent>
+        <DialogContent className={teacherSearchActive ? "opacity-0 pointer-events-none" : ""}>
           <DialogHeader>
             <DialogTitle className="mb-4">Add Team</DialogTitle>
-            <AddTeamForm/>
+            <AddTeamForm 
+              onTeacherSearchOpen={() => setTeacherSearchActive(true)}
+              onTeacherSearchClose={() => setTeacherSearchActive(false)}
+              onCancel={() => setAddFormOpen(false)}
+              onSuccess={async () => {
+                setAddFormOpen(false);
+                // Refresh the data after successful submission
+                try {
+                  const result = await selectData();
+                  if (result) {
+                    setData(result);
+                  }
+                } catch (error) {
+                  console.error("Error refreshing data:", error);
+                }
+              }}
+            />
           </DialogHeader>
         </DialogContent>
       </Dialog>
