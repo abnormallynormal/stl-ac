@@ -1,3 +1,5 @@
+"use client";
+import AddTeamForm from "@/components/add-team-form";
 import {
   Select,
   SelectContent,
@@ -7,420 +9,80 @@ import {
 } from "@/components/ui/select";
 import { Team, columns } from "./columns";
 import { DataTable } from "./data-table";
+import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { selectData } from "../functions/teams";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 export default function TeamList() {
-  const data: Team[] = [
-    {
-      id: 1,
-      sport: "Badminton",
-      gender: "Co-ed",
-      grade: "Jr.",
-      season: "Winter",
-      teachers: ["martin.nicholls@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 2,
-      sport: "Badminton",
-      gender: "Co-ed",
-      grade: "Sr.",
-      season: "Winter",
-      teachers: ["richard.ow@ycdsbk12.ca", "tiziana.hayhoe@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 3,
-      sport: "Baseball",
-      gender: "Boys",
-      grade: "Varsity",
-      season: "Spring",
-      teachers: ["michael.morrison@ycdsbk12.ca", "domenico.coccia@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 4,
-      sport: "Basketball",
-      gender: "Boys",
-      grade: "Jr.",
-      season: "Winter",
-      teachers: [
-        "jordan.caruso@ycdsbk12.ca",
-        "adam.dandrea@ycdsbk12.ca",
-        "anthony.petrone@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 5,
-      sport: "Basketball",
-      gender: "Boys",
-      grade: "Sr.",
-      season: "Fall",
-      teachers: [
-        "alexander.dasilva@ycdsbk12.ca",
-        "michele.petrone@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 6,
-      sport: "Basketball",
-      gender: "Girls",
-      grade: "Jr.",
-      season: "Fall",
-      teachers: ["brian.villavazera@ycdsbk12.ca", "david.beck@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 7,
-      sport: "Basketball",
-      gender: "Girls",
-      grade: "Sr.",
-      season: "Fall",
-      teachers: [
-        "alexander.dasilva@ycdsbk12.ca",
-        "daniela.bonello@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 8,
-      sport: "Cross-Country",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Fall",
-      teachers: [
-        "jennifer.hickey@ycdsbk12.ca",
-        "sabrina.buffa@ycdsbk12.ca",
-        "paola.amoroso@ycdsbk12.ca",
-      ],
-      points: 5,
-      year: "2025-26",
-    },
-    {
-      id: 9,
-      sport: "Curling",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Winter",
-      teachers: [
-        "alexandra.carvier@ycdsbk12.ca",
-        "michael.onorati@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 10,
-      sport: "Golf",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Fall",
-      teachers: ["tiziana.hayhoe@ycdsbk12.ca", "martin.nicholls@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 11,
-      sport: "Hockey",
-      gender: "Boys",
-      grade: "Varsity",
-      season: "Winter",
-      teachers: [
-        "dan.nero@ycdsbk12.ca",
-        "mark.johnson@ycdsbk12.ca",
-        "michael.morrison@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 12,
-      sport: "Hockey",
-      gender: "Girls",
-      grade: "Varsity",
-      season: "Winter",
-      teachers: [
-        "michael.stevan@ycdsbk12.ca",
-        "michael.merlocco@ycdsbk12.ca",
-        "rocky.savoia@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 13,
-      sport: "Rock Climbing",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Winter",
-      teachers: ["michael.onorati@ycdsbk12.ca", "george.azar@ycdsbk12.ca"],
-      points: 5,
-      year: "2025-26",
-    },
-    {
-      id: 14,
-      sport: "Rugby",
-      gender: "Boys",
-      grade: "Jr.",
-      season: "Spring",
-      teachers: [
-        "george.azar@ycdsbk12.ca",
-        "michael.onorati@ycdsbk12.ca",
-        "mark.johnson@ycdsbk12.ca",
-        "rocky.savoia@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 15,
-      sport: "Rugby",
-      gender: "Boys",
-      grade: "Sr.",
-      season: "Spring",
-      teachers: [
-        "george.azar@ycdsbk12.ca",
-        "michael.onorati@ycdsbk12.ca",
-        "mark.johnson@ycdsbk12.ca",
-        "rocky.savoia@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 16,
-      sport: "Rugby Sevens",
-      gender: "Boys",
-      grade: "Jr.",
-      season: "Fall",
-      teachers: [
-        "michael.onorati@ycdsbk12.ca",
-        "george.azar@ycdsbk12.ca",
-        "rocky.savoia@ycdsbk12.ca",
-        "mark.johnson@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 17,
-      sport: "Rugby Sevens",
-      gender: "Boys",
-      grade: "Sr.",
-      season: "Fall",
-      teachers: [
-        "george.azar@ycdsbk12.ca",
-        "michael.onorati@ycdsbk12.ca",
-        "mark.johnson@ycdsbk12.ca",
-        "rocky.savoia@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 18,
-      sport: "Rugby Sevens",
-      gender: "Girls",
-      grade: "Varsity",
-      season: "Fall",
-      teachers: ["stephanie.veitch@ycdsbk12.ca", "michael.onorati@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 19,
-      sport: "Slow Pitch",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Spring",
-      teachers: [
-        "tiziana.hayhoe@ycdsbk12.ca",
-        "melina.tedesco@ycdsbk12.ca",
-        "natalie.ligato@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 20,
-      sport: "Soccer",
-      gender: "Boys",
-      grade: "Jr.",
-      season: "Fall",
-      teachers: ["michele.petrone@ycdsbk12.ca", "domenico.coccia@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 21,
-      sport: "Soccer",
-      gender: "Boys",
-      grade: "Sr.",
-      season: "Fall",
-      teachers: [
-        "steven.sedran@ycdsbk12.ca",
-        "michal.kirejczyk@ycdsbk12.ca",
-        "anthony.petrone@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 22,
-      sport: "Soccer",
-      gender: "Girls",
-      grade: "Jr.",
-      season: "Spring",
-      teachers: ["jordan.caruso@ycdsbk12.ca", "anthony.petrone@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 23,
-      sport: "Soccer",
-      gender: "Girls",
-      grade: "Sr.",
-      season: "Spring",
-      teachers: [
-        "alessia.landolfi@ycdsbk12.ca",
-        "michal.kirejczyk@ycdsbk12.ca",
-        "steven.sedran@ycdsbk12.ca",
-        "michele.petrone@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 24,
-      sport: "Swimming",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Winter",
-      teachers: [
-        "manuel.decompa@ycdsbk12.ca",
-        "antonette.montanaro@ycdsbk12.ca",
-        "alaa.al-shaikh@ycdsbk12.ca",
-        "vanessa.vitale@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 25,
-      sport: "Table Tennis",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Fall",
-      teachers: ["david.beck@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 26,
-      sport: "Tennis",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Fall",
-      teachers: ["raimondo.pupolo@ycdsbk12.ca", "victoria.ah-chin@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 27,
-      sport: "Track(Outdoor)",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Spring",
-      teachers: [
-        "roberto.rizzo@ycdsbk12.ca",
-        "daniela.bonello@ycdsbk12.ca",
-        "sabrina.buffa@ycdsbk12.ca",
-        "julia.loschiavo@ycdsbk12.ca",
-        "lori.gentile@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 28,
-      sport: "Ultimate Frisbee",
-      gender: "Co-ed",
-      grade: "Varsity",
-      season: "Spring",
-      teachers: ["david.west@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 29,
-      sport: "Volleyball",
-      gender: "Boys",
-      grade: "Jr.",
-      season: "Fall",
-      teachers: ["adam.dandrea@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 30,
-      sport: "Volleyball",
-      gender: "Boys",
-      grade: "Sr.",
-      season: "Fall",
-      teachers: ["michael.morrison@ycdsbk12.ca", "david.west@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 31,
-      sport: "Volleyball",
-      gender: "Girls",
-      grade: "Jr.",
-      season: "Fall",
-      teachers: ["david.beck@ycdsbk12.ca"],
-      points: 10,
-      year: "2025-26",
-    },
-    {
-      id: 32,
-      sport: "Volleyball",
-      gender: "Girls",
-      grade: "Sr.",
-      season: "Winter",
-      teachers: [
-        "stephanie.veitch@ycdsbk12.ca",
-        "kasia.bak@ycdsbk12.ca",
-        "lucy.araujo@ycdsbk12.ca",
-      ],
-      points: 10,
-      year: "2025-26",
-    },
-  ];
+  const [data, setData] = useState<Team[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedYear, setSelectedYear] = useState<string>("2025-26");
+  const [addFormOpen, setAddFormOpen] = useState(false);
+  const filteredData = data.filter((team) => team.year === selectedYear);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const result = await selectData();
+        if (result) {
+          setData(result);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+  if (loading) {
+    return (
+      <div className="px-16 py-24">
+        <div className="max-w-4xl justify-self-center w-full">
+          <div className="flex justify-center items-center h-32">
+            <div>Loading...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-16 py-24">
       <div className="text-3xl font-bold mb-2">Team List</div>
-      <div className="flex gap-4 items-center mb-8">
-        <span>Select a year:</span>
-        <Select>
-          <SelectTrigger className="w-auto">
-            <SelectValue placeholder="Select" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="light">2025-26</SelectItem>
-            <SelectItem value="dark">2024-25</SelectItem>
-            <SelectItem value="system">2023-24</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex justify-between items-center mb-8">
+        <div className="flex gap-4 items-center">
+          <span>Select a year:</span>
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="w-auto">
+              <SelectValue placeholder="Select year" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2025-26">2025-26</SelectItem>
+              <SelectItem value="2024-25">2024-25</SelectItem>
+              <SelectItem value="2023-24">2023-24</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Button onClick={() => setAddFormOpen(true)}>Add Team</Button>
       </div>
-      <DataTable columns={columns} data={data} />
+      <DataTable columns={columns} data={filteredData} />
+      <Dialog open={addFormOpen} onOpenChange={setAddFormOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="mb-4">Add Team</DialogTitle>
+            <AddTeamForm/>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

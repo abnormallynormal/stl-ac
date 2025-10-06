@@ -36,7 +36,6 @@ import { useState, use } from "react";
 import { Button } from "@/components/ui/button";
 import { CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandSeparator } from "@/components/ui/command";
 import { DialogTitle } from "@/components/ui/dialog";
-import { Calendar, Smile, Calculator, User, CreditCard, Settings } from "lucide-react";
 const editSportSchema = z.object({
   sport: z.string().min(1, "Sport is required"),
   gender: z.string().min(1, "Gender is required"),
