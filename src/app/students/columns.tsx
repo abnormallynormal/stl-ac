@@ -7,7 +7,8 @@ export type Student = {
   name: string;
   email: string;
   grade: number;
-  year: number;
+  grad: number;
+  active: boolean;
 };
 
 export const columns: ColumnDef<Student>[] = [
