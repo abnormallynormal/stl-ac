@@ -1,50 +1,33 @@
 import {
-    NavigationMenu,
-    NavigationMenuContent,
-    NavigationMenuIndicator,
-    NavigationMenuItem,
-    NavigationMenuLink,
-    NavigationMenuList,
-    NavigationMenuTrigger,
-    NavigationMenuViewport,
-} from "@/components/ui/navigation-menu"
-import  Link  from "next/link"
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+import Link from "next/link";
 
 export default function Navigation() {
-    return (
-        <NavigationMenu>
-            <NavigationMenuList>
+  return (
+    <NavigationMenu className="px-8 py-4">
+      <NavigationMenuList>
+        <NavigationMenuItem>
+          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+            <Link href="/teams">Teams</Link>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
 
-                <NavigationMenuItem>
-                    <NavigationMenuTrigger>Teams</NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                        <NavigationMenuLink asChild>
-                            <Link href="/teams">Teams</Link>
-                        </NavigationMenuLink>
-                    </NavigationMenuContent>
-                </NavigationMenuItem>
-
-                <NavigationMenuItem>
-                    <NavigationMenuTrigger>Sports</NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                        <NavigationMenuLink asChild>
-                            <Link href="/sports">Sports</Link>
-                        </NavigationMenuLink>
-                    </NavigationMenuContent>
-                </NavigationMenuItem>
-
-                <NavigationMenuItem>
-                    <NavigationMenuTrigger>Students</NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                        <NavigationMenuLink asChild>
-                            <Link href="/students">Students</Link>
-                        </NavigationMenuLink>
-                    </NavigationMenuContent>
-                </NavigationMenuItem>
-
-                
-
-            </NavigationMenuList>
-        </NavigationMenu>
-    )
+        <NavigationMenuItem>
+          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+            <Link href="/students">Students</Link>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+            <Link href="/sports">Sports</Link>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
+  );
 }

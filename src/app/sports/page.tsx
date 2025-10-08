@@ -1,4 +1,5 @@
 "use client";
+import Navigation from "@/components/navbar";
 import { selectData, updateData, insertData, deleteData } from "../functions/sports";
 import { createColumns, Team } from "./columns";
 import { Button } from "@/components/ui/button";
@@ -198,8 +199,10 @@ export default function Teams() {
   }
 
   return (
-    <div className="px-16 py-24">
-      <div className="max-w-4xl justify-self-center w-full">
+    <>
+      <Navigation />
+      <div className="px-16 py-24">
+        <div className="max-w-4xl justify-self-center w-full">
         <div className="flex mb-4 justify-between">
           <div className="font-bold text-3xl">Sports</div>
           <Dialog open={addIsOpen} onOpenChange={setAddIsOpen}>
@@ -348,7 +351,8 @@ export default function Teams() {
           </AlertDialog>
         </div>
         <DataTable columns={columns} data={data} />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

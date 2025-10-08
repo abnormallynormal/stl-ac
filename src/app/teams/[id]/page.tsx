@@ -1,4 +1,5 @@
 "use client";
+import Navigation from "@/components/navbar";
 import { Team } from "../columns";
 import { Player, createColumns } from "./columns";
 import { DataTable } from "./data-table";
@@ -308,10 +309,12 @@ export default function TeamPage({
   };
 
   return (
-    <div className="px-16 py-24">
-      <div className="font-bold text-3xl mb-4">
-        {team.grade} {team.gender} {team.sport}
-      </div>
+    <>
+      <Navigation />
+      <div className="px-16 py-24">
+        <div className="font-bold text-3xl mb-4">
+          {team.grade} {team.gender} {team.sport}
+        </div>
       <div className="grid grid-cols-[1fr_2fr] gap-16">
         <div>
           <div className="text-xl font-semibold mb-4">
@@ -634,6 +637,7 @@ export default function TeamPage({
           </CommandDialog>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

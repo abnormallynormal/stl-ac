@@ -1,6 +1,12 @@
+import Navigation from "@/components/navbar";
+
 export default function Home() {
-  return (    <div>
-      
-    </div>
+  return (
+    <>
+      <Navigation />
+      <div>
+        
+      </div>
+    </>
   );
 }

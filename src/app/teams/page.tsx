@@ -1,4 +1,5 @@
 "use client";
+import Navigation from "@/components/navbar";
 import AddTeamForm from "@/components/add-team-form";
 import {
   Select,
@@ -56,8 +57,10 @@ export default function TeamList() {
   }
 
   return (
-    <div className="px-16 py-24">
-      <div className="text-3xl font-bold mb-2">Team List</div>
+    <>
+      <Navigation />
+      <div className="px-16 py-24">
+        <div className="text-3xl font-bold mb-2">Team List</div>
       <div className="flex justify-between items-center mb-8">
         <div className="flex gap-4 items-center">
           <span>Select a year:</span>
@@ -99,6 +102,7 @@ export default function TeamList() {
           </DialogHeader>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </>
   );
 }
