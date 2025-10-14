@@ -326,15 +326,15 @@ export default function TeamPage({
   }, [team, formInitialized]);
 
   if (loading || !formInitialized) {
-    return <div className="px-16 py-24">Loading team data...</div>;
+    return <div className="px-16 py-8">Loading team data...</div>;
   }
 
   if (error) {
-    return <div className="px-16 py-24">Error loading team data: {error}</div>;
+    return <div className="px-16 py-8">Error loading team data: {error}</div>;
   }
 
   if (!team) {
-    return <div className="px-16 py-24">Team not found</div>;
+    return <div className="px-16 py-8">Team not found</div>;
   }
 
   const addPlayer = async (player: Student) => {

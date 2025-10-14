@@ -40,7 +40,7 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Player>[] => [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Season
+          Name
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
@@ -108,7 +108,7 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Player>[] => [
           onValueChange={() => {
             // Optimistic update - update UI immediately
             actions.onUpdateRadio(row.original.id, "LDA", true);
-            // Background API call
+            // Background API call                
             updateRadio({
               teamId: row.original.team_id,
               playerId: row.original.id,

@@ -46,7 +46,7 @@ export default function TeamList() {
   }, []);
   if (loading) {
     return (
-      <div className="px-16 py-24">
+      <div className="px-16 py-8">
         <div className="max-w-4xl justify-self-center w-full">
           <div className="flex justify-center items-center h-32">
             <div>Loading...</div>
@@ -59,7 +59,7 @@ export default function TeamList() {
   return (
     <>
       <Navigation />
-      <div className="px-16 py-24">
+      <div className="px-16 py-8">
         <div className="text-3xl font-bold mb-2">Team List</div>
       <div className="flex justify-between items-center mb-8">
         <div className="flex gap-4 items-center">

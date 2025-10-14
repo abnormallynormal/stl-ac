@@ -188,7 +188,7 @@ export default function Teams() {
 
   if (loading) {
     return (
-      <div className="px-16 py-24">
+      <div className="px-16 py-8">
         <div className="max-w-4xl justify-self-center w-full">
           <div className="flex justify-center items-center h-32">
             <div>Loading...</div>
@@ -201,7 +201,7 @@ export default function Teams() {
   return (
     <>
       <Navigation />
-      <div className="px-16 py-24">
+      <div className="px-16 py-8">
         <div className="max-w-4xl justify-self-center w-full">
         <div className="flex mb-4 justify-between">
           <div className="font-bold text-3xl">Sports</div>

@@ -87,7 +87,7 @@ export default function Students() {
     <>
       <Navigation />
 
-      <div className="px-16 py-24">
+      <div className="px-16 py-8">
         <div className="text-3xl font-bold mb-2">Student List</div>
         <div className="flex gap-4 items-center mb-8">
           <Input
