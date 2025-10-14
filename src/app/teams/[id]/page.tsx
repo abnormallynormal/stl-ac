@@ -1,4 +1,5 @@
 "use client";
+import { Student } from "@/app/students/columns";
 import Navigation from "@/components/navbar";
 import { Team } from "../columns";
 import { Player, createColumns } from "./columns";
@@ -46,7 +47,19 @@ import {
 import { DialogTitle } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { selectData, selectSports, updateSport, deleteSport } from "../../functions/teams";
+import {
+  selectData,
+  selectSports,
+  updateSport,
+  deleteSport,
+} from "../../functions/teams";
+import {
+  selectablePlayers,
+  selectTeamPlayers,
+  addPlayer as addPlayerApi,
+  deletePlayer as deletePlayerApi,
+} from "@/app/functions/team";
+import { selectData as selectStudents } from "@/app/functions/students";
 const createEditSportSchema = (
   existingTeams: Team[] = [],
   currentTeamId?: number
@@ -104,7 +117,45 @@ export default function TeamPage({
       setToBeDeleted(player);
       setDeleteIsOpen(true);
     },
+    onUpdateCheckbox: (playerId, field, value) => {
+      // Optimistic update - update players state immediately
+      setPlayers(prevPlayers => 
+        prevPlayers.map(player => 
+          player.id === playerId 
+            ? { ...player, [field]: value }
+            : player
+        )
+      );
+    },
+    onUpdateRadio: (playerId, field, value) => {
+      // For radio buttons, we need to clear other radio options and set the selected one
+      setPlayers(prevPlayers => 
+        prevPlayers.map(player => 
+          player.id === playerId 
+            ? { 
+                ...player, 
+                MVP: field === "MVP" ? true : player.MVP,
+                LDA: field === "LDA" ? true : player.LDA
+              }
+            : {
+              ...player,
+              MVP: field === "MVP" ? false : player.MVP,
+              LDA: field === "LDA" ? false : player.LDA
+            }
+        )
+      );
+    },
   });
+  const onDeletePlayer = async (player: Player) => {
+    try {
+      await deletePlayerApi(player.id);
+      setPlayers(players.filter((p) => p.id !== player.id));
+      setDeleteIsOpen(false);
+    } catch (err) {
+      console.error("Error deleting player:", err);
+      setError(err instanceof Error ? err.message : "Failed to delete player");
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -134,18 +185,67 @@ export default function TeamPage({
 
     loadData();
   }, []);
+  const [addablePlayers, setAddablePlayers] = useState<Student[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [allStudents, setAllStudents] = useState<Student[]>([]);
+  useEffect(() => {
+    const loadPlayers = async () => {
+      try {
+        const playersResult = await selectTeamPlayers(
+          Number(resolvedParams.id)
+        );
+        if (playersResult) {
+          setPlayers(playersResult);
+          console.log("Players data set to state:", playersResult);
+        }
+      } catch (err) {
+        console.error("Error fetching players data:", err);
+        setError(
+          err instanceof Error ? err.message : "Failed to load players data"
+        );
+      }
+    };
 
-  const players: Player[] = [
-    {
-      id: 1,
-      name: "Player 1",
-      grade: 10,
-      champs: true,
-      MVP: true,
-      LDA: false,
-      paid: false,
-    },
-  ];
+    loadPlayers();
+    console.log(players);
+  }, []);
+  useEffect(() => {
+    const loadAddablePlayers = async () => {
+      try {
+        const playersResult = await selectablePlayers(
+          Number(resolvedParams.id)
+        );
+        if (playersResult) {
+          // selectablePlayers returns a Student[]; assert to Player[] to satisfy the state typing
+          setAddablePlayers(playersResult as unknown as Student[]);
+          console.log("Addable players data set to state:", playersResult);
+        }
+      } catch (err) {
+        console.error("Error fetching players data:", err);
+        setError(
+          err instanceof Error ? err.message : "Failed to load players data"
+        );
+      }
+    };
+
+    loadAddablePlayers();
+  }, []);
+
+  useEffect(() => {
+    const loadAllStudents = async () => {
+      try {
+        const studentsResult = await selectStudents();
+        if (studentsResult) {
+          setAllStudents(studentsResult);
+          console.log("All students data set to state:", studentsResult);
+        }
+      } catch (err) {
+        console.error("Error fetching all students data:", err);
+      }
+    };
+
+    loadAllStudents();
+  }, []);
 
   const availableTeachers = [
     "martin.nicholls@ycdsbk12.ca",
@@ -237,6 +337,37 @@ export default function TeamPage({
     return <div className="px-16 py-24">Team not found</div>;
   }
 
+  const addPlayer = async (player: Student) => {
+    console.log(player);
+    try {
+      const result = await addPlayerApi({
+        team_id: Number(resolvedParams.id),
+        student_id: Number(player.id),
+        champs: false,
+        mvp: false,
+        lda: false,
+        paid: false,
+      });
+      if (result) {
+        // Refresh the players list
+        const refreshedPlayers = await selectTeamPlayers(
+          Number(resolvedParams.id)
+        );
+        if (refreshedPlayers) {
+          setPlayers(refreshedPlayers);
+        }
+
+        // Update addable players list
+        setAddablePlayers(addablePlayers.filter((p) => p.id !== player.id));
+
+        // Close the dialog
+        setAddPlayerOpen(false);
+      }
+    } catch (error) {
+      console.error("Error adding player:", error);
+      setError(error instanceof Error ? error.message : "Failed to add player");
+    }
+  };
   const addTeacher = (teacher: string) => {
     if (!selectedTeachers.includes(teacher)) {
       const newTeachers = [...selectedTeachers, teacher];
@@ -294,9 +425,9 @@ export default function TeamPage({
   const onDeleteTeam = async () => {
     try {
       console.log("Deleting team with id:", team.id);
-      
+
       const result = await deleteSport({ id: team.id });
-      
+
       if (result) {
         console.log("Team deleted successfully:", result);
         // Navigate back to teams page
@@ -311,332 +442,377 @@ export default function TeamPage({
   return (
     <>
       <Navigation />
-      <div className="px-16 py-24">
+      <div className="px-16 py-8">
         <div className="font-bold text-3xl mb-4">
           {team.grade} {team.gender} {team.sport}
         </div>
-      <div className="grid grid-cols-[1fr_2fr] gap-16">
-        <div>
-          <div className="text-xl font-semibold mb-4">
-            Edit Team Information
-          </div>
-          <Form {...editSportForm}>
-            <form
-              onSubmit={editSportForm.handleSubmit(onEditSportSave)}
-              className="space-y-4"
-            >
-              <FormField
-                control={editSportForm.control}
-                name="sport"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Sport</FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        // Find the selected sport and set its points
-                        const selectedSport = sports.find(
-                          (s) => s.sport === value
-                        );
-                        if (selectedSport) {
-                          editSportForm.setValue(
-                            "points",
-                            selectedSport.points
+        <div className="grid grid-cols-[1fr_2fr] gap-16">
+          <div>
+            <div className="text-xl font-semibold mb-4">
+              Edit Team Information
+            </div>
+            <Form {...editSportForm}>
+              <form
+                onSubmit={editSportForm.handleSubmit(onEditSportSave)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={editSportForm.control}
+                  name="sport"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sport</FormLabel>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Find the selected sport and set its points
+                          const selectedSport = sports.find(
+                            (s) => s.sport === value
                           );
-                        }
-                      }}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select sport" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {sports.map(({ sport, points }) => (
-                          <SelectItem key={sport} value={sport}>
-                            {sport} ({points} points)
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={editSportForm.control}
-                name="gender"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Gender</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select gender" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Boys">Boys</SelectItem>
-                        <SelectItem value="Girls">Girls</SelectItem>
-                        <SelectItem value="Co-ed">Co-ed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={editSportForm.control}
-                name="grade"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Grade</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select grade level" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Jr.">Junior</SelectItem>
-                        <SelectItem value="Sr.">Senior</SelectItem>
-                        <SelectItem value="Varsity">Varsity</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={editSportForm.control}
-                name="season"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Season</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select season" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Fall">Fall</SelectItem>
-                        <SelectItem value="Winter">Winter</SelectItem>
-                        <SelectItem value="Spring">Spring</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={editSportForm.control}
-                name="year"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Year</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select year" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="2025-26">2025-26</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={editSportForm.control}
-                name="teachers"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex justify-between items-center">
-                      <FormLabel>Coaches</FormLabel>
-                      <Button
-                        type="button"
-                        className="p-0 h-auto text-gray-500"
-                        variant="link"
-                        onClick={() => setTeacherSearchOpen(true)}
+                          if (selectedSport) {
+                            editSportForm.setValue(
+                              "points",
+                              selectedSport.points
+                            );
+                          }
+                        }}
+                        value={field.value}
                       >
-                        Add Coaches
-                      </Button>
-                    </div>
-                    <FormControl>
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap gap-2 min-h-[2.5rem] px-3 py-2 border rounded-md">
-                          {selectedTeachers.length === 0 ? (
-                            <div className="text-muted-foreground text-sm">
-                              No coaches selected
-                            </div>
-                          ) : (
-                            selectedTeachers.map((teacher) => (
-                              <Badge
-                                key={teacher}
-                                variant="secondary"
-                                className="flex items-center gap-1"
-                              >
-                                {getTeacherDisplayName(teacher)}
-                                <X
-                                  className="h-3 w-3 cursor-pointer rounded-full"
-                                  onClick={() => removeTeacher(teacher)}
-                                />
-                              </Badge>
-                            ))
-                          )}
-                        </div>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select sport" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {sports.map(({ sport, points }) => (
+                            <SelectItem key={sport} value={sport}>
+                              {sport} ({points} points)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editSportForm.control}
+                  name="gender"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Gender</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Boys">Boys</SelectItem>
+                          <SelectItem value="Girls">Girls</SelectItem>
+                          <SelectItem value="Co-ed">Co-ed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editSportForm.control}
+                  name="grade"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Grade</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select grade level" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Jr.">Junior</SelectItem>
+                          <SelectItem value="Sr.">Senior</SelectItem>
+                          <SelectItem value="Varsity">Varsity</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editSportForm.control}
+                  name="season"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Season</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select season" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Fall">Fall</SelectItem>
+                          <SelectItem value="Winter">Winter</SelectItem>
+                          <SelectItem value="Spring">Spring</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editSportForm.control}
+                  name="year"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Year</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select year" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="2025-26">2025-26</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editSportForm.control}
+                  name="teachers"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex justify-between items-center">
+                        <FormLabel>Coaches</FormLabel>
+                        <Button
+                          type="button"
+                          className="p-0 h-auto text-gray-500"
+                          variant="link"
+                          onClick={() => setTeacherSearchOpen(true)}
+                        >
+                          Add Coaches
+                        </Button>
                       </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={editSportForm.control}
-                name="seasonHighlights"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Season Highlights</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter season highlights"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={editSportForm.control}
-                name="yearbookMessage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Yearbook Message</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter a message for the yearbook"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="flex justify-between">
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={() => setDeleteTeamIsOpen(true)}
-                >
-                  Delete Team
-                </Button>
-                <div className="gap-2 flex">
-                  <Button type="button" variant="secondary">
-                    Cancel
+                      <FormControl>
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap gap-2 min-h-[2.5rem] px-3 py-2 border rounded-md">
+                            {selectedTeachers.length === 0 ? (
+                              <div className="text-muted-foreground text-sm">
+                                No coaches selected
+                              </div>
+                            ) : (
+                              selectedTeachers.map((teacher) => (
+                                <Badge
+                                  key={teacher}
+                                  variant="secondary"
+                                  className="flex items-center gap-1"
+                                >
+                                  {getTeacherDisplayName(teacher)}
+                                  <X
+                                    className="h-3 w-3 cursor-pointer rounded-full"
+                                    onClick={() => removeTeacher(teacher)}
+                                  />
+                                </Badge>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editSportForm.control}
+                  name="seasonHighlights"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Season Highlights</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter season highlights"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editSportForm.control}
+                  name="yearbookMessage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Yearbook Message</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter a message for the yearbook"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-between">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => setDeleteTeamIsOpen(true)}
+                  >
+                    Delete Team
                   </Button>
-                  <Button type="submit">Save</Button>
+                  <div className="gap-2 flex">
+                    <Button type="button" variant="secondary">
+                      Cancel
+                    </Button>
+                    <Button type="submit">Save</Button>
+                  </div>
                 </div>
-              </div>
-            </form>
-          </Form>
-        </div>
-        <div>
-          <div className="flex justify-between items-center mb-4 ">
-            <div className="text-xl font-semibold">Manage Players</div>
-            <Button onClick={() => setAddPlayerOpen(true)}>Add Player</Button>
+              </form>
+            </Form>
           </div>
-          <DataTable columns={columns} data={players} />
-          <AlertDialog>
-            <AlertDialog open={deleteIsOpen} onOpenChange={setDeleteIsOpen}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    Are you absolutely sure you want to delete{" "}
-                    {toBeDeleted?.name}?
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => console.log(toBeDeleted)}>
-                    Continue
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
+          <div>
+            <div className="flex justify-between items-center mb-4 ">
+              <div className="text-xl font-semibold">Manage Players</div>
+              <Button onClick={() => setAddPlayerOpen(true)}>Add Player</Button>
+            </div>
+            <DataTable
+              columns={columns}
+              data={players.map((player) => {
+                const student = allStudents.find(
+                  (s) => String(s.id) === String(player.student_id)
+                );
+                return {
+                  ...player,
+                  name: student?.name || `Student ${player.student_id}`,
+                  grade: student?.grade || 0,
+                };
+              })}
+            />
+            <AlertDialog>
+              <AlertDialog open={deleteIsOpen} onOpenChange={setDeleteIsOpen}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you absolutely sure you want to delete{" "}
+                      {toBeDeleted?.name}?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => {
+                        if (toBeDeleted) onDeletePlayer(toBeDeleted);
+                      }}
+                    >
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </AlertDialog>
-          </AlertDialog>
-          <AlertDialog>
-            <AlertDialog
-              open={deleteTeamIsOpen}
-              onOpenChange={setDeleteTeamIsOpen}
-            >
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    Are you absolutely sure you want to delete {team.grade}{" "}
-                    {team.gender} {team.sport}?
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={onDeleteTeam}>
-                    Continue
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
+            <AlertDialog>
+              <AlertDialog
+                open={deleteTeamIsOpen}
+                onOpenChange={setDeleteTeamIsOpen}
+              >
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you absolutely sure you want to delete {team.grade}{" "}
+                      {team.gender} {team.sport}?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={onDeleteTeam}>
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </AlertDialog>
-          </AlertDialog>
-          <CommandDialog open={addPlayerOpen} onOpenChange={setAddPlayerOpen}>
-            <DialogTitle className="sr-only">Add Player</DialogTitle>
-            <CommandInput placeholder="Search for a player to add..." />
-            <CommandList>
-              <CommandEmpty>No results found.</CommandEmpty>
-            </CommandList>
-          </CommandDialog>
-
-          <CommandDialog
-            open={teacherSearchOpen}
-            onOpenChange={setTeacherSearchOpen}
-          >
-            <DialogTitle className="sr-only">Search Teachers</DialogTitle>
-            <CommandInput placeholder="Search for a teacher to add..." />
-            <CommandList>
-              <CommandEmpty>No teachers found.</CommandEmpty>
-              <CommandGroup>
-                {availableTeachers
-                  .filter((teacher) => !selectedTeachers.includes(teacher))
-                  .map((teacher) => (
+            <CommandDialog open={addPlayerOpen} onOpenChange={setAddPlayerOpen}>
+              <DialogTitle className="sr-only">Add Player</DialogTitle>
+              <CommandInput placeholder="Search for a player to add..." />
+              <CommandList>
+                <CommandEmpty>No results found.</CommandEmpty>
+                <CommandGroup>
+                  {addablePlayers.map((player) => (
                     <CommandItem
-                      key={teacher}
-                      value={teacher}
-                      onSelect={() => addTeacher(teacher)}
+                      key={player.id}
+                      value={String(player.id)}
+                      onSelect={() => addPlayer(player)}
                       className="cursor-pointer"
                     >
                       <div className="flex flex-col">
-                        <span className="font-medium">
-                          {getTeacherDisplayName(teacher)}
-                        </span>
+                        <span className="font-medium">{player.name}</span>
                         <span className="text-sm text-muted-foreground">
-                          {teacher}
+                          {player.email}
                         </span>
                       </div>
                     </CommandItem>
                   ))}
-              </CommandGroup>
-            </CommandList>
-          </CommandDialog>
+                </CommandGroup>
+              </CommandList>
+            </CommandDialog>
+
+            <CommandDialog
+              open={teacherSearchOpen}
+              onOpenChange={setTeacherSearchOpen}
+            >
+              <DialogTitle className="sr-only">Search Teachers</DialogTitle>
+              <CommandInput placeholder="Search for a teacher to add..." />
+              <CommandList>
+                <CommandEmpty>No teachers found.</CommandEmpty>
+                <CommandGroup>
+                  {availableTeachers
+                    .filter((teacher) => !selectedTeachers.includes(teacher))
+                    .map((teacher) => (
+                      <CommandItem
+                        key={teacher}
+                        value={teacher}
+                        onSelect={() => addTeacher(teacher)}
+                        className="cursor-pointer"
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium">
+                            {getTeacherDisplayName(teacher)}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            {teacher}
+                          </span>
+                        </div>
+                      </CommandItem>
+                    ))}
+                </CommandGroup>
+              </CommandList>
+            </CommandDialog>
+          </div>
         </div>
-      </div>
       </div>
     </>
   );

@@ -1,9 +1,11 @@
 "use client";
-
+import { useState } from "react";
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
   useReactTable,
 } from "@tanstack/react-table";
 import {
@@ -24,10 +26,17 @@ export function DataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "name", desc: false },
+  ]);
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    state: {
+      sorting,
+    },
   });
 
   return (
@@ -38,9 +47,13 @@ export function DataTable<TData, TValue>({
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
                 return (
-                  <TableHead 
-                    key={header.id} 
-                    className={header.column.id === "actions" ? "text-right px-4" : "px-4"}
+                  <TableHead
+                    key={header.id}
+                    className={
+                      header.column.id === "actions"
+                        ? "text-right px-4"
+                        : "px-4"
+                    }
                   >
                     {header.isPlaceholder
                       ? null
@@ -62,9 +75,11 @@ export function DataTable<TData, TValue>({
                 data-state={row.getIsSelected() && "selected"}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell 
-                    key={cell.id} 
-                    className={cell.column.id === "actions" ? "text-right px-4" : " px-4"}
+                  <TableCell
+                    key={cell.id}
+                    className={
+                      cell.column.id === "actions" ? "text-right px-4" : " px-4"
+                    }
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
