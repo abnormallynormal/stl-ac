@@ -11,6 +11,7 @@ export type Student = {
   grade: number;
   grad: number;
   active: boolean;
+  points: number;
 };
 
 export const columns: ColumnDef<Student>[] = [
@@ -35,5 +36,9 @@ export const columns: ColumnDef<Student>[] = [
   {
     accessorKey: "grade",
     header: "Grade",
+  },
+  {
+    accessorKey: "points",
+    header: "Points",
   },
 ];

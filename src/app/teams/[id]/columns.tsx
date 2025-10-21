@@ -12,8 +12,8 @@ export type Player = {
   email: string;
   grade: number;
   champs: boolean;
-  MVP: boolean;
-  LDA: boolean;
+  mvp: boolean;
+  lca: boolean;
   paid: boolean;
 };
 
@@ -76,49 +76,49 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Player>[] => [
     },
   },
   {
-    accessorKey: "MVP",
+    accessorKey: "mvp",
     header: "MVP",
     cell: ({ row }) => {
       return (
         <RadioGroup
           onValueChange={() => {
             // Optimistic update - update UI immediately
-            actions.onUpdateRadio(row.original.id, "MVP", true);
+            actions.onUpdateRadio(row.original.id, "mvp", true);
             // Background API call
             updateRadio({
               playerId: row.original.id,
               teamId: row.original.team_id,
-              param: "MVP",
+              param: "mvp",
               value: true,
             });
           }}
-          value={row.original.MVP ? "MVP" : ""}
+          value={row.original.mvp ? "mvp" : ""}
         >
-          <RadioGroupItem value="MVP" />
+          <RadioGroupItem value="mvp" />
         </RadioGroup>
       );
     },
   },
   {
-    accessorKey: "LDA",
-    header: "LDA",
+    accessorKey: "lca",
+    header: "LCA",
     cell: ({ row }) => {
       return (
         <RadioGroup
           onValueChange={() => {
             // Optimistic update - update UI immediately
-            actions.onUpdateRadio(row.original.id, "LDA", true);
+            actions.onUpdateRadio(row.original.id, "lca", true);
             // Background API call                
             updateRadio({
               teamId: row.original.team_id,
               playerId: row.original.id,
-              param: "LDA",
+              param: "lca",
               value: true,
             });
           }}
-          value={row.original.LDA ? "LDA" : ""}
+          value={row.original.lca ? "lca" : ""}
         >
-          <RadioGroupItem value="LDA" />
+          <RadioGroupItem value="lca" />
         </RadioGroup>
       );
     },

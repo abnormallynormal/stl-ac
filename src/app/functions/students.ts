@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Student } from "../students/columns"
 export const selectData = async () => {
   const supabase = createClient()
-  const { data, error } = await supabase.from("students").select()
+  const { data, error } = await supabase.from("student_points").select()
   if (!error) {
     console.log(data)
     

@@ -41,7 +41,8 @@ export const selectTeamPlayers = async (teamId: number) => {
   if (!error) {
     return data as Player[];
   } else {
-    console.log(error);
+    // console.log(error);
+    throw new Error(error.message);
   }
 };
 
@@ -50,14 +51,14 @@ export const addPlayer = async ({
   student_id,
   champs,
   mvp,
-  lda,
+  lca,
   paid
 }: {
   team_id: number;
   student_id: number;
   champs: boolean;
   mvp: boolean;
-  lda: boolean;
+  lca: boolean;
   paid: boolean;
 }) => {
   const supabase = createClient();
@@ -68,16 +69,18 @@ export const addPlayer = async ({
       student_id, 
       champs, 
       mvp, 
-      lda, 
+      lca, 
       paid 
     })
     .select();
   if (!error) {
     return data as Player[];
   } else {
-    console.log(error);
+    // console.log(error);
+    throw new Error(error.message);
   }
 };
+
 export const deletePlayer = async (playerId: number) => {
   const supabase = createClient();
   const { data, error } = await supabase
@@ -88,7 +91,8 @@ export const deletePlayer = async (playerId: number) => {
   if (!error) {
     return data as Player[];
   } else {
-    console.log(error);
+    // console.log(error);
+    throw new Error(error.message);
   }
 };
 
@@ -102,7 +106,8 @@ export const updateCheckbox = async({playerId, param, value}: {playerId: number,
   if (!error) {
     return data as Player[];
   } else {
-    console.log(error);
+    // console.log(error);
+    throw new Error(error.message);
   }
 }
 
@@ -124,7 +129,13 @@ export const updateRadio = async({playerId, teamId, param, value}: {playerId: nu
 
   if (!error && !othersError) {
     return others as Player[];
-  } else {
-    console.log(error ?? othersError);
   }
+  if(error){
+    // console.log(error ?? othersError);
+    throw new Error(error.message);
+  }
+  if(othersError){
+    throw new Error(othersError.message);
+  }
+
 }

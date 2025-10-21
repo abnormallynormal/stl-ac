@@ -134,13 +134,13 @@ export default function TeamPage({
           player.id === playerId 
             ? { 
                 ...player, 
-                MVP: field === "MVP" ? true : player.MVP,
-                LDA: field === "LDA" ? true : player.LDA
+                mvp: field === "mvp" ? true : player.mvp,
+                lca: field === "lca" ? true : player.lca
               }
             : {
               ...player,
-              MVP: field === "MVP" ? false : player.MVP,
-              LDA: field === "LDA" ? false : player.LDA
+              mvp: field === "mvp" ? false : player.mvp,
+              lca: field === "lca" ? false : player.lca
             }
         )
       );
@@ -345,7 +345,7 @@ export default function TeamPage({
         student_id: Number(player.id),
         champs: false,
         mvp: false,
-        lda: false,
+        lca: false,
         paid: false,
       });
       if (result) {
@@ -760,13 +760,13 @@ export default function TeamPage({
               <CommandInput placeholder="Search for a player to add..." />
               <CommandList>
                 <CommandEmpty>No results found.</CommandEmpty>
-                <CommandGroup>
+                <CommandGroup heading = "Students">
                   {addablePlayers.map((player) => (
                     <CommandItem
                       key={player.id}
-                      value={String(player.id)}
-                      onSelect={() => addPlayer(player)}
-                      className="cursor-pointer"
+                      value={`$(player.id) ${player.email} $(player.name)`}
+                      onSelect={() => {addPlayer(player); setAddPlayerOpen(false);}}
+                      // className="cursor-pointer"
                     >
                       <div className="flex flex-col">
                         <span className="font-medium">{player.name}</span>

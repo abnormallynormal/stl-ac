@@ -1,12 +1,6 @@
-import Navigation from "@/components/navbar";
+// import Navigation from "@/components/navbar";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return (
-    <>
-      <Navigation />
-      <div>
-        
-      </div>
-    </>
-  );
+  redirect("/teams");
 }
