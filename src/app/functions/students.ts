@@ -35,3 +35,60 @@ export const selectData = async () => {
     console.log(error)
   }
 }
+export const addPlayer = async ({ name, email, grade }: Student) => {
+  const supabase = createClient();
+  const month = new Date().getMonth();
+  console.log(month);
+  let year = new Date().getFullYear();
+  if (month >= 7) {
+    year + 1;
+  }
+  const { data, error } = await supabase
+    .from("students")
+    .insert({
+      name,
+      email,
+      grade,
+      grad: year + (12 - grade),
+      active: true,
+    })
+    .select();
+  if (!error) {
+    return data as Student[];
+  } else {
+    console.log(error);
+  }
+};
+export const deletePlayer = async (playerId: number) => {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("players")
+    .delete()
+    .eq("id", playerId)
+    .select();
+  if (!error) {
+    return data as Student[];
+  } else {
+    console.log(error);
+  }
+};
+
+export const updatePlayer = async ({ id, name, email, grade }: Student) => {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("players")
+    .update({
+      name,
+      email,
+      grade,
+      grad: Number(process.env.CURRENT_YEAR) + (12 - grade),
+      active: true,
+    })
+    .eq("id", id)
+    .select();
+  if (!error) {
+    return data as Student[];
+  } else {
+    console.log(error);
+  }
+};
