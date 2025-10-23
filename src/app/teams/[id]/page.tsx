@@ -60,6 +60,7 @@ import {
   deletePlayer as deletePlayerApi,
 } from "@/app/functions/team";
 import { selectData as selectStudents } from "@/app/functions/students";
+import { Input } from "@/components/ui/input";
 const createEditSportSchema = (
   existingTeams: Team[] = [],
   currentTeamId?: number
@@ -103,6 +104,7 @@ export default function TeamPage({
 }) {
   const [data, setData] = useState<Team[]>([]);
   const [sports, setSports] = useState<{ sport: string; points: number }[]>([]);
+  const [selectedSport, setSelectedSport] = useState<string | null>();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteIsOpen, setDeleteIsOpen] = useState(false);
@@ -331,6 +333,7 @@ export default function TeamPage({
   useEffect(() => {
     if (team && !formInitialized) {
       setSelectedTeachers(team.teachers);
+      setSelectedSport(team.sport)
       console.log("Setting form values with team data:", team);
 
       editSportForm.reset({
@@ -499,6 +502,7 @@ export default function TeamPage({
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value);
+                          setSelectedSport(value);
                           // Find the selected sport and set its points
                           const selectedSport = sports.find(
                             (s) => s.sport === value
@@ -518,9 +522,9 @@ export default function TeamPage({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {sports.map(({ sport, points }) => (
+                          {sports.map(({ sport}) => (
                             <SelectItem key={sport} value={sport}>
-                              {sport} ({points} points)
+                              {sport}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -579,6 +583,20 @@ export default function TeamPage({
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={editSportForm.control}
+                  name="points"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Points</FormLabel>
+                      <Input
+                        {...field}
+                        disabled
+                      />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={editSportForm.control}
                   name="season"
@@ -725,7 +743,12 @@ export default function TeamPage({
           <div>
             <div className="flex gap-6 items-center mb-4 ">
               <div className="text-xl font-semibold">Players</div>
-              <Button onClick={() => setAddPlayerOpen(true)} className="text-xs h-8">Add Player</Button>
+              <Button
+                onClick={() => setAddPlayerOpen(true)}
+                className="text-xs h-8"
+              >
+                Add Player
+              </Button>
             </div>
             <DataTable
               columns={columns}
@@ -798,7 +821,7 @@ export default function TeamPage({
               />
               <CommandList>
                 <CommandEmpty>No results found.</CommandEmpty>
-                <CommandGroup heading="Students">
+                <CommandGroup>
                   {filteredPlayers.map((player) => (
                     <CommandItem
                       key={player.id}
