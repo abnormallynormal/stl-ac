@@ -49,14 +49,16 @@ export const selectTeamPlayers = async (teamId: number) => {
 export const addPlayer = async ({
   team_id,
   student_id,
-  champs,
+  yraa,
+  ofsaa,
   mvp,
   lca,
   paid
 }: {
   team_id: number;
   student_id: number;
-  champs: boolean;
+  yraa: boolean;
+  ofsaa: boolean;
   mvp: boolean;
   lca: boolean;
   paid: boolean;
@@ -67,7 +69,8 @@ export const addPlayer = async ({
     .insert({ 
       team_id, 
       student_id, 
-      champs, 
+      yraa, 
+      ofsaa,
       mvp, 
       lca, 
       paid 

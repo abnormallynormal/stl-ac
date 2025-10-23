@@ -41,7 +41,7 @@ export const addPlayer = async ({ name, email, grade }: Student) => {
   console.log(month);
   let year = new Date().getFullYear();
   if (month >= 7) {
-    year + 1;
+    year += 1;
   }
   const { data, error } = await supabase
     .from("students")

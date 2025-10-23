@@ -1,8 +1,15 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Ellipsis } from "lucide-react";
 
 export type Student = {
   id: number;
@@ -14,7 +21,12 @@ export type Student = {
   points: number;
 };
 
-export const columns: ColumnDef<Student>[] = [
+export interface ColumnActions{
+  onEdit: (student: Student) => void;
+  onDelete: (student: Student) => void;
+}
+
+export const createColumns = (actions: ColumnActions): ColumnDef<Student>[] => [
   {
     accessorKey: "name",
     header: ({ column }) => {
@@ -41,4 +53,34 @@ export const columns: ColumnDef<Student>[] = [
     accessorKey: "points",
     header: "Points",
   },
+  {
+    accessorKey: "actions",
+    header: () => {
+      return null;
+    },
+    cell: ({ row }) => {
+      const student = row.original;
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger>
+            <Ellipsis />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => actions.onEdit(student)}>
+              Edit Student
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive focus:bg-destructive/10"
+              onClick={() => actions.onDelete(student)}
+            >
+              Delete Student
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
+  }
 ];

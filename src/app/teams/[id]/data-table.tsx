@@ -42,7 +42,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="overflow-hidden rounded-md border-2">
-      <Table>
+      <Table className="overflow-x-auto"> 
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
@@ -52,8 +52,8 @@ export function DataTable<TData, TValue>({
                     key={header.id}
                     className={
                       header.column.id === "actions"
-                        ? "text-right px-4"
-                        : "px-4"
+                        ? "text-right px-4 py-2"
+                        : "px-4 py-2"
                     }
                   >
                     {header.isPlaceholder

@@ -34,7 +34,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { useState, use, useEffect } from "react";
+import { useState, use, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   CommandDialog,
@@ -119,43 +119,31 @@ export default function TeamPage({
     },
     onUpdateCheckbox: (playerId, field, value) => {
       // Optimistic update - update players state immediately
-      setPlayers(prevPlayers => 
-        prevPlayers.map(player => 
-          player.id === playerId 
-            ? { ...player, [field]: value }
-            : player
+      setPlayers((prevPlayers) =>
+        prevPlayers.map((player) =>
+          player.id === playerId ? { ...player, [field]: value } : player
         )
       );
     },
     onUpdateRadio: (playerId, field, value) => {
       // For radio buttons, we need to clear other radio options and set the selected one
-      setPlayers(prevPlayers => 
-        prevPlayers.map(player => 
-          player.id === playerId 
-            ? { 
-                ...player, 
+      setPlayers((prevPlayers) =>
+        prevPlayers.map((player) =>
+          player.id === playerId
+            ? {
+                ...player,
                 mvp: field === "mvp" ? true : player.mvp,
-                lca: field === "lca" ? true : player.lca
+                lca: field === "lca" ? true : player.lca,
               }
             : {
-              ...player,
-              mvp: field === "mvp" ? false : player.mvp,
-              lca: field === "lca" ? false : player.lca
-            }
+                ...player,
+                mvp: field === "mvp" ? false : player.mvp,
+                lca: field === "lca" ? false : player.lca,
+              }
         )
       );
     },
   });
-  const onDeletePlayer = async (player: Player) => {
-    try {
-      await deletePlayerApi(player.id);
-      setPlayers(players.filter((p) => p.id !== player.id));
-      setDeleteIsOpen(false);
-    } catch (err) {
-      console.error("Error deleting player:", err);
-      setError(err instanceof Error ? err.message : "Failed to delete player");
-    }
-  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -186,6 +174,7 @@ export default function TeamPage({
     loadData();
   }, []);
   const [addablePlayers, setAddablePlayers] = useState<Student[]>([]);
+  const [filter, setFilter] = useState<string>("");
   const [players, setPlayers] = useState<Player[]>([]);
   const [allStudents, setAllStudents] = useState<Student[]>([]);
   useEffect(() => {
@@ -230,7 +219,31 @@ export default function TeamPage({
 
     loadAddablePlayers();
   }, []);
-
+  const onDeletePlayer = async (player: Player) => {
+    try {
+      await deletePlayerApi(player.id);
+      setPlayers(players.filter((p) => p.id !== player.id));
+      try {
+        const playersResult = await selectablePlayers(
+          Number(resolvedParams.id)
+        );
+        if (playersResult) {
+          // selectablePlayers returns a Student[]; assert to Player[] to satisfy the state typing
+          setAddablePlayers(playersResult as unknown as Student[]);
+          console.log("Addable players data set to state:", playersResult);
+        }
+      } catch (err) {
+        console.error("Error fetching players data:", err);
+        setError(
+          err instanceof Error ? err.message : "Failed to load players data"
+        );
+      }
+      setDeleteIsOpen(false);
+    } catch (err) {
+      console.error("Error deleting player:", err);
+      setError(err instanceof Error ? err.message : "Failed to delete player");
+    }
+  };
   useEffect(() => {
     const loadAllStudents = async () => {
       try {
@@ -324,6 +337,14 @@ export default function TeamPage({
       console.log("Form values after reset:", editSportForm.getValues());
     }
   }, [team, formInitialized]);
+  const filteredPlayers = useMemo(() => {
+    if (!filter.trim()) return addablePlayers;
+    const lowerFilter = filter.toLowerCase();
+    return addablePlayers.filter(
+      (player) =>
+        player.name.toLowerCase().includes(lowerFilter)
+    );
+  }, [addablePlayers, filter]);
 
   if (loading || !formInitialized) {
     return <div className="px-16 py-8">Loading team data...</div>;
@@ -343,7 +364,8 @@ export default function TeamPage({
       const result = await addPlayerApi({
         team_id: Number(resolvedParams.id),
         student_id: Number(player.id),
-        champs: false,
+        yraa: false,
+        ofsaa: false,
         mvp: false,
         lca: false,
         paid: false,
@@ -689,9 +711,9 @@ export default function TeamPage({
             </Form>
           </div>
           <div>
-            <div className="flex justify-between items-center mb-4 ">
-              <div className="text-xl font-semibold">Manage Players</div>
-              <Button onClick={() => setAddPlayerOpen(true)}>Add Player</Button>
+            <div className="flex gap-6 items-center mb-4 ">
+              <div className="text-xl font-semibold">Players</div>
+              <Button onClick={() => setAddPlayerOpen(true)} className="text-xs h-8">Add Player</Button>
             </div>
             <DataTable
               columns={columns}
@@ -757,15 +779,22 @@ export default function TeamPage({
             </AlertDialog>
             <CommandDialog open={addPlayerOpen} onOpenChange={setAddPlayerOpen}>
               <DialogTitle className="sr-only">Add Player</DialogTitle>
-              <CommandInput placeholder="Search for a player to add..." />
+              <CommandInput
+                placeholder="Search for a player to add..."
+                value={filter}
+                onValueChange={(e) => setFilter(e)}
+              />
               <CommandList>
                 <CommandEmpty>No results found.</CommandEmpty>
-                <CommandGroup heading = "Students">
-                  {addablePlayers.map((player) => (
+                <CommandGroup heading="Students">
+                  {filteredPlayers.map((player) => (
                     <CommandItem
                       key={player.id}
                       value={`$(player.id) ${player.email} $(player.name)`}
-                      onSelect={() => {addPlayer(player); setAddPlayerOpen(false);}}
+                      onSelect={() => {
+                        addPlayer(player);
+                        setAddPlayerOpen(false);
+                      }}
                       // className="cursor-pointer"
                     >
                       <div className="flex flex-col">

@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Student, columns } from "./columns";
+import { Student, createColumns } from "./columns";
 import { DataTable } from "./data-table";
 import { selectData } from "@/app/functions/students";
 import { useState, useEffect } from "react";
@@ -155,6 +155,14 @@ export default function Students() {
     const graduationMatch = includeGraduated || student.active;
 
     return nameMatch && gradeMatch && graduationMatch;
+  });
+  const columns = createColumns({
+    onEdit: (student) => {
+      console.log("Edit student:", student);
+    },
+    onDelete: (student) => {
+      console.log("Delete student:", student);
+    },
   });
   return (
     <>

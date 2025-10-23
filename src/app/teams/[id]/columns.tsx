@@ -11,7 +11,8 @@ export type Player = {
   name: string;
   email: string;
   grade: number;
-  champs: boolean;
+  yraa: boolean;
+  ofsaa: boolean;
   mvp: boolean;
   lca: boolean;
   paid: boolean;
@@ -51,24 +52,67 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Player>[] => [
     header: "Grade",
   },
   {
-    accessorKey: "champs",
-    header: "Champs",
+    accessorKey: "yraa",
+    header: () => {
+      return (
+        <div className="flex-col ">
+          <div>YRAA Champions</div>
+          <Button variant="link" size="sm" className="text-xs p-0 h-4">
+            Select All
+          </Button>
+        </div>
+      );
+    },
     cell: ({ row }) => {
       return (
         <Checkbox
-          checked={row.original.champs}
+          checked={row.original.yraa}
           onCheckedChange={() => {
             // Optimistic update - update UI immediately
             actions.onUpdateCheckbox(
               row.original.id,
-              "champs",
-              !row.original.champs
+              "yraa",
+              !row.original.yraa
             );
             // Background API call
             updateCheckbox({
               playerId: row.original.id,
-              param: "champs",
-              value: !row.original.champs,
+              param: "yraa",
+              value: !row.original.yraa,
+            });
+          }}
+        />
+      );
+    },
+  },
+  {
+    accessorKey: "ofsaa",
+    header: () => {
+      return (
+        <div className="flex-col ">
+          <div>OFSAA Medalists</div>
+          <Button variant="link" size="sm" className="text-xs p-0 h-4">
+            Select All
+          </Button>
+        </div>
+      );
+    },
+    cell: ({ row }) => {
+      return (
+        <Checkbox
+          checked={row.original.ofsaa}
+          onCheckedChange={() => {
+            // Optimistic update - update UI immediately
+            actions.onUpdateCheckbox(
+              row.original.id,
+              "ofsaa",
+              !row.original.ofsaa
+            );
+            // Background API call
+            updateCheckbox({
+              playerId: row.original.id,
+              param: "ofsaa",
+              value: !row.original.ofsaa,
             });
           }}
         />
@@ -108,7 +152,7 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Player>[] => [
           onValueChange={() => {
             // Optimistic update - update UI immediately
             actions.onUpdateRadio(row.original.id, "lca", true);
-            // Background API call                
+            // Background API call
             updateRadio({
               teamId: row.original.team_id,
               playerId: row.original.id,
@@ -125,7 +169,7 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Player>[] => [
   },
   {
     accessorKey: "paid",
-    header: "Paid",
+    header: "Banquet Payment",
     cell: ({ row }) => {
       return (
         <Checkbox
