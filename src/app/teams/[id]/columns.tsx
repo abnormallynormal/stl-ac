@@ -30,6 +30,9 @@ export interface ColumnActions {
     field: keyof Player,
     value: boolean
   ) => void;
+  onSelectAll: (
+    field: keyof Player
+  ) => void;
 }
 
 export const createColumns = (actions: ColumnActions): ColumnDef<Player>[] => [
@@ -57,7 +60,7 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Player>[] => [
       return (
         <div className="flex-col ">
           <div>YRAA Champions</div>
-          <Button variant="link" size="sm" className="text-xs p-0 h-4">
+          <Button variant="link" size="sm" className="text-xs p-0 h-4" onClick={() => actions.onSelectAll("yraa")}>
             Select All
           </Button>
         </div>
@@ -91,7 +94,7 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Player>[] => [
       return (
         <div className="flex-col ">
           <div>OFSAA Medalists</div>
-          <Button variant="link" size="sm" className="text-xs p-0 h-4">
+          <Button variant="link" size="sm" className="text-xs p-0 h-4" onClick={() => actions.onSelectAll("ofsaa")}>
             Select All
           </Button>
         </div>
@@ -220,4 +223,5 @@ export const columns = createColumns({
     console.log("Update checkbox:", playerId, field, value),
   onUpdateRadio: (playerId, field, value) =>
     console.log("Update radio:", playerId, field, value),
+  onSelectAll: (field) => console.log("Select all for field:", field),
 });

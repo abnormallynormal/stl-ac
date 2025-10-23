@@ -58,6 +58,7 @@ import {
   selectTeamPlayers,
   addPlayer as addPlayerApi,
   deletePlayer as deletePlayerApi,
+  updateCheckbox,
 } from "@/app/functions/team";
 import { selectData as selectStudents } from "@/app/functions/students";
 import { Input } from "@/components/ui/input";
@@ -126,6 +127,22 @@ export default function TeamPage({
           player.id === playerId ? { ...player, [field]: value } : player
         )
       );
+    },
+    onSelectAll: (field) => {
+      setPlayers((prevPlayers) =>
+        prevPlayers.map((player) => ({
+          ...player,
+          [field]: true,
+        }))
+      );
+      players.map((player) => { 
+        updateCheckbox(
+          {playerId: player.id,
+          param: field,
+          value: true,}
+          
+        )
+      })
     },
     onUpdateRadio: (playerId, field, value) => {
       // For radio buttons, we need to clear other radio options and set the selected one
