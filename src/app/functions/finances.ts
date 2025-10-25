@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import { Player } from "../teams/[id]/columns";
+import { Finance } from "../finances/columns";
 
 export async function markAsPaid({playerId, teamId} : {playerId: number, teamId: number}){
   const supabase = createClient();
@@ -11,6 +12,7 @@ export async function markAsPaid({playerId, teamId} : {playerId: number, teamId:
   if (selectError) {
     throw new Error(selectError.message);
   }
+  console.log(players)
   return (players ?? []) as Player[];
 }
 export async function markAsUnpaid({playerId, teamId} : {playerId: number, teamId: number}){
@@ -23,6 +25,7 @@ export async function markAsUnpaid({playerId, teamId} : {playerId: number, teamI
   if (selectError) {
     throw new Error(selectError.message);
   }
+  console.log(players)
   return (players ?? []) as Player[];
 }
 
@@ -32,5 +35,6 @@ export async function getFinances(){
   if(error){
     throw new Error(error.message)
   }
-  return data as [];
+  console.log(data)
+  return data as Finance[];
 }

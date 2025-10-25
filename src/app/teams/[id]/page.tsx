@@ -63,6 +63,7 @@ import {
 import { selectData as selectStudents } from "@/app/functions/students";
 import { Input } from "@/components/ui/input";
 import { getFinances } from "@/app/functions/finances";
+import { Finance } from "@/app/finances/columns";
 const createEditSportSchema = (
   existingTeams: Team[] = [],
   currentTeamId?: number
@@ -105,7 +106,7 @@ export default function TeamPage({
   params: Promise<{ id: string }>;
 }) {
   const [data, setData] = useState<Team[]>([]);
-  const [finances, setFinances] = useState<[]>()
+  const [finances, setFinances] = useState<Finance[]>();
   const [sports, setSports] = useState<{ sport: string; points: number }[]>([]);
   const [selectedSport, setSelectedSport] = useState<string | null>();
   const [loading, setLoading] = useState<boolean>(true);
@@ -117,6 +118,17 @@ export default function TeamPage({
   const [selectedTeachers, setSelectedTeachers] = useState<string[]>([]);
   const [deleteTeamIsOpen, setDeleteTeamIsOpen] = useState(false);
   const router = useRouter();
+  const getPayments = async () => {
+    try {
+      const financesResult = await getFinances();
+      if (financesResult) {
+        setFinances(financesResult);
+      }
+    } catch (error) {
+      console.error("Error getting finances:", error);
+      alert("Failed to get finances. Please try again.");
+    }
+  };
   const columns = createColumns({
     actions: {
       onDelete: (player) => {
@@ -161,7 +173,11 @@ export default function TeamPage({
         );
       },
     },
-    reloadData: (data: Player[]) => { setPlayers(data) },
+    reloadData:  (data: Player[]) => {
+      setPlayers(data);
+      getPayments();
+      
+    },
     finances: finances ?? [],
   });
 
@@ -183,6 +199,7 @@ export default function TeamPage({
           setSports(sportsResult);
           console.log("Sports data set to state:", sportsResult);
         }
+        getPayments()
       } catch (err) {
         console.error("Error fetching data:", err);
         setError(err instanceof Error ? err.message : "Failed to load data");
@@ -351,7 +368,7 @@ export default function TeamPage({
   useEffect(() => {
     if (team && !formInitialized) {
       setSelectedTeachers(team.teachers);
-      setSelectedSport(team.sport)
+      setSelectedSport(team.sport);
       console.log("Setting form values with team data:", team);
 
       editSportForm.reset({
@@ -373,9 +390,8 @@ export default function TeamPage({
   const filteredPlayers = useMemo(() => {
     if (!filter.trim()) return addablePlayers;
     const lowerFilter = filter.toLowerCase();
-    return addablePlayers.filter(
-      (player) =>
-        player.name.toLowerCase().includes(lowerFilter)
+    return addablePlayers.filter((player) =>
+      player.name.toLowerCase().includes(lowerFilter)
     );
   }, [addablePlayers, filter]);
 
@@ -494,17 +510,7 @@ export default function TeamPage({
     }
   };
 
-  const getPayments = async () => {
-    try{
-      const financesResult = await getFinances();
-      if(financesResult){
-        setFinances(financesResult);
-      }
-    } catch(error){
-      console.error("Error getting finances:", error);
-      alert("Failed to get finances. Please try again.");
-    }
-  }
+  
 
   return (
     <>
@@ -552,7 +558,7 @@ export default function TeamPage({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {sports.map(({ sport}) => (
+                          {sports.map(({ sport }) => (
                             <SelectItem key={sport} value={sport}>
                               {sport}
                             </SelectItem>
@@ -619,10 +625,7 @@ export default function TeamPage({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Points</FormLabel>
-                      <Input
-                        {...field}
-                        disabled
-                      />
+                      <Input {...field} disabled />
                     </FormItem>
                   )}
                 />
@@ -774,7 +777,11 @@ export default function TeamPage({
             <div className="flex gap-6 items-center mb-4 ">
               <div className="text-xl font-semibold">Players</div>
               <Button
-                onClick={() => setAddPlayerOpen(true)}
+                onClick={() => {
+                  setAddPlayerOpen(true)
+                  console.log(finances)
+                  console.log(players)
+                }}
                 className="text-xs h-8"
               >
                 Add Player
