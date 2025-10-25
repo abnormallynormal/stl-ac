@@ -4,6 +4,7 @@ import { ArrowUpDown, Trash } from "lucide-react";
 import { RadioGroupItem, RadioGroup } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { updateRadio, updateCheckbox } from "@/app/functions/team";
+import { markAsPaid, markAsUnpaid } from "@/app/functions/finances";
 export type Player = {
   id: number;
   team_id: number;
@@ -30,12 +31,10 @@ export interface ColumnActions {
     field: keyof Player,
     value: boolean
   ) => void;
-  onSelectAll: (
-    field: keyof Player
-  ) => void;
+  onSelectAll: (field: keyof Player) => void;
 }
 
-export const createColumns = (actions: ColumnActions): ColumnDef<Player>[] => [
+export const createColumns = ({actions, reloadData, finances}: {actions: ColumnActions, reloadData: (data: Player[]) => void, finances: []}): ColumnDef<Player>[] => [
   {
     accessorKey: "name",
     header: ({ column }) => {
@@ -60,7 +59,12 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Player>[] => [
       return (
         <div className="flex-col ">
           <div>YRAA Champions</div>
-          <Button variant="link" size="sm" className="text-xs p-0 h-4" onClick={() => actions.onSelectAll("yraa")}>
+          <Button
+            variant="link"
+            size="sm"
+            className="text-xs p-0 h-4"
+            onClick={() => actions.onSelectAll("yraa")}
+          >
             Select All
           </Button>
         </div>
@@ -94,7 +98,12 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Player>[] => [
       return (
         <div className="flex-col ">
           <div>OFSAA Medalists</div>
-          <Button variant="link" size="sm" className="text-xs p-0 h-4" onClick={() => actions.onSelectAll("ofsaa")}>
+          <Button
+            variant="link"
+            size="sm"
+            className="text-xs p-0 h-4"
+            onClick={() => actions.onSelectAll("ofsaa")}
+          >
             Select All
           </Button>
         </div>
@@ -174,24 +183,32 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Player>[] => [
     accessorKey: "paid",
     header: "Banquet Payment",
     cell: ({ row }) => {
-      return (
-        <Checkbox
-          checked={row.original.paid}
-          onCheckedChange={() => {
-            // Optimistic update - update UI immediately
-            actions.onUpdateCheckbox(
-              row.original.id,
-              "paid",
-              !row.original.paid
-            );
-            // Background API call
-            updateCheckbox({
+      return row.original.paid ? (
+        <Button
+          className="text-xs h-8"
+          onClick={async () => {
+            const data = await markAsUnpaid({
               playerId: row.original.id,
-              param: "paid",
-              value: !row.original.paid,
+              teamId: row.original.team_id,
             });
+            reloadData(data);
           }}
-        />
+        >
+          Paid - Mark as unpaid
+        </Button>
+      ) : (
+        <Button
+          className="text-xs h-8"
+          onClick={async () => {
+            const data = await markAsPaid({
+              playerId: row.original.id,
+              teamId: row.original.team_id,
+            });
+            reloadData(data);
+          }}
+        >
+          Mark as paid
+        </Button>
       );
     },
   },
@@ -217,11 +234,3 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Player>[] => [
   },
 ];
 
-export const columns = createColumns({
-  onDelete: (player) => console.log("Delete player:", player),
-  onUpdateCheckbox: (playerId, field, value) =>
-    console.log("Update checkbox:", playerId, field, value),
-  onUpdateRadio: (playerId, field, value) =>
-    console.log("Update radio:", playerId, field, value),
-  onSelectAll: (field) => console.log("Select all for field:", field),
-});

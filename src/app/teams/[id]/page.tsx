@@ -62,6 +62,7 @@ import {
 } from "@/app/functions/team";
 import { selectData as selectStudents } from "@/app/functions/students";
 import { Input } from "@/components/ui/input";
+import { getFinances } from "@/app/functions/finances";
 const createEditSportSchema = (
   existingTeams: Team[] = [],
   currentTeamId?: number
@@ -104,6 +105,7 @@ export default function TeamPage({
   params: Promise<{ id: string }>;
 }) {
   const [data, setData] = useState<Team[]>([]);
+  const [finances, setFinances] = useState<[]>()
   const [sports, setSports] = useState<{ sport: string; points: number }[]>([]);
   const [selectedSport, setSelectedSport] = useState<string | null>();
   const [loading, setLoading] = useState<boolean>(true);
@@ -116,52 +118,51 @@ export default function TeamPage({
   const [deleteTeamIsOpen, setDeleteTeamIsOpen] = useState(false);
   const router = useRouter();
   const columns = createColumns({
-    onDelete: (player) => {
-      setToBeDeleted(player);
-      setDeleteIsOpen(true);
+    actions: {
+      onDelete: (player) => {
+        setToBeDeleted(player);
+        setDeleteIsOpen(true);
+      },
+      onUpdateCheckbox: (playerId, field, value) => {
+        // Optimistic update - update players state immediately
+        setPlayers((prevPlayers) =>
+          prevPlayers.map((player) =>
+            player.id === playerId ? { ...player, [field]: value } : player
+          )
+        );
+      },
+      onSelectAll: (field) => {
+        setPlayers((prevPlayers) =>
+          prevPlayers.map((player) => ({
+            ...player,
+            [field]: true,
+          }))
+        );
+        players.map((player) => {
+          updateCheckbox({ playerId: player.id, param: field, value: true });
+        });
+      },
+      onUpdateRadio: (playerId, field, value) => {
+        // For radio buttons, we need to clear other radio options and set the selected one
+        setPlayers((prevPlayers) =>
+          prevPlayers.map((player) =>
+            player.id === playerId
+              ? {
+                  ...player,
+                  mvp: field === "mvp" ? true : player.mvp,
+                  lca: field === "lca" ? true : player.lca,
+                }
+              : {
+                  ...player,
+                  mvp: field === "mvp" ? false : player.mvp,
+                  lca: field === "lca" ? false : player.lca,
+                }
+          )
+        );
+      },
     },
-    onUpdateCheckbox: (playerId, field, value) => {
-      // Optimistic update - update players state immediately
-      setPlayers((prevPlayers) =>
-        prevPlayers.map((player) =>
-          player.id === playerId ? { ...player, [field]: value } : player
-        )
-      );
-    },
-    onSelectAll: (field) => {
-      setPlayers((prevPlayers) =>
-        prevPlayers.map((player) => ({
-          ...player,
-          [field]: true,
-        }))
-      );
-      players.map((player) => { 
-        updateCheckbox(
-          {playerId: player.id,
-          param: field,
-          value: true,}
-          
-        )
-      })
-    },
-    onUpdateRadio: (playerId, field, value) => {
-      // For radio buttons, we need to clear other radio options and set the selected one
-      setPlayers((prevPlayers) =>
-        prevPlayers.map((player) =>
-          player.id === playerId
-            ? {
-                ...player,
-                mvp: field === "mvp" ? true : player.mvp,
-                lca: field === "lca" ? true : player.lca,
-              }
-            : {
-                ...player,
-                mvp: field === "mvp" ? false : player.mvp,
-                lca: field === "lca" ? false : player.lca,
-              }
-        )
-      );
-    },
+    reloadData: (data: Player[]) => { setPlayers(data) },
+    finances: finances ?? [],
   });
 
   useEffect(() => {
@@ -492,6 +493,18 @@ export default function TeamPage({
       alert("Failed to delete team. Please try again.");
     }
   };
+
+  const getPayments = async () => {
+    try{
+      const financesResult = await getFinances();
+      if(financesResult){
+        setFinances(financesResult);
+      }
+    } catch(error){
+      console.error("Error getting finances:", error);
+      alert("Failed to get finances. Please try again.");
+    }
+  }
 
   return (
     <>
