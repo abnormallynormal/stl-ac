@@ -5,14 +5,22 @@ import { DataTable } from "./data-table";
 import { columns, Team } from "./columns";
 import { selectData } from "@/app/functions/teams";
 import { Button } from "@/components/ui/button";
+import { Select } from "@radix-ui/react-select";
+import {
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function EmailPage() {
-  const [message, setMessage] = useState("Hello, please follow the link below to update the roster for your team.");
+  const [message, setMessage] = useState(
+    "Hello, please follow the link below to update the roster for your team."
+  );
   const [season, setSeason] = useState("All");
-  const [selectedTeams, setSelectedTeams] = useState<string[]>([])
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [year, setYear] = useState("2025-2026");
-  // const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -22,7 +30,7 @@ export default function EmailPage() {
     fetchTeams();
   }, []);
 
-  const toggleTeam = (id:string) => {
+  const toggleTeam = (id: string) => {
     setSelectedTeams((prev) =>
       prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
     );
@@ -33,56 +41,62 @@ export default function EmailPage() {
     setSelectedTeams((prev) => prev.filter((id) => visibleIds.includes(id)));
   }, [season, teams]);
 
-
-  const filteredTeams = 
-    season === "All" 
-      ? teams
-      : teams.filter((t) => t.season === season)
+  const filteredTeams =
+    season === "All" ? teams : teams.filter((t) => t.season === season);
 
   async function testHandleSend() {
     console.log("Send button success");
-  } 
+  }
 
   return (
     <>
       <Navigation />
       <div className="p-6 ml-10 mr-10">
-        <h1 className="text-3xl font-bold mb-4" >Send Roster Update Email</h1>
-        <p>Select which teams you would like to send a Roster Update request to. Each coach will be emailed a link that will allow them to update their roster, add managers, record championships, track payments, and assign MVP/LCA. The link will be set to expire in 3 months.</p>
-        <br></br>
-        <label htmlFor="season" className="text-foreground">
-          <b>Select Season: </b>
-        </label>
-        <select
-          id="season"
-          value={season}
-          onChange={(e) => setSeason(e.target.value)}
-          className="border p-1 bg-background text-foreground"
-        >
-          <option value="All">All</option>
-          <option value="Fall">Fall</option>
-          <option value="Winter">Winter</option>
-          <option value="Spring">Spring</option>
-        </select>
-      </div>
+        <div className="text-3xl font-bold mb-4">Send Roster Update Email</div>
+        <div className="mb-4">
+          Select which teams you would like to send a Roster Update request to.
+          Each coach will be emailed a link that will allow them to update their
+          roster, add managers, record championships, track payments, and assign
+          MVP/LCA. The link will be set to expire in 3 months.
+        </div>
+        <div className="flex items-center flex-row gap-4 mb-4">
+          <div>
+            Select season: 
+          </div>
+          <Select value={season} onValueChange={setSeason}>
+            <SelectTrigger className="w-auto">
+              <SelectValue placeholder="Select year" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All</SelectItem>
+              <SelectItem value="Fall">Fall</SelectItem>
+              <SelectItem value="Winter">Winter</SelectItem>
+              <SelectItem value="Spring">Spring</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-      <DataTable columns={columns(toggleTeam, selectedTeams, setSelectedTeams)} data={filteredTeams} />
-
-      <div className="p-6 ml-10 mr-10 mb-20">
-        <b>Message:</b>
-        <textarea
-          className="border p-2 w-full mb-2"
-          placeholder="Message"
-          rows={2}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
+        <DataTable
+          columns={columns(toggleTeam, selectedTeams, setSelectedTeams)}
+          data={filteredTeams}
         />
-        <Button
-          className="text-white px-4 py-2 rounded"
-          onClick={testHandleSend}
-        >
-          Send
-        </Button>
+
+        <div className="p-6 mb-20">
+          <b>Message:</b>
+          <Textarea
+            className="mb-2"
+            placeholder="Message"
+            rows={2}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+          />
+          <Button
+            className="text-white px-4 py-2 rounded"
+            onClick={testHandleSend}
+          >
+            Send
+          </Button>
+        </div>
       </div>
     </>
   );

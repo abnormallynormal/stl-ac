@@ -1,43 +1,106 @@
 "use client";
 
-import { useState } from "react";
-import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
-import { columns, Team } from "./columns";
-import { ColumnDef } from "@tanstack/react-table";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
 
-export function DataTable({ data, columns }: { data: Team[] ; columns: ColumnDef<Team>[] }) {
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import React from "react";
+
+interface DataTableProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+}
+
+export function DataTable<TData, TValue>({
+  columns,
+  data,
+}: DataTableProps<TData, TValue>) {
+  const [sorting, setSorting] = React.useState<SortingState>([
+    {
+      id: "sport",
+      desc: false,
+    },
+  ]);
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
+    state: {
+      sorting,
+    },
   });
 
   return (
-    <div className="px-20 mb-5">
-        <table className="w-full border-b border-accent bg-background text-foreground">
-        <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                <th key={header.id} className="bg-accent px-4 py-2 border-b text-left">
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                </th>
-                ))}
-            </tr>
-            ))}
-        </thead>
-        <tbody>
-            {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="hover:bg-accent">
+    <div className="overflow-hidden rounded-md border-2">
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => {
+                return (
+                  <TableHead
+                    key={header.id}
+                    className={
+                      header.column.id === "actions"
+                        ? "text-right px-4 py-2"
+                        : "px-4 py-2"
+                    }
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() && "selected"}
+              >
                 {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="px-4 py-2 border-b align-middle whitespace-normal break-words">
+                  <TableCell
+                    key={cell.id}
+                    className={
+                      cell.column.id === "actions" ? "text-end px-4" : " px-4"
+                    }
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
+                  </TableCell>
                 ))}
-            </tr>
-            ))}
-        </tbody>
-        </table>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="h-24 text-center">
+                No results.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 }
