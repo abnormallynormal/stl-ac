@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -25,14 +25,6 @@ export default function Navigation() {
             <NavigationMenuItem>
               <NavigationMenuLink asChild className="text-2xl font-bold">
                 <Link href="/">STL Athletics</Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink
-                asChild
-                className={navigationMenuTriggerStyle()}
-              >
-                <Link href="/finances">Finances</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
           </NavigationMenuList>
@@ -67,7 +59,14 @@ export default function Navigation() {
                   <Link href="/sports">Sports</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
-
+              <NavigationMenuItem>
+                <NavigationMenuLink
+                  asChild
+                  className={navigationMenuTriggerStyle()}
+                >
+                  <Link href="/finances">Finances</Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
 
               <NavigationMenuItem>
                 <NavigationMenuLink
@@ -77,12 +76,10 @@ export default function Navigation() {
                   <Link href="/emails">Email</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
-
-
             </NavigationMenuList>
           </NavigationMenu>
           <ModeToggle />
-          <Logout/>
+          <Logout />
         </div>
       </div>
       <div className="px-16 pt-6 flex justify-between items-center w-full border-b"></div>
