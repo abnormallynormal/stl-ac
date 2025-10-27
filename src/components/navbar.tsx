@@ -18,51 +18,66 @@ export default function Navigation() {
     const { error } = await supabase.auth.signOut();
   }
   return (
-    <div className="px-16 pt-6 flex justify-between items-center w-full ">
-      <NavigationMenu>
-        <NavigationMenuList>
-          <NavigationMenuItem>
-            <NavigationMenuLink asChild className="text-2xl font-bold">
-              <Link href="/">STL Athletics</Link>
-            </NavigationMenuLink>
-          </NavigationMenuItem>
-        </NavigationMenuList>
-      </NavigationMenu>
-
-      <div className="flex items-center gap-2">
+    <>
+      <div className="px-16 pt-6 flex justify-between items-center w-full ">
         <NavigationMenu>
           <NavigationMenuList>
             <NavigationMenuItem>
-              <NavigationMenuLink
-                asChild
-                className={navigationMenuTriggerStyle()}
-              >
-                <Link href="/teams">Teams</Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-
-            <NavigationMenuItem>
-              <NavigationMenuLink
-                asChild
-                className={navigationMenuTriggerStyle()}
-              >
-                <Link href="/students">Students</Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-
-            <NavigationMenuItem>
-              <NavigationMenuLink
-                asChild
-                className={navigationMenuTriggerStyle()}
-              >
-                <Link href="/sports">Sports</Link>
+              <NavigationMenuLink asChild className="text-2xl font-bold">
+                <Link href="/">STL Athletics</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
-        <ModeToggle />
-        <Logout/>
+
+        <div className="flex items-center gap-2">
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuLink
+                  asChild
+                  className={navigationMenuTriggerStyle()}
+                >
+                  <Link href="/teams">Teams</Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+
+              <NavigationMenuItem>
+                <NavigationMenuLink
+                  asChild
+                  className={navigationMenuTriggerStyle()}
+                >
+                  <Link href="/students">Students</Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+
+              <NavigationMenuItem>
+                <NavigationMenuLink
+                  asChild
+                  className={navigationMenuTriggerStyle()}
+                >
+                  <Link href="/sports">Sports</Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+
+
+              <NavigationMenuItem>
+                <NavigationMenuLink
+                  asChild
+                  className={navigationMenuTriggerStyle()}
+                >
+                  <Link href="/emails">Email</Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+
+
+            </NavigationMenuList>
+          </NavigationMenu>
+          <ModeToggle />
+          <Logout/>
+        </div>
       </div>
-    </div>
+      <div className="px-16 pt-6 flex justify-between items-center w-full border-b"></div>
+    </>
   );
 }
