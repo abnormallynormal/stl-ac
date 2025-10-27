@@ -36,7 +36,7 @@ Thank you`);
       <Navigation />
       <div className="p-6 ml-10 mr-10">
         <div className="text-3xl font-bold mb-4">Student List Request</div>
-        <div className="font-bold">Maplewood Secretary's Email: </div>
+        <div className="font-bold">Maplewood Secretary&apos;s Email: </div>
         <Input
           className="border p-1 w-80 mb-2 ml-2"
           placeholder=""
