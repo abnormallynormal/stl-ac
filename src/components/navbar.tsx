@@ -5,6 +5,8 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   navigationMenuTriggerStyle,
+  NavigationMenuContent, 
+  NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import Link from "next/link";
 import { ModeToggle } from "./mode-toggle";
@@ -31,8 +33,9 @@ export default function Navigation() {
         </NavigationMenu>
 
         <div className="flex items-center gap-2">
-          <NavigationMenu>
-            <NavigationMenuList>
+          <NavigationMenu viewport={false}>
+            <NavigationMenuList className="flex flex-row">
+
               <NavigationMenuItem>
                 <NavigationMenuLink
                   asChild
@@ -40,6 +43,32 @@ export default function Navigation() {
                 >
                   <Link href="/teams">Teams</Link>
                 </NavigationMenuLink>
+              </NavigationMenuItem>
+
+              
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>Records</NavigationMenuTrigger>
+                <NavigationMenuContent className="p-1 shadow-md rounded-lg">
+                  <ul className="grid">
+                    <li>
+                      <NavigationMenuLink
+                        asChild
+                        className={navigationMenuTriggerStyle()}
+                      >
+                        <Link href="/finances">Finances</Link>
+                      </NavigationMenuLink>
+                    </li>
+
+                    <li>
+                      <NavigationMenuLink
+                        asChild
+                        className={navigationMenuTriggerStyle()}
+                      >
+                        <Link href="/finances">Finances</Link>
+                      </NavigationMenuLink>
+                    </li>
+                  </ul>
+                </NavigationMenuContent>
               </NavigationMenuItem>
 
               <NavigationMenuItem>
@@ -50,6 +79,7 @@ export default function Navigation() {
                   <Link href="/students">Students</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
+              
 
               <NavigationMenuItem>
                 <NavigationMenuLink
@@ -57,14 +87,6 @@ export default function Navigation() {
                   className={navigationMenuTriggerStyle()}
                 >
                   <Link href="/sports">Sports</Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuLink
-                  asChild
-                  className={navigationMenuTriggerStyle()}
-                >
-                  <Link href="/finances">Finances</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
 
@@ -76,6 +98,7 @@ export default function Navigation() {
                   <Link href="/emails">Email</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
+
             </NavigationMenuList>
           </NavigationMenu>
           <ModeToggle />
