@@ -2,6 +2,8 @@
 import { useState } from "react";
 import Navigation from "@/components/navbar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function EmailPage() {
   const [to, setTo] = useState("");
@@ -33,24 +35,23 @@ Thank you`);
     <>
       <Navigation />
       <div className="p-6 ml-10 mr-10">
-        <h1 className="text-3xl font-bold mb-4">Student List Request</h1>
-        <b>Maplewood Secretary's Email:  </b>
-        <input
+        <div className="text-3xl font-bold mb-4">Student List Request</div>
+        <div className="font-bold">Maplewood Secretary's Email: </div>
+        <Input
           className="border p-1 w-80 mb-2 ml-2"
           placeholder=""
           value={to}
           onChange={(e) => setTo(e.target.value)}
-        /><br></br>
-        <b>Subject:  </b>
-        <input
+        />
+        <div className="font-bold">Subject:</div>
+        <Input
           className="border p-1 w-50 mb-2 ml-2"
           placeholder="Subject"
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
         />
-        <br></br>
-        <b>Message:</b>
-        <textarea
+        <div className="font-bold">Message:</div>
+        <Textarea
           className="border p-2 w-full mb-2"
           placeholder="Message"
           rows={11}
