@@ -61,47 +61,51 @@ export default function TeamList() {
       <Navigation />
       <div className="px-16 py-8">
         <div className="text-3xl font-bold mb-2">Team List</div>
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex gap-4 items-center">
-          <span>Select a year:</span>
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-auto">
-              <SelectValue placeholder="Select year" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2025-26">2025-26</SelectItem>
-              <SelectItem value="2024-25">2024-25</SelectItem>
-              <SelectItem value="2023-24">2023-24</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex gap-4 items-center">
+            <span>Select a year:</span>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="w-auto">
+                <SelectValue placeholder="Select year" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2025-26">2025-26</SelectItem>
+                <SelectItem value="2024-25">2024-25</SelectItem>
+                <SelectItem value="2023-24">2023-24</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={() => setAddFormOpen(true)}>Add Team</Button>
         </div>
-        <Button onClick={() => setAddFormOpen(true)}>Add Team</Button>
-      </div>
-      <DataTable columns={columns} data={filteredData} />
-      <Dialog open={addFormOpen} onOpenChange={setAddFormOpen}>
-        <DialogContent className={teacherSearchActive ? "opacity-0 pointer-events-none" : ""}>
-          <DialogHeader>
-            <DialogTitle className="mb-4">Add Team</DialogTitle>
-            <AddTeamForm 
-              onTeacherSearchOpen={() => setTeacherSearchActive(true)}
-              onTeacherSearchClose={() => setTeacherSearchActive(false)}
-              onCancel={() => setAddFormOpen(false)}
-              onSuccess={async () => {
-                setAddFormOpen(false);
-                // Refresh the data after successful submission
-                try {
-                  const result = await selectData();
-                  if (result) {
-                    setData(result);
+        <DataTable columns={columns} data={filteredData} />
+        <Dialog open={addFormOpen} onOpenChange={setAddFormOpen}>
+          <DialogContent
+            className={
+              teacherSearchActive ? "opacity-0 pointer-events-none" : ""
+            }
+          >
+            <DialogHeader>
+              <DialogTitle className="mb-4">Add Team</DialogTitle>
+              <AddTeamForm
+                onTeacherSearchOpen={() => setTeacherSearchActive(true)}
+                onTeacherSearchClose={() => setTeacherSearchActive(false)}
+                onCancel={() => setAddFormOpen(false)}
+                onSuccess={async () => {
+                  setAddFormOpen(false);
+                  // Refresh the data after successful submission
+                  try {
+                    const result = await selectData();
+                    if (result) {
+                      setData(result);
+                    }
+                  } catch (error) {
+                    console.error("Error refreshing data:", error);
                   }
-                } catch (error) {
-                  console.error("Error refreshing data:", error);
-                }
-              }}
-            />
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
+                }}
+              />
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );
