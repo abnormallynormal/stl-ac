@@ -5,7 +5,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   navigationMenuTriggerStyle,
-  NavigationMenuContent, 
+  NavigationMenuContent,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import Link from "next/link";
@@ -21,21 +21,16 @@ export default function Navigation() {
   }
   return (
     <>
-      <div className="px-16 pt-6 flex justify-between items-center w-full ">
-        <NavigationMenu>
-          <NavigationMenuList>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild className="text-2xl font-bold">
-                <Link href="/">STL Athletics</Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
+      <div className="px-16 pt-4 flex justify-between items-center w-full">
+        <div className="flex items-center h-16">
+          <Link href="/" className="text-2xl font-bold">
+            STL Athletics
+          </Link>
+        </div>
 
         <div className="flex items-center gap-2">
           <NavigationMenu viewport={false}>
             <NavigationMenuList className="flex flex-row">
-
               <NavigationMenuItem>
                 <NavigationMenuLink
                   asChild
@@ -45,20 +40,10 @@ export default function Navigation() {
                 </NavigationMenuLink>
               </NavigationMenuItem>
 
-              
               <NavigationMenuItem>
                 <NavigationMenuTrigger>Records</NavigationMenuTrigger>
                 <NavigationMenuContent className="p-1 shadow-md rounded-lg">
                   <ul className="grid">
-                    <li>
-                      <NavigationMenuLink
-                        asChild
-                        className={navigationMenuTriggerStyle()}
-                      >
-                        <Link href="/finances">Finances</Link>
-                      </NavigationMenuLink>
-                    </li>
-
                     <li>
                       <NavigationMenuLink
                         asChild
@@ -79,7 +64,6 @@ export default function Navigation() {
                   <Link href="/students">Students</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
-              
 
               <NavigationMenuItem>
                 <NavigationMenuLink
@@ -98,14 +82,12 @@ export default function Navigation() {
                   <Link href="/emails">Email</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
-
             </NavigationMenuList>
           </NavigationMenu>
           <ModeToggle />
           <Logout />
         </div>
       </div>
-      <div className="px-16 pt-6 flex justify-between items-center w-full border-b"></div>
     </>
   );
 }

@@ -8,8 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 export default function EmailPage() {
   const [to, setTo] = useState("");
   const [subject, setSubject] = useState("Student List Request");
-  const [message, setMessage] = useState(`Greetings, the Phys Ed department needs a student alpha list extract from Maplewood to update their student athelete records.
-To make the update process eaiser, could you please send me the extract in .xlsx format with the following headings:
+  const [message, setMessage] =
+    useState(`Greetings, the Phys Ed department needs a student alpha list extract from Maplewood to update their student athlete records.
+To make the update process easier, could you please send me the extract in .xlsx format with the following headings:
 
 First Name
 Last Name
@@ -18,7 +19,7 @@ Student Number
 Sex
 Email
 
-Thank you`);
+Thank you.`);
 
   async function handleSend() {
     const res = await fetch("/api/sendEmail", {
@@ -36,34 +37,29 @@ Thank you`);
       <Navigation />
       <div className="p-6 ml-10 mr-10">
         <div className="text-3xl font-bold mb-4">Student List Request</div>
-        <div className="font-bold">Maplewood Secretary&apos;s Email: </div>
+        <div className="font-bold mb-2">Maplewood Secretary&apos;s Email: </div>
         <Input
-          className="border p-1 w-80 mb-2 ml-2"
+          className="w-80 mb-4 h-8"
           placeholder=""
           value={to}
           onChange={(e) => setTo(e.target.value)}
         />
         <div className="font-bold">Subject:</div>
         <Input
-          className="border p-1 w-50 mb-2 ml-2"
+          className="w-80 mb-4 h-8"
           placeholder="Subject"
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
         />
         <div className="font-bold">Message:</div>
         <Textarea
-          className="border p-2 w-full mb-2"
+          className=" w-full mb-2"
           placeholder="Message"
           rows={11}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
         />
-        <Button
-          className="text-white px-4 py-2 rounded"
-          onClick={handleSend}
-        >
-          Send
-        </Button>
+        <Button onClick={handleSend}>Send</Button>
       </div>
     </>
   );
