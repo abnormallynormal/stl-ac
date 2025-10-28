@@ -59,7 +59,7 @@ Thank you`);
           onChange={(e) => setMessage(e.target.value)}
         />
         <Button
-          className="bg-blue-600 hover-blue-800 text-white px-4 py-2 rounded"
+          className="text-white px-4 py-2 rounded"
           onClick={handleSend}
         >
           Send
