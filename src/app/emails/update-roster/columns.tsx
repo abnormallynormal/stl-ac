@@ -17,9 +17,10 @@ export type Team = {
 };
 
 export const columns = (
-  toggleTeam: (id: string) => void,
-  selectedTeams: string[],
-  setSelectedTeams: React.Dispatch<React.SetStateAction<string[]>>
+  toggleTeam: (team: Team) => void,
+  selectedTeams: Team[],
+  setSelectedTeams: (teams: Team[]) => void,
+  allTeams: Team[]
 ): ColumnDef<Team>[] => [
   {
     accessorKey: "sport",
@@ -54,7 +55,7 @@ export const columns = (
       const allSelected = table
         .getRowModel()
         .rows.every((row) =>
-          selectedTeams.includes(row.original.id.toString())
+          selectedTeams.includes(row.original)
         );
 
       return (
@@ -68,12 +69,10 @@ export const columns = (
                 .rows.map((row) => row.original.id.toString());
               if (allSelected) {
                 // Uncheck all
-                setSelectedTeams((prev) =>
-                  prev.filter((id) => !ids.includes(id))
-                );
+                setSelectedTeams([])
               } else {
                 // Check all
-                setSelectedTeams((prev) => [...new Set([...prev, ...ids])]);
+                setSelectedTeams([...allTeams]);
               }
             }}
             className="h-4 w-4 accent-blue-500"
@@ -83,7 +82,7 @@ export const columns = (
       );
     },
     cell: ({ row }) => {
-      const id = row.original.id.toString();
+      const id = row.original;
       return (
         <div className="flex justify-end pr-4">
           <Checkbox

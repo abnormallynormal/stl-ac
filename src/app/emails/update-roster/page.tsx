@@ -16,36 +16,57 @@ import { Textarea } from "@/components/ui/textarea";
 
 export default function EmailPage() {
   const [message, setMessage] = useState(
-    "Hello, please follow the link below to update the roster for your team."
+    "Hello, please follow the link below to update the roster for your team. "
   );
   const [season, setSeason] = useState("All");
-  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+  const [selectedTeams, setSelectedTeams] = useState<Team[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
-
+  const [teamsBySeason, setTeamsBySeason] = useState<Team[]>([]);
   useEffect(() => {
     const fetchTeams = async () => {
       const data = await selectData();
-      if (data) setTeams(data);
+      if (data) {
+        setTeams(data);
+        setTeamsBySeason(data)
+      }
     };
     fetchTeams();
   }, []);
 
-  const toggleTeam = (id: string) => {
+  const toggleTeam = (team: Team) => {
     setSelectedTeams((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
+      prev.includes(team) ? prev.filter((t) => t !== team) : [...prev, team]
     );
   };
 
   useEffect(() => {
     const visibleIds = filteredTeams.map((t) => t.id.toString());
-    setSelectedTeams((prev) => prev.filter((id) => visibleIds.includes(id)));
+    setSelectedTeams((prev) => prev.filter((team) => visibleIds.includes(team.id.toString())));
   }, [season, teams]);
 
   const filteredTeams =
     season === "All" ? teams : teams.filter((t) => t.season === season);
 
-  async function testHandleSend() {
-    console.log("Send button success");
+  async function loopTeams() {
+    selectedTeams.forEach((team: Team) => {
+      const to = team.teachers;
+      const subject = `Update Student Roster`;
+      const link = `https://stl-ac.vercel.app/teams/${team.id}`;
+      handleSend({to,subject, link});
+    })
+  }
+
+  async function handleSend({to, subject, link}: { to: string[], subject: string, link: string} ) {
+    const msg = `${message}${link}`;
+
+    const res = await fetch("/api/sendEmail", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to, subject, text: msg }),
+    });
+
+    const data = await res.json();
+    alert(data.success ? "Email sent!" : "Failed to send email.");
   }
 
   return (
@@ -63,7 +84,10 @@ export default function EmailPage() {
           <div>
             Select season: 
           </div>
-          <Select value={season} onValueChange={setSeason}>
+          <Select value={season} onValueChange={(season) => {
+            setSeason(season);
+            setTeamsBySeason(teams.filter((team) => team.season === season))
+          }}>
             <SelectTrigger className="w-auto">
               <SelectValue placeholder="Select year" />
             </SelectTrigger>
@@ -77,7 +101,7 @@ export default function EmailPage() {
         </div>
 
         <DataTable
-          columns={columns(toggleTeam, selectedTeams, setSelectedTeams)}
+          columns={columns(toggleTeam, selectedTeams, setSelectedTeams, teamsBySeason)}
           data={filteredTeams}
         />
 
@@ -92,7 +116,7 @@ export default function EmailPage() {
           />
           <Button
             className="text-white px-4 py-2 rounded"
-            onClick={testHandleSend}
+            onClick={loopTeams}
           >
             Send
           </Button>
