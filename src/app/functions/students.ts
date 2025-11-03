@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Student } from "../students/columns"
 export const selectData = async () => {
   const supabase = createClient()
-  const { data, error } = await supabase.from("student_points").select()
+  const { data, error } = await supabase.from("student_points").select().range(0, 5000);
   if (!error) {
     console.log(data)
     
@@ -52,7 +52,7 @@ export const addPlayer = async ({ name, email, grade }: Student) => {
       grad: year + (12 - grade),
       active: true,
     })
-    .select();
+    .select()
   if (!error) {
     return data as Student[];
   } else {

@@ -69,6 +69,7 @@ export default function Students() {
       try {
         const result = await selectData();
         if (result) {
+          console.log("Total students fetched:", result.length);
           setData(result);
         } else {
           setData([]);
