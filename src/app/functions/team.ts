@@ -142,3 +142,131 @@ export const updateRadio = async({playerId, teamId, param, value}: {playerId: nu
   }
 
 }
+
+export const selectableManagers = async (teamId: number): Promise<Student[]> => {
+  const supabase = createClient();
+
+  const { data: managers, error: managersError } = await supabase
+    .from("managers")
+    .select("student_id")
+    .eq("team_id", teamId);
+
+  if (managersError) {
+    console.error("Error fetching managers:", managersError);
+    return [];
+  }
+
+  const studentIdsInManagers =
+    managers?.map((m: { student_id: number }) => m.student_id) ?? [];
+  let query = supabase.from("students").select("*").eq("active", true);
+
+  if (studentIdsInManagers.length > 0) {
+    query = query.not("id", "in", `(${studentIdsInManagers.join(",")})`);
+  }
+  const { data: availableStudents, error: studentsError } = await query;
+
+  if (studentsError) {
+    console.error("Error fetching available students:", studentsError);
+    return [];
+  }
+
+  return availableStudents as Student[];
+};
+
+
+export const selectTeamManagers = async (teamId: number) => {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("managers")
+    .select("*")
+    .eq("team_id", teamId);
+  if (error) throw error;
+  return data;
+};
+
+export const addManager = async (manager: {
+  team_id: number;
+  student_id: number;
+  paid: boolean;
+}) => {
+  // console.group("🧩 addManager() DEBUG");
+  // console.log("➡️ Payload received:", manager);
+
+  const supabase = createClient();
+  const { data, error } = await supabase.from("managers").insert(manager).select();
+
+  // console.log("📥 Supabase response:", { data, error });
+
+  if (error) {
+    // console.error("❌ Supabase insert error:", error);
+    // console.groupEnd();
+    throw error;
+  }
+
+  // console.log("✅ Insert successful:", data);
+  // console.groupEnd();
+  return data;
+};
+
+
+export const deleteManager = async (managerId: number) => {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("managers")
+    .delete()
+    .eq("id", managerId);
+  if (error) throw error;
+};
+
+export const updateManagerPaid = async (managerId: number, value: boolean) => {
+  const supabase = createClient();
+
+  // 1️⃣ Find which student this manager corresponds to
+  const { data: manager, error: managerError } = await supabase
+    .from("managers")
+    .select("student_id")
+    .eq("id", managerId)
+    .single();
+
+  if (managerError || !manager) {
+    console.error("❌ Manager lookup failed:", managerError);
+    throw managerError;
+  }
+
+  // 2️⃣ Update this manager’s paid field
+  const { error: updateError } = await supabase
+    .from("managers")
+    .update({ paid: value })
+    .eq("id", managerId);
+
+  if (updateError) {
+    console.error("❌ Error updating manager paid:", updateError);
+    throw updateError;
+  }
+
+  // 3️⃣ If marked paid, sync to all other teams via finances view
+  if (value) {
+    const { data: finance, error: financeError } = await supabase
+      .from("finances")
+      .select("paid_to_team")
+      .eq("student_id", manager.student_id)
+      .maybeSingle();
+
+    if (financeError) {
+      console.error("❌ Finance lookup error:", financeError);
+    }
+
+    // Update all related player + manager rows for this student
+    await Promise.all([
+      supabase
+        .from("players")
+        .update({ paid: true })
+        .eq("student_id", manager.student_id),
+      supabase
+        .from("managers")
+        .update({ paid: true })
+        .eq("student_id", manager.student_id),
+    ]);
+  }
+};
+

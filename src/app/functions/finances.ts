@@ -70,3 +70,39 @@ export async function getFinances() {
   });
   return data as Finance[];
 }
+
+export const markManagerAsPaid = async ({
+  managerId,
+  teamId,
+}: {
+  managerId: number;
+  teamId: number;
+}) => {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("managers")
+    .update({ paid: true })
+    .eq("id", managerId)
+    .select();
+
+  if (error) throw error;
+  return data;
+};
+
+export const markManagerAsUnpaid = async ({
+  managerId,
+  teamId,
+}: {
+  managerId: number;
+  teamId: number;
+}) => {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("managers")
+    .update({ paid: false })
+    .eq("id", managerId)
+    .select();
+
+  if (error) throw error;
+  return data;
+};

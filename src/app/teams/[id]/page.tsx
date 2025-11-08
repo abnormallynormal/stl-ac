@@ -3,6 +3,7 @@ import { Student } from "@/app/students/columns";
 import Navigation from "@/components/navbar";
 import { Team } from "../columns";
 import { Player, createColumns } from "./columns";
+import { Manager, createManagerColumns } from "./managerColumns";
 import { DataTable } from "./data-table";
 import {
   AlertDialog,
@@ -59,10 +60,15 @@ import {
   addPlayer as addPlayerApi,
   deletePlayer as deletePlayerApi,
   updateCheckbox,
+  selectableManagers,
+  selectTeamManagers,
+  addManager,
+  deleteManager,
+  updateManagerPaid,
 } from "@/app/functions/team";
 import { selectData as selectStudents } from "@/app/functions/students";
 import { Input } from "@/components/ui/input";
-import { getFinances } from "@/app/functions/finances";
+import { getFinances, markManagerAsPaid, markManagerAsUnpaid } from "@/app/functions/finances";
 import { Finance } from "@/app/finances/columns";
 const createEditSportSchema = (
   existingTeams: Team[] = [],
@@ -117,6 +123,12 @@ export default function TeamPage({
   const [teacherSearchOpen, setTeacherSearchOpen] = useState(false);
   const [selectedTeachers, setSelectedTeachers] = useState<string[]>([]);
   const [deleteTeamIsOpen, setDeleteTeamIsOpen] = useState(false);
+  const [managers, setManagers] = useState<Manager[]>([]);
+  const [addableManagers, setAddableManagers] = useState<Student[]>([]);
+  const [addManagerOpen, setAddManagerOpen] = useState(false);
+  const [toBeDeletedManager, setToBeDeletedManager] = useState<Manager | null>(null);
+  const [deleteManagerIsOpen, setDeleteManagerIsOpen] = useState(false);
+
   const router = useRouter();
   const getPayments = async () => {
     try {
@@ -297,6 +309,30 @@ export default function TeamPage({
     loadAllStudents();
   }, []);
 
+  useEffect(() => {
+    const loadManagers = async () => {
+      try {
+        const managersResult = await selectTeamManagers(Number(resolvedParams.id));
+        if (managersResult) setManagers(managersResult);
+      } catch (err) {
+        console.error("Error fetching managers:", err);
+      }
+    };
+    loadManagers();
+  }, []);
+  useEffect(() => {
+    const loadAddableManagers = async () => {
+      try {
+        const managersResult = await selectableManagers(Number(resolvedParams.id));
+        if (managersResult) setAddableManagers(managersResult);
+      } catch (err) {
+        console.error("Error fetching selectable managers:", err);
+      }
+    };
+    loadAddableManagers();
+  }, []);
+
+
   const availableTeachers = [
     "adam.dandrea@ycdsb.ca",
     "alessia.landolfi@ycdsb.ca",
@@ -442,6 +478,54 @@ export default function TeamPage({
       setError(error instanceof Error ? error.message : "Failed to add player");
     }
   };
+
+  const addManagerHandler = async (student: Student) => {
+  try {
+    console.group("🧩 ADD MANAGER HANDLER DEBUG");
+    console.log("➡️ Adding manager for:", student);
+
+    // Call the helper (which now logs everything)
+    const result = await addManager({
+      team_id: Number(resolvedParams.id),
+      student_id: student.id,
+      paid: false,
+    });
+
+    console.log("✅ addManager() returned:", result);
+
+    const refreshed = await selectTeamManagers(Number(resolvedParams.id));
+    console.log("🔁 Refreshed managers:", refreshed);
+
+    setManagers(refreshed);
+    setAddableManagers(addableManagers.filter((p) => p.id !== student.id));
+    setAddManagerOpen(false);
+
+    console.groupEnd();
+  } catch (error) {
+    console.error("❌ Error adding manager:", error);
+    console.groupEnd();
+  }
+};
+
+
+const onDeleteManager = async (manager: Manager) => {
+  try {
+    await deleteManager(manager.id);
+    setManagers(managers.filter((m) => m.id !== manager.id));
+    setDeleteManagerIsOpen(false);
+  } catch (err) {
+    console.error("Error deleting manager:", err);
+  }
+};
+
+const reloadManagers = async (data?: Manager[]) => {
+  if (data) setManagers(data);
+  await getPayments(); // refresh finances
+  const refreshedPlayers = await selectTeamPlayers(Number(resolvedParams.id));
+  setPlayers(refreshedPlayers);
+};
+
+
   const addTeacher = (teacher: string) => {
     if (!selectedTeachers.includes(teacher)) {
       const newTeachers = [...selectedTeachers, teacher];
@@ -883,6 +967,82 @@ export default function TeamPage({
                 </CommandGroup>
               </CommandList>
             </CommandDialog>
+
+            <div className="flex gap-6 items-center mt-8 mb-4">
+              <div className="text-xl font-semibold">Managers</div>
+              <Button
+                onClick={() => setAddManagerOpen(true)}
+                className="text-xs h-8"
+              >
+                Add Manager
+              </Button>
+            </div>
+
+            <DataTable
+              columns={createManagerColumns({
+                onDelete: (manager) => {
+                  setToBeDeletedManager(manager);
+                  setDeleteManagerIsOpen(true);
+                },
+                reloadData: reloadManagers,
+                finances: finances ?? [],
+              })}
+              data={managers.map((manager) => {
+                const student = allStudents.find(
+                  (s) => String(s.id) === String(manager.student_id)
+                );
+                return {
+                  ...manager,
+                  name: student?.name || `Student ${manager.student_id}`,
+                };
+              })}
+            />
+
+
+            <AlertDialog open={deleteManagerIsOpen} onOpenChange={setDeleteManagerIsOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Are you sure you want to delete {toBeDeletedManager?.name}?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      if (toBeDeletedManager) onDeleteManager(toBeDeletedManager);
+                    }}
+                  >
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <CommandDialog open={addManagerOpen} onOpenChange={setAddManagerOpen}>
+              <DialogTitle className="sr-only">Add Manager</DialogTitle>
+              <CommandInput placeholder="Search for a manager..." value={filter} onValueChange={setFilter} />
+              <CommandList>
+                <CommandEmpty>No results found.</CommandEmpty>
+                <CommandGroup>
+                  {addableManagers.map((manager) => (
+                    <CommandItem
+                      key={manager.id}
+                      onSelect={() => addManagerHandler(manager)}
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium">{manager.name}</span>
+                        <span className="text-sm text-muted-foreground">{manager.email}</span>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </CommandDialog>
+
 
             <CommandDialog
               open={teacherSearchOpen}
