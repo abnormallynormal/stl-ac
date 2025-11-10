@@ -5,14 +5,30 @@ export const selectData = async () => {
   const { data, error } = await supabase.from("student_points").select().range(0, 5000);
   if (!error) {
     console.log(data)
-    
-    // Sort by last name and format names as "Last, First"
+      // Sort by last name and format names as "Last, First"
     const sortedData = (data as Student[])
-      .map(student => {
-        // Split the name to get first and last name
-        const nameParts = student.name.trim().split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
+      .map(student => {        let firstName = '';
+        let lastName = '';
+        
+        // Check if name is already in "Last, First" format
+        if (student.name.includes(',')) {
+          const parts = student.name.split(',').map(part => part.trim());
+          lastName = parts[0] || '';
+          firstName = parts[1] || '';
+        } else {
+          // Names are stored as "Last Name First Name" - find the last space to split
+          const trimmedName = student.name.trim();
+          const lastSpaceIndex = trimmedName.lastIndexOf(' ');
+          
+          if (lastSpaceIndex !== -1) {
+            lastName = trimmedName.substring(0, lastSpaceIndex);
+            firstName = trimmedName.substring(lastSpaceIndex + 1);
+          } else {
+            // Single name case - treat as first name
+            firstName = trimmedName;
+            lastName = '';
+          }
+        }
         
         return {
           ...student,
@@ -28,7 +44,7 @@ export const selectData = async () => {
         if (lastNameCompare !== 0) return lastNameCompare;
         return a._firstName.localeCompare(b._firstName);
       })
-      .map(({ _firstName, _lastName, ...student }) => student); // Remove temp sorting fields
+      .map(({ _lastName, _firstName, ...student }) => student); // Remove temp sorting fields
     
     return sortedData as Student[]
   } else {
