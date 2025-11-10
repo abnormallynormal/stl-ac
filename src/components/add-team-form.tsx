@@ -119,6 +119,9 @@ export default function AddTeamForm({ onTeacherSearchOpen, onTeacherSearchClose,
     "julia.branganza@ycdsb.ca",
     "vanessa.dilecce@ycdsb.ca",
     "anne.santiago@ycdsb.ca",
+    "jocelyn.shih@ycdsb.ca",
+    "joey.villaneuve@ycdsb.ca",
+    "nicole.romanelli@ycdsb.ca",
   ];
 
   useEffect(() => {
