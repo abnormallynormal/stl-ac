@@ -385,7 +385,6 @@ export default function TeamPage({
     "jocelyn.shih@ycdsb.ca",
     "joey.villaneuve@ycdsb.ca",
     "nicole.romanelli@ycdsb.ca",
-    "kenny.zhang26@ycdsbk12.ca",
   ];
 
   const resolvedParams = use(params);
