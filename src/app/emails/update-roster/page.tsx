@@ -56,17 +56,42 @@ export default function EmailPage() {
     })
   }
 
-  async function handleSend({to, subject, link}: { to: string[], subject: string, link: string} ) {
-    const msg = `${message}${link}`;
+  async function handleSend({
+    to,
+    subject,
+    link
+  }: {
+    to: string[];
+    subject: string;
+    link: string;
+  }) {
 
-    const res = await fetch("/api/sendEmail", {
+    const text = `${message}`;
+    const html = `
+      <p>${message}</p>
+      <p><a href="${link}">Team Link</a></p>
+    `;
+
+    const res = await fetch("/api/updateRoster", {  
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ to, subject, text: msg }),
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        to,            // array of emails
+        subject,       // subject line
+        text,          // plaintext version
+        html           // HTML version (clickable link)
+      })
     });
 
     const data = await res.json();
-    alert(data.success ? "Email sent!" : "Failed to send email.");
+
+    if (data.success) {
+      alert("Email sent!");
+    } else {
+      alert("Failed to send email.");
+    }
   }
 
   return (
