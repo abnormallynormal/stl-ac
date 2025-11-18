@@ -29,6 +29,11 @@ export const createManagerColumns = ({
 }: ManagerColumnActions): ColumnDef<Manager>[] => {
   return [
     {
+      id: "rowNumber",
+      header: "#",
+      cell: ({ row }) => row.index + 1,   // <-- numbering here
+    },
+    {
       accessorKey: "name",
       header: "Name",
     },
