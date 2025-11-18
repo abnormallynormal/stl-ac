@@ -205,7 +205,7 @@ export const createColumns = ({
         if (row.original.paid) {
           return (
             <Button
-              className="text-xs h-8"
+              className="text-xs h-8 opacity-85"
               onClick={async () => {
                 const data = await markAsUnpaid({
                   playerId: row.original.id,
@@ -214,7 +214,8 @@ export const createColumns = ({
                 reloadData(data);
               }}
             >
-              Paid - Mark as unpaid
+              Paid - {paidTeam?.grade.charAt(0)}
+              {paidTeam?.gender.charAt(0)} {paidTeam?.sport}
             </Button>
           );
         }
@@ -232,7 +233,7 @@ export const createColumns = ({
                 reloadData(data);
               }}
             >
-              Mark as paid
+              Record Payment
             </Button>
           );
         }
@@ -251,7 +252,7 @@ export const createColumns = ({
                 reloadData(data);
               }}
             >
-              Mark as paid
+              Record Payment
             </Button>
           );
         }

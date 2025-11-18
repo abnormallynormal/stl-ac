@@ -379,7 +379,7 @@ export default function TeamPage({
     "tiziana.hayhoe@ycdsb.ca",
     "vanessa.vitale@ycdsb.ca",
     "victoria.ah-chin@ycdsb.ca",
-    "julia.branganza@ycdsb.ca",
+    "julia.braganza@ycdsb.ca",
     "vanessa.dilecce@ycdsb.ca",
     "anne.santiago@ycdsb.ca",
     "jocelyn.shih@ycdsb.ca",

@@ -49,7 +49,7 @@ export const createManagerColumns = ({
         if (manager.paid) {
           return (
             <Button
-              className="text-xs h-8"
+              className="text-xs h-8 opacity-85"
               onClick={async () => {
                 const data = await markManagerAsUnpaid({
                   managerId: manager.id,
@@ -58,7 +58,8 @@ export const createManagerColumns = ({
                 reloadData(data);
               }}
             >
-              Paid - Mark as unpaid
+              Paid - {paidTeam?.grade.charAt(0)}
+              {paidTeam?.gender.charAt(0)} {paidTeam?.sport}
             </Button>
           );
         }
@@ -76,7 +77,7 @@ export const createManagerColumns = ({
                 reloadData(data);
               }}
             >
-              Mark as paid
+              Record Payment
             </Button>
           );
         }
