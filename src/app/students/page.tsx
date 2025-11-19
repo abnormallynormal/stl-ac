@@ -69,7 +69,6 @@ export default function Students() {
       try {
         const result = await selectData();
         if (result) {
-          console.log("Total students fetched:", result.length);
           setData(result);
         } else {
           setData([]);
@@ -170,10 +169,8 @@ export default function Students() {
   });
   const columns = createColumns({
     onEdit: (student) => {
-      console.log("Edit student:", student);
     },
     onDelete: (student) => {
-      console.log("Delete student:", student);
     },
   });
   return (

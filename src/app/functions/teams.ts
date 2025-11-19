@@ -28,7 +28,6 @@ export const selectSports = async () => {
   const supabase = createClient();
   const {data, error} = await supabase.from("sports").select("sport, points");
   if (!error) {
-    console.log(data);
     return data as {sport: string, points: number}[];
   } else {
     console.log(error);

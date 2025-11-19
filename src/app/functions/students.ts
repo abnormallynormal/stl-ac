@@ -4,7 +4,6 @@ export const selectData = async () => {
   const supabase = createClient()
   const { data, error } = await supabase.from("student_points").select().range(0, 5000);
   if (!error) {
-    console.log(data)
       // Sort by last name and format names as "Last, First"
     const sortedData = (data as Student[])
       .map(student => {        let firstName = '';
@@ -54,7 +53,6 @@ export const selectData = async () => {
 export const addPlayer = async ({ name, email, grade }: Student) => {
   const supabase = createClient();
   const month = new Date().getMonth();
-  console.log(month);
   let year = new Date().getFullYear();
   if (month >= 7) {
     year += 1;

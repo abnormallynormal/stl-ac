@@ -179,10 +179,8 @@ export default function AddTeamForm({ onTeacherSearchOpen, onTeacherSearchClose,
         points: values.points,
       });
       
-      console.log("addSport result:", result);
       
       if (result) {
-        console.log("Team created successfully:", result);
         form.reset();
         setSelectedTeachers([]);
         onSuccess?.();

@@ -70,7 +70,6 @@ export const columns: ColumnDef<Team>[] = [
             variant="link"
             size="icon"
             onClick={() => {
-              console.log(row.original);
             }}
           >
             <Pencil />

@@ -200,16 +200,12 @@ export default function TeamPage({
           selectData(),
           selectSports(),
         ]);
-        console.log("Fetched teams data:", teamsResult);
-        console.log("Fetched sports data:", sportsResult);
 
         if (teamsResult) {
           setData(teamsResult);
-          console.log("Teams data set to state:", teamsResult);
         }
         if (sportsResult) {
           setSports(sportsResult);
-          console.log("Sports data set to state:", sportsResult);
         }
         getPayments()
       } catch (err) {
@@ -234,7 +230,6 @@ export default function TeamPage({
         );
         if (playersResult) {
           setPlayers(playersResult);
-          console.log("Players data set to state:", playersResult);
         }
       } catch (err) {
         console.error("Error fetching players data:", err);
@@ -245,7 +240,6 @@ export default function TeamPage({
     };
 
     loadPlayers();
-    console.log(players);
   }, []);
   useEffect(() => {
     const loadAddablePlayers = async () => {
@@ -256,7 +250,6 @@ export default function TeamPage({
         if (playersResult) {
           // selectablePlayers returns a Student[]; assert to Player[] to satisfy the state typing
           setAddablePlayers(playersResult as unknown as Student[]);
-          console.log("Addable players data set to state:", playersResult);
         }
       } catch (err) {
         console.error("Error fetching players data:", err);
@@ -279,7 +272,6 @@ export default function TeamPage({
         if (playersResult) {
           // selectablePlayers returns a Student[]; assert to Player[] to satisfy the state typing
           setAddablePlayers(playersResult as unknown as Student[]);
-          console.log("Addable players data set to state:", playersResult);
         }
       } catch (err) {
         console.error("Error fetching players data:", err);
@@ -299,7 +291,6 @@ export default function TeamPage({
         const studentsResult = await selectStudents();
         if (studentsResult) {
           setAllStudents(studentsResult);
-          console.log("All students data set to state:", studentsResult);
         }
       } catch (err) {
         console.error("Error fetching all students data:", err);
@@ -411,7 +402,6 @@ export default function TeamPage({
     if (team && !formInitialized) {
       setSelectedTeachers(team.teachers);
       setSelectedSport(team.sport);
-      console.log("Setting form values with team data:", team);
 
       editSportForm.reset({
         sport: team.sport,
@@ -426,7 +416,6 @@ export default function TeamPage({
       });
 
       setFormInitialized(true);
-      console.log("Form values after reset:", editSportForm.getValues());
     }
   }, [team, formInitialized]);
   const filteredPlayers = useMemo(() => {
@@ -450,7 +439,6 @@ export default function TeamPage({
   }
 
   const addPlayer = async (player: Student) => {
-    console.log(player);
     try {
       const result = await addPlayerApi({
         team_id: Number(resolvedParams.id),
@@ -553,7 +541,6 @@ const reloadManagers = async (data?: Manager[]) => {
   };
   const onEditSportSave = async (values: z.infer<typeof editSportSchema>) => {
     try {
-      console.log("Updating team with values:", values);
 
       const result = await updateSport({
         id: team.id,
@@ -569,7 +556,6 @@ const reloadManagers = async (data?: Manager[]) => {
       });
 
       if (result) {
-        console.log("Team updated successfully:", result);
         // Refresh the team data
         const refreshedData = await selectData();
         if (refreshedData) {
@@ -585,12 +571,10 @@ const reloadManagers = async (data?: Manager[]) => {
 
   const onDeleteTeam = async () => {
     try {
-      console.log("Deleting team with id:", team.id);
 
       const result = await deleteSport({ id: team.id });
 
       if (result) {
-        console.log("Team deleted successfully:", result);
         // Navigate back to teams page
         router.push("/teams");
       }
@@ -869,8 +853,6 @@ const reloadManagers = async (data?: Manager[]) => {
               <Button
                 onClick={() => {
                   setAddPlayerOpen(true)
-                  console.log(finances)
-                  console.log(players)
                 }}
                 className="text-xs h-8"
               >
