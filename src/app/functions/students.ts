@@ -18,7 +18,7 @@ export const selectData = async () => {
         } else {
           // Names are stored as "Last Name First Name" - find the last space to split
           const trimmedName = student.name.trim();
-          const lastSpaceIndex = trimmedName.lastIndexOf(' ');
+          const lastSpaceIndex = trimmedName.indexOf(' ');
           
           if (lastSpaceIndex !== -1) {
             lastName = trimmedName.substring(0, lastSpaceIndex);

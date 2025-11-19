@@ -128,9 +128,20 @@ export default function Students() {
   };
 
   const filteredData = data.filter((student) => {
-    // Filter by name
-    const nameMatch = student.name.toLowerCase().includes(filter.toLowerCase());
-
+    // Filter by name - check both "Last, First" and "First Last" formats
+    const filterLower = filter.toLowerCase();
+    const nameLower = student.name.toLowerCase();
+    
+    // Check original format (e.g., "Doe, John")
+    const originalMatch = nameLower.includes(filterLower);
+    const noComma = nameLower.replace(",", "").includes(filterLower);
+    // Check reversed format (e.g., "John Doe" when name is stored as "Doe, John")
+    const nameParts = nameLower.split(", ");
+    const reversedName = nameParts.length === 2 ? `${nameParts[1]} ${nameParts[0]}` : nameLower;
+    const reversedMatch = reversedName.includes(filterLower);
+    
+    const nameMatch = originalMatch || reversedMatch || noComma;
+    
     // Filter by grade if any grade filters are selected
     const selectedGrades: number[] = Object.entries(gradeFilters)
       .filter(([_, isSelected]) => isSelected)
