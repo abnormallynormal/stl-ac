@@ -31,7 +31,11 @@ export const createManagerColumns = ({
     {
       id: "rowNumber",
       header: "#",
-      cell: ({ row }) => row.index + 1,   // <-- numbering here
+      cell: ({ table, row }) => {
+        const sorted = table.getSortedRowModel().rows;
+        const index = sorted.findIndex(r => r.id === row.id);
+        return index + 1;
+      },
     },
     {
       accessorKey: "name",
