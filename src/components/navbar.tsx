@@ -52,6 +52,14 @@ export default function Navigation() {
                         <Link href="/finances">Finances</Link>
                       </NavigationMenuLink>
                     </li>
+                    <li>
+                      <NavigationMenuLink
+                        asChild
+                        className={navigationMenuTriggerStyle()}
+                      >
+                        <Link href="/points">Points</Link>
+                      </NavigationMenuLink>
+                    </li>
                   </ul>
                 </NavigationMenuContent>
               </NavigationMenuItem>
