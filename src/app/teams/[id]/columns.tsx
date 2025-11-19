@@ -48,6 +48,11 @@ export const createColumns = ({
 }): ColumnDef<Player>[] => {
   return [
     {
+      id: "rowNumber",
+      header: "#",
+      cell: ({ row }) => row.index + 1,   // <-- numbering here
+    },
+    {
       accessorKey: "name",
       header: ({ column }) => {
         return (
