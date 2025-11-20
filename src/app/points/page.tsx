@@ -70,7 +70,7 @@ export default function Points() {
         <div className="justify-self-center w-full">
           <div className="mb-2 justify-between">
             <div className="font-bold text-4xl mb-2">
-              This year's recipients
+              This year&apos;s recipients
             </div>
             <Accordion type="multiple" className="w-full mb-8">
               <AccordionItem value="outstanding-contribution">
