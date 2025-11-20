@@ -19,7 +19,7 @@ export default function SeasonHighlights() {
             team_id: team.id,
             name: `${team.grade} ${team.gender} ${team.sport}`,
             highlight: team.seasonHighlights
-              ? `"${team.seasonHighlights}"`
+              ? `"${team.seasonHighlights.trim()}"`
               : "No message yet",
           }))
         );

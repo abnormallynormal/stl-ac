@@ -18,7 +18,7 @@ export default function YearbookMessages() {
             team_id: team.id,
             name: `${team.grade} ${team.gender} ${team.sport}`,
             message: team.yearbookMessage
-              ? `"${team.yearbookMessage}"`
+              ? `"${team.yearbookMessage.trim()}"`
               : "No message yet",
           }))
         );
