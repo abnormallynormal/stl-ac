@@ -19,7 +19,7 @@ export const selectData = async () => {
       // Finally by gender
       return a.gender.localeCompare(b.gender);
     });
-    return sortedData;
+    return sortedData as Team[];
   } else {
     console.log(error);
   }
@@ -87,7 +87,7 @@ export const updateSport = async({
   yearbookMessage: string;
 }) =>{
   const supabase = createClient();
-  const {data, error} = await   supabase.from("teams").update({
+  const {data, error} = await supabase.from("teams").update({
     sport,
     grade,
     gender,

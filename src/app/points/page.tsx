@@ -20,13 +20,9 @@ import {
 } from "@/components/ui/accordion";
 export default function Points() {
   const [data, setData] = useState<PlayerWithPoints[]>();
-  const [pointsFilter, setPointsFilter] = useState<{
-    lower: number | undefined;
-    upper: number | undefined;
-  }>();
   const [filter, setFilter] = useState<string>("");
   useEffect(() => {
-    const getPayments = async () => {
+    const getPoints = async () => {
       try {
         const data = await selectData();
         if (!data) {
@@ -45,7 +41,7 @@ export default function Points() {
         console.log("Error fetching players");
       }
     };
-    getPayments();
+    getPoints();
   }, []);
 
   const filteredData = data?.filter((student) => {

@@ -14,7 +14,8 @@ export const selectablePlayers = async (teamId: number): Promise<Student[]> => {
     return [];
   }
 
-  const studentIdsInTeam = players?.map((p: { student_id: number }) => p.student_id) ?? [];
+  const studentIdsInTeam =
+    players?.map((p: { student_id: number }) => p.student_id) ?? [];
 
   let query = supabase.from("students").select("*").eq("active", true);
 
@@ -46,6 +47,22 @@ export const selectTeamPlayers = async (teamId: number) => {
   }
 };
 
+export const selectAllPlayers = async () => {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("players")
+    .select("*, students(name, email)");
+  if(!error){
+    return data?.map((player: any) => ({
+      ...player,
+      name: player.students?.name,
+      email: player.students?.email,
+    })) as Player[];
+  } else {
+    throw new Error(error.message);
+  }
+};
+
 export const addPlayer = async ({
   team_id,
   student_id,
@@ -53,7 +70,7 @@ export const addPlayer = async ({
   ofsaa,
   mvp,
   lca,
-  paid
+  paid,
 }: {
   team_id: number;
   student_id: number;
@@ -66,14 +83,14 @@ export const addPlayer = async ({
   const supabase = createClient();
   const { data, error } = await supabase
     .from("players")
-    .insert({ 
-      team_id, 
-      student_id, 
-      yraa, 
+    .insert({
+      team_id,
+      student_id,
+      yraa,
       ofsaa,
-      mvp, 
-      lca, 
-      paid 
+      mvp,
+      lca,
+      paid,
     })
     .select();
   if (!error) {
@@ -99,7 +116,15 @@ export const deletePlayer = async (playerId: number) => {
   }
 };
 
-export const updateCheckbox = async({playerId, param, value}: {playerId: number, param: keyof Player, value: boolean}) => {
+export const updateCheckbox = async ({
+  playerId,
+  param,
+  value,
+}: {
+  playerId: number;
+  param: keyof Player;
+  value: boolean;
+}) => {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("players")
@@ -112,11 +137,21 @@ export const updateCheckbox = async({playerId, param, value}: {playerId: number,
     // console.log(error);
     throw new Error(error.message);
   }
-}
+};
 
-export const updateRadio = async({playerId, teamId, param, value}: {playerId: number, teamId: number, param: keyof Player, value: boolean}) => {
+export const updateRadio = async ({
+  playerId,
+  teamId,
+  param,
+  value,
+}: {
+  playerId: number;
+  teamId: number;
+  param: keyof Player;
+  value: boolean;
+}) => {
   const supabase = createClient();
-  
+
   const { data: updated, error } = await supabase
     .from("players")
     .update({ [param]: value })
@@ -133,17 +168,18 @@ export const updateRadio = async({playerId, teamId, param, value}: {playerId: nu
   if (!error && !othersError) {
     return others as Player[];
   }
-  if(error){
+  if (error) {
     // console.log(error ?? othersError);
     throw new Error(error.message);
   }
-  if(othersError){
+  if (othersError) {
     throw new Error(othersError.message);
   }
+};
 
-}
-
-export const selectableManagers = async (teamId: number): Promise<Student[]> => {
+export const selectableManagers = async (
+  teamId: number
+): Promise<Student[]> => {
   const supabase = createClient();
 
   const { data: managers, error: managersError } = await supabase
@@ -173,7 +209,6 @@ export const selectableManagers = async (teamId: number): Promise<Student[]> => 
   return availableStudents as Student[];
 };
 
-
 export const selectTeamManagers = async (teamId: number) => {
   const supabase = createClient();
   const { data, error } = await supabase
@@ -193,7 +228,10 @@ export const addManager = async (manager: {
   // console.log("➡️ Payload received:", manager);
 
   const supabase = createClient();
-  const { data, error } = await supabase.from("managers").insert(manager).select();
+  const { data, error } = await supabase
+    .from("managers")
+    .insert(manager)
+    .select();
 
   // console.log("📥 Supabase response:", { data, error });
 
@@ -207,7 +245,6 @@ export const addManager = async (manager: {
   // console.groupEnd();
   return data;
 };
-
 
 export const deleteManager = async (managerId: number) => {
   const supabase = createClient();
@@ -269,4 +306,3 @@ export const updateManagerPaid = async (managerId: number, value: boolean) => {
     ]);
   }
 };
-

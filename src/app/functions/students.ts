@@ -1,40 +1,44 @@
-import { createClient } from "@/lib/supabase/client"
-import { Student } from "../students/columns"
+import { createClient } from "@/lib/supabase/client";
+import { Student } from "../students/columns";
 export const selectData = async () => {
-  const supabase = createClient()
-  const { data, error } = await supabase.from("student_points").select().range(0, 5000);
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("student_points")
+    .select()
+    .range(0, 5000);
   if (!error) {
-      // Sort by last name and format names as "Last, First"
+    // Sort by last name and format names as "Last, First"
     const sortedData = (data as Student[])
-      .map(student => {        let firstName = '';
-        let lastName = '';
-        
+      .map((student) => {
+        let firstName = "";
+        let lastName = "";
+
         // Check if name is already in "Last, First" format
-        if (student.name.includes(',')) {
-          const parts = student.name.split(',').map(part => part.trim());
-          lastName = parts[0] || '';
-          firstName = parts[1] || '';
+        if (student.name.includes(",")) {
+          const parts = student.name.split(",").map((part) => part.trim());
+          lastName = parts[0] || "";
+          firstName = parts[1] || "";
         } else {
           // Names are stored as "Last Name First Name" - find the last space to split
           const trimmedName = student.name.trim();
-          const lastSpaceIndex = trimmedName.indexOf(' ');
-          
+          const lastSpaceIndex = trimmedName.indexOf(" ");
+
           if (lastSpaceIndex !== -1) {
             lastName = trimmedName.substring(0, lastSpaceIndex);
             firstName = trimmedName.substring(lastSpaceIndex + 1);
           } else {
             // Single name case - treat as first name
             firstName = trimmedName;
-            lastName = '';
+            lastName = "";
           }
         }
-        
+
         return {
           ...student,
           name: lastName ? `${lastName}, ${firstName}` : firstName,
           // Store original name parts for sorting
           _firstName: firstName,
-          _lastName: lastName
+          _lastName: lastName,
         };
       })
       .sort((a, b) => {
@@ -44,12 +48,12 @@ export const selectData = async () => {
         return a._firstName.localeCompare(b._firstName);
       })
       .map(({ _lastName, _firstName, ...student }) => student); // Remove temp sorting fields
-    
-    return sortedData as Student[]
+
+    return sortedData as Student[];
   } else {
-    console.log(error)
+    console.log(error);
   }
-}
+};
 export const addPlayer = async ({ name, email, grade }: Student) => {
   const supabase = createClient();
   const month = new Date().getMonth();
@@ -66,7 +70,7 @@ export const addPlayer = async ({ name, email, grade }: Student) => {
       grad: year + (12 - grade),
       active: true,
     })
-    .select()
+    .select();
   if (!error) {
     return data as Student[];
   } else {

@@ -5,14 +5,19 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   navigationMenuTriggerStyle,
-  NavigationMenuContent,
-  NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { ModeToggle } from "./mode-toggle";
 import { Button } from "./ui/button";
 import { createClient } from "@/lib/supabase/client";
 import Logout from "./logout";
+import { ChevronDown } from "lucide-react";
 
 export default function Navigation() {
   async function signOut() {
@@ -41,27 +46,28 @@ export default function Navigation() {
               </NavigationMenuItem>
 
               <NavigationMenuItem>
-                <NavigationMenuTrigger>Records</NavigationMenuTrigger>
-                <NavigationMenuContent className="p-1 shadow-md rounded-lg">
-                  <ul className="grid">
-                    <li>
-                      <NavigationMenuLink
-                        asChild
-                        className={navigationMenuTriggerStyle()}
-                      >
-                        <Link href="/finances">Finances</Link>
-                      </NavigationMenuLink>
-                    </li>
-                    <li>
-                      <NavigationMenuLink
-                        asChild
-                        className={navigationMenuTriggerStyle()}
-                      >
-                        <Link href="/points">Points</Link>
-                      </NavigationMenuLink>
-                    </li>
-                  </ul>
-                </NavigationMenuContent>
+                <DropdownMenu>
+                  <DropdownMenuTrigger className={navigationMenuTriggerStyle()}>
+                    Records <ChevronDown className="ml-2 h-3 w-3" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="p-2">
+                    <DropdownMenuItem asChild>
+                      <Link href="/finances">Finances</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/points">Points</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/yearbook">Yearbook</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/highlights">Highlights</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/highlights">MVPs/LCAs</Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </NavigationMenuItem>
 
               <NavigationMenuItem>
