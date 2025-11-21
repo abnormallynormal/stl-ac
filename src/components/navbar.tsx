@@ -64,7 +64,7 @@ export default function Navigation() {
                       <Link href="/highlights">Highlights</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/highlights">MVPs/LCAs</Link>
+                      <Link href="/awards">MVPs/LCAs</Link>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
