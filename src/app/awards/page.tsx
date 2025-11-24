@@ -37,7 +37,7 @@ export default function AwardsList() {
             return {
               team_id: team.id,
               season: `${team.season}`,
-              name: `${team.grade} ${team.gender} ${team.sport}`,
+              name: `${team.sport} ${team.grade} ${team.gender}`,
               mvp: formatName(mvpPlayer?.name),
               lca: formatName(lcaPlayer?.name),
             };
