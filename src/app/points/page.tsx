@@ -2,8 +2,10 @@
 import Navigation from "@/components/navbar";
 import { DataTable } from "./data-table";
 import { columns, PlayerWithPoints } from "./columns";
+import { PreviousWinner } from "./previous-winners/columns";
 import { useEffect, useState } from "react";
 import { selectData } from "../functions/students";
+import { selectPreviousWinners, addWinner, updateWinner } from "../functions/awards";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +22,7 @@ import {
 } from "@/components/ui/accordion";
 export default function Points() {
   const [data, setData] = useState<PlayerWithPoints[]>();
+  const [prevWinners, setPrevWinners] = useState<PreviousWinner[]>();
   const [filter, setFilter] = useState<string>("");
   useEffect(() => {
     const getPoints = async () => {
@@ -36,6 +39,29 @@ export default function Points() {
               name: student.name,
               points: student.points,
             }))
+        );
+        const prevData = await selectPreviousWinners();
+        if (!prevData) {
+          console.log("Error fetching players");
+        }
+        console.log("Previous winners raw data:", prevData);
+        setPrevWinners(
+          prevData
+            ?.filter((winner) => winner.student_points?.points > 0)
+            .map((winner) => ({
+              student_id: winner.id,
+              name: winner.student_points?.name || "",
+              points: winner.student_points?.points || 0,
+              year: winner.year,
+              award: winner.award,
+            }))
+        );
+        console.log(
+          "Mapped previous winners:",
+          prevData?.map((winner) => ({
+            student_id: winner.id,
+            award: winner.award,
+          }))
         );
       } catch {
         console.log("Error fetching players");
@@ -63,15 +89,104 @@ export default function Points() {
     // Filter by grade if any grade filters are selected
     return nameMatch;
   });
+
+  async function updateRecipients() {
+    const recipients = data?.filter((student) => student.points >= 60);
+    
+    // Process all recipients sequentially
+    const promises = recipients?.map(async (student) => {
+      const prevWinner = prevWinners?.find(
+        (winner) => winner.student_id === student.student_id
+      );
+      const prevOutstandingWinner = prevWinners?.find(
+        (winner) =>
+          winner.student_id === student.student_id &&
+          winner.award === "Outstanding Contribution"
+      );
+      if (!prevOutstandingWinner && student.points >= 100) {
+        if(prevWinner){
+          await updateWinner({id: student.student_id, award: "Outstanding Contribution", year: new Date().getFullYear()});
+        } else {
+          await addWinner({
+            id: student.student_id,
+            award: "Outstanding Contribution",
+            year: new Date().getFullYear(),
+          });
+        }
+      }
+      const prevDistinctionWinner = prevWinners?.find(
+        (winner) =>
+          winner.student_id === student.student_id &&
+          winner.award === "Letter of Distinction"
+      );
+      if (
+        !prevDistinctionWinner &&
+        student.points >= 90 &&
+        student.points < 100
+      ) {
+        if (prevWinner) {
+          await updateWinner({
+            id: student.student_id,
+            award: "Letter of Distinction",
+            year: new Date().getFullYear(),
+          });
+        } else {
+          await addWinner({
+            id: student.student_id,
+            award: "Letter of Distinction",
+            year: new Date().getFullYear(),
+          });
+        }
+      }
+      const prevMeritWinner = prevWinners?.find(
+        (winner) =>
+          winner.student_id === student.student_id &&
+          winner.award === "Letter of Merit"
+      );
+      if (!prevMeritWinner && student.points >= 60 && student.points < 90) {
+        await addWinner({
+          id: student.student_id,
+          award: "Letter of Merit",
+          year: new Date().getFullYear(),
+        });
+      }
+    }) || [];
+    
+    // Wait for all updates to complete
+    await Promise.all(promises);
+    
+    // Refetch the complete list of previous winners
+    const prevData = await selectPreviousWinners();
+    setPrevWinners(
+      prevData
+        ?.filter((winner) => winner.student_points?.points > 0)
+        .map((winner) => ({
+          student_id: winner.id,
+          name: winner.student_points?.name || "",
+          points: winner.student_points?.points || 0,
+          year: winner.year,
+          award: winner.award,
+        }))
+    );
+  }
   return (
     <>
       <Navigation />
       <div className="px-16 py-8">
         <div className="justify-self-center w-full">
           <div className="mb-2 justify-between">
-            <div className="font-bold text-4xl mb-2">
-              This year&apos;s recipients
+            <div className="flex flex-row gap-4 items-center mb-2">
+              <div className="font-bold text-4xl">
+                This year&apos;s recipients
+              </div>
+              <Button onClick={updateRecipients}>Archive recipients</Button>
             </div>
+            <a
+              className="text-lg font-semibold hover:underline"
+              href="/points/previous-winners"
+            >
+              View past recipients
+            </a>
             <Accordion type="multiple" className="w-full mb-8">
               <AccordionItem value="outstanding-contribution">
                 <AccordionTrigger>
@@ -83,16 +198,32 @@ export default function Points() {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  {data
-                    ?.filter((student) => student.points >= 100)
-                    .map((student) => (
-                      <div
-                        key={student.student_id}
-                        className="text-sm text-gray-500"
-                      >
-                        {student.name}: {student.points} points
+                  {(() => {
+                    const filtered = data?.filter((student) => {
+                      const hasWonBefore = prevWinners?.some((winner) => {
+                        const match =
+                          winner.student_id === student.student_id &&
+                          winner.award === "Outstanding Contribution";
+                        return match;
+                      });
+                      return student.points >= 100 && !hasWonBefore;
+                    });
+
+                    return filtered && filtered.length > 0 ? (
+                      filtered.map((student) => (
+                        <div
+                          key={student.student_id}
+                          className="text-sm text-gray-500"
+                        >
+                          {student.name}: {student.points} points
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-gray-500">
+                        There are no Outstanding Contributions at this time.
                       </div>
-                    ))}
+                    );
+                  })()}
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="letter-of-distinction">
@@ -105,16 +236,36 @@ export default function Points() {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  {data
-                    ?.filter((student) => student.points >= 90)
-                    .map((student) => (
-                      <div
-                        key={student.student_id}
-                        className="text-sm text-gray-500"
-                      >
-                        {student.name}: {student.points} points
+                  {(() => {
+                    const filtered = data?.filter((student) => {
+                      const hasWonBefore = prevWinners?.some((winner) => {
+                        const match =
+                          winner.student_id === student.student_id &&
+                          winner.award === "Letter of Distinction";
+                        return match;
+                      });
+                      return (
+                        student.points >= 90 &&
+                        student.points < 100 &&
+                        !hasWonBefore
+                      );
+                    });
+
+                    return filtered && filtered.length > 0 ? (
+                      filtered.map((student) => (
+                        <div
+                          key={student.student_id}
+                          className="text-sm text-gray-500"
+                        >
+                          {student.name}: {student.points} points
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-gray-500">
+                        There are no Letter of Distinctions at this time.
                       </div>
-                    ))}
+                    );
+                  })()}
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="letter-of-merit">
@@ -127,16 +278,36 @@ export default function Points() {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  {data
-                    ?.filter((student) => student.points >= 60)
-                    .map((student) => (
-                      <div
-                        key={student.student_id}
-                        className="text-sm text-gray-500"
-                      >
-                        {student.name}: {student.points} points
+                  {(() => {
+                    const filtered = data?.filter((student) => {
+                      const hasWonBefore = prevWinners?.some((winner) => {
+                        const match =
+                          winner.student_id === student.student_id &&
+                          winner.award === "Letter of Merit";
+                        return match;
+                      });
+                      return (
+                        student.points >= 60 &&
+                        student.points < 90 &&
+                        !hasWonBefore
+                      );
+                    });
+
+                    return filtered && filtered.length > 0 ? (
+                      filtered.map((student) => (
+                        <div
+                          key={student.student_id}
+                          className="text-sm text-gray-500"
+                        >
+                          {student.name}: {student.points} points
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-gray-500">
+                        There are no Letter of Merits at this time.
                       </div>
-                    ))}
+                    );
+                  })()}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
