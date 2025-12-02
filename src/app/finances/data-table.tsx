@@ -45,6 +45,8 @@ export function DataTable<TData, TValue>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    onPaginationChange: setPagination,
+    onSortingChange: setSorting,
     getPaginationRowModel: getPaginationRowModel(),
     state: {
       sorting,
