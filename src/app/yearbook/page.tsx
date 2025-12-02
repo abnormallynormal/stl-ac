@@ -4,6 +4,7 @@ import { DataTable } from "./data-table";
 import { columns, Yearbook } from "./columns";
 import { useEffect, useState } from "react";
 import { selectData } from "../functions/teams";
+import SeasonHighlights from "../highlights/page";
 export default function YearbookMessages() {
   const [data, setData] = useState<Yearbook[]>();
   useEffect(() => {
@@ -16,10 +17,11 @@ export default function YearbookMessages() {
         setData(
           data?.map((team) => ({
             team_id: team.id,
-            name: `${team.grade} ${team.gender} ${team.sport}`,
+            season: `${team.season}`,
+            name: `${team.sport} ${team.grade} ${team.gender}`,
             message: team.yearbookMessage
               ? `"${team.yearbookMessage.trim()}"`
-              : "No message yet",
+              : "⚠️ No message yet ⚠️",
           }))
         );
       } catch {

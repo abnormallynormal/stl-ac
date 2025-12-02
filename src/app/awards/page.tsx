@@ -27,7 +27,7 @@ export default function AwardsList() {
             
             // Convert "Last First Middle..." to "First Middle... Last"
             const formatName = (name: string | undefined) => {
-              if (!name) return "No selection yet";
+              if (!name) return "⚠️ No selection yet ⚠️";
               const parts = name.trim().split(" ");
               if (parts.length < 2) return name;
               const [lastName, ...firstNames] = parts;
@@ -36,7 +36,8 @@ export default function AwardsList() {
             
             return {
               team_id: team.id,
-              name: `${team.grade} ${team.gender} ${team.sport}`,
+              season: `${team.season}`,
+              name: `${team.sport} ${team.grade} ${team.gender}`,
               mvp: formatName(mvpPlayer?.name),
               lca: formatName(lcaPlayer?.name),
             };

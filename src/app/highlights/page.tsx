@@ -17,10 +17,11 @@ export default function SeasonHighlights() {
         setData(
           data?.map((team) => ({
             team_id: team.id,
-            name: `${team.grade} ${team.gender} ${team.sport}`,
+            season: `${team.season}`,
+            name: `${team.sport} ${team.grade} ${team.gender}`,
             highlight: team.seasonHighlights
               ? `"${team.seasonHighlights.trim()}"`
-              : "No message yet",
+              : "⚠️ No message yet ⚠️",
           }))
         );
       } catch {
