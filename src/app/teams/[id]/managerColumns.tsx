@@ -92,18 +92,18 @@ export const createManagerColumns = ({
         }
 
         // CASE 3: Paid on another team -> Link to that team’s page
-        if (paidTeamId !== manager.team_id) {
+        // if (paidTeamId !== manager.team_id) {
           return (
             <Button className="text-xs h-8 opacity-70" asChild>
-              <a href={`/teams/${paidTeam?.id}`}>
+              <a>
                 Paid - {paidTeam?.grade.charAt(0)}
                 {paidTeam?.gender.charAt(0)} {paidTeam?.sport}
               </a>
             </Button>
           );
-        }
+        // }
 
-        return null;
+        // return null;
       },
     },
     {
