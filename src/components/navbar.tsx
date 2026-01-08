@@ -84,6 +84,15 @@ export default function Navigation() {
                   asChild
                   className={navigationMenuTriggerStyle()}
                 >
+                  <Link href="/coaches">Coaches</Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+
+              <NavigationMenuItem>
+                <NavigationMenuLink
+                  asChild
+                  className={navigationMenuTriggerStyle()}
+                >
                   <Link href="/sports">Sports</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>

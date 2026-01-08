@@ -5,6 +5,7 @@ import { Team } from "../columns";
 import { Player, createColumns } from "./columns";
 import { Manager, createManagerColumns } from "./managerColumns";
 import { DataTable } from "./data-table";
+import { selectData as selectCoaches } from "@/app/functions/coaches";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -68,8 +69,13 @@ import {
 } from "@/app/functions/team";
 import { selectData as selectStudents } from "@/app/functions/students";
 import { Input } from "@/components/ui/input";
-import { getFinances, markManagerAsPaid, markManagerAsUnpaid } from "@/app/functions/finances";
+import {
+  getFinances,
+  markManagerAsPaid,
+  markManagerAsUnpaid,
+} from "@/app/functions/finances";
 import { Finance } from "@/app/finances/columns";
+import { Coach } from "@/app/coaches/columns";
 const createEditSportSchema = (
   existingTeams: Team[] = [],
   currentTeamId?: number
@@ -83,7 +89,7 @@ const createEditSportSchema = (
       year: z.string().min(1, "Year is required"),
       teachers: z
         .array(z.email("Invalid email address"))
-        .min(1, "At least one teacher is required"),
+        .min(1, "At least one coach is required"),
       points: z.number().int().min(0, "Points must be a non-negative integer"),
       seasonHighlights: z.string().optional(),
       yearbookMessage: z.string().optional(),
@@ -115,18 +121,21 @@ export default function TeamPage({
   const [finances, setFinances] = useState<Finance[]>();
   const [sports, setSports] = useState<{ sport: string; points: number }[]>([]);
   const [selectedSport, setSelectedSport] = useState<string | null>();
+  const [availableCoaches, setAvailableCoaches] = useState<Coach[]>();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteIsOpen, setDeleteIsOpen] = useState(false);
   const [toBeDeleted, setToBeDeleted] = useState<Player | null>(null);
   const [addPlayerOpen, setAddPlayerOpen] = useState(false);
-  const [teacherSearchOpen, setTeacherSearchOpen] = useState(false);
-  const [selectedTeachers, setSelectedTeachers] = useState<string[]>([]);
+  const [coachSearchOpen, setCoachSearchOpen] = useState(false);
+  const [selectedCoaches, setSelectedCoaches] = useState<string[]>([]);
   const [deleteTeamIsOpen, setDeleteTeamIsOpen] = useState(false);
   const [managers, setManagers] = useState<Manager[]>([]);
   const [addableManagers, setAddableManagers] = useState<Student[]>([]);
   const [addManagerOpen, setAddManagerOpen] = useState(false);
-  const [toBeDeletedManager, setToBeDeletedManager] = useState<Manager | null>(null);
+  const [toBeDeletedManager, setToBeDeletedManager] = useState<Manager | null>(
+    null
+  );
   const [deleteManagerIsOpen, setDeleteManagerIsOpen] = useState(false);
 
   const router = useRouter();
@@ -185,10 +194,9 @@ export default function TeamPage({
         );
       },
     },
-    reloadData:  (data: Player[]) => {
+    reloadData: (data: Player[]) => {
       setPlayers(data);
       getPayments();
-      
     },
     finances: finances ?? [],
   });
@@ -207,7 +215,7 @@ export default function TeamPage({
         if (sportsResult) {
           setSports(sportsResult);
         }
-        getPayments()
+        getPayments();
       } catch (err) {
         console.error("Error fetching data:", err);
         setError(err instanceof Error ? err.message : "Failed to load data");
@@ -303,7 +311,9 @@ export default function TeamPage({
   useEffect(() => {
     const loadManagers = async () => {
       try {
-        const managersResult = await selectTeamManagers(Number(resolvedParams.id));
+        const managersResult = await selectTeamManagers(
+          Number(resolvedParams.id)
+        );
         if (managersResult) setManagers(managersResult);
       } catch (err) {
         console.error("Error fetching managers:", err);
@@ -314,7 +324,9 @@ export default function TeamPage({
   useEffect(() => {
     const loadAddableManagers = async () => {
       try {
-        const managersResult = await selectableManagers(Number(resolvedParams.id));
+        const managersResult = await selectableManagers(
+          Number(resolvedParams.id)
+        );
         if (managersResult) setAddableManagers(managersResult);
       } catch (err) {
         console.error("Error fetching selectable managers:", err);
@@ -323,60 +335,19 @@ export default function TeamPage({
     loadAddableManagers();
   }, []);
 
-
-  const availableTeachers = [
-    "adam.dandrea@ycdsb.ca",
-    "alessia.landolfi@ycdsb.ca",
-    "alexander.dasilva@ycdsb.ca",
-    "alexandra.defaveri@ycdsb.ca",
-    "alla.al-shaikh@ycdsb.ca",
-    "anthony.petrone@ycdsb.ca",
-    "antonette.montanaro@ycdsb.ca",
-    "brian.villaalvarez@ycdsb.ca",
-    "catharina.wicks@ycdsb.ca",
-    "dan.nero@ycdsb.ca",
-    "daniela.bonello@ycdsb.ca",
-    "david.beck@ycdsb.ca",
-    "david.west@ycdsb.ca",
-    "domenico.coccia@ycdsb.ca",
-    "george.azar@ycdsb.ca",
-    "jennifer.hickey@ycdsb.ca",
-    "jordan.caruso@ycdsb.ca",
-    "julia.loschiavo@ycdsb.ca",
-    "kasia.bak@ycdsb.ca",
-    "lori.gennaro@ycdsb.ca",
-    "lucy.araujo@ycdsb.ca",
-    "manuel.deocampo@ycdsb.ca",
-    "mark.johnson@ycdsb.ca",
-    "martin.nicholls@ycdsb.ca",
-    "melina.tedesco@ycdsb.ca",
-    "michael.merlocco@ycdsb.ca",
-    "michael.morrison@ycdsb.ca",
-    "michael.onorati@ycdsb.ca",
-    "michael.steiner@ycdsb.ca",
-    "michal.kirejczyk@ycdsb.ca",
-    "michele.petrone@ycdsb.ca",
-    "natalie.ligato@ycdsb.ca",
-    "paola.amoroso@ycdsb.ca",
-    "racquel.ventrella@ycdsb.ca",
-    "raimondo.puopolo@ycdsb.ca",
-    "richard.ow@ycdsb.ca",
-    "roberto.niro@ycdsb.ca",
-    "rocky.savoia@ycdsb.ca",
-    "sabrina.buffa@ycdsb.ca",
-    "samantha.maugeri@ycdsb.ca",
-    "stephanie.veitch@ycdsb.ca",
-    "steven.sedran@ycdsb.ca",
-    "tiziana.hayhoe@ycdsb.ca",
-    "vanessa.vitale@ycdsb.ca",
-    "victoria.ah-chin@ycdsb.ca",
-    "julia.braganza@ycdsb.ca",
-    "vanessa.dilecce@ycdsb.ca",
-    "anne.santiago@ycdsb.ca",
-    "jocelyn.shih@ycdsb.ca",
-    "joey.villaneuve@ycdsb.ca",
-    "nicole.romanelli@ycdsb.ca",
-  ];
+  useEffect(() => {
+    const loadCoaches = async () => {
+    try {
+      const coachesResult = await selectCoaches();
+      if (coachesResult) {
+        setAvailableCoaches(coachesResult);
+      }
+    } catch (err) {
+      console.error("Error fetching coaches:", err);
+    }
+  };
+  loadCoaches();
+  }, []);
 
   const resolvedParams = use(params);
   const team = data.find((item) => item.id === Number(resolvedParams.id));
@@ -400,7 +371,7 @@ export default function TeamPage({
 
   useEffect(() => {
     if (team && !formInitialized) {
-      setSelectedTeachers(team.teachers);
+      setSelectedCoaches(team.teachers);
       setSelectedSport(team.sport);
 
       editSportForm.reset({
@@ -419,8 +390,8 @@ export default function TeamPage({
     }
   }, [team, formInitialized]);
   const filteredPlayers = useMemo(() => {
-    const players = !filter.trim() 
-      ? addablePlayers 
+    const players = !filter.trim()
+      ? addablePlayers
       : addablePlayers.filter((player) =>
           player.name.toLowerCase().includes(filter.toLowerCase())
         );
@@ -472,68 +443,66 @@ export default function TeamPage({
   };
 
   const addManagerHandler = async (student: Student) => {
-  try {
-    console.group("🧩 ADD MANAGER HANDLER DEBUG");
-    console.log("➡️ Adding manager for:", student);
+    try {
+      console.group("🧩 ADD MANAGER HANDLER DEBUG");
+      console.log("➡️ Adding manager for:", student);
 
-    // Call the helper (which now logs everything)
-    const result = await addManager({
-      team_id: Number(resolvedParams.id),
-      student_id: student.id,
-      paid: false,
-    });
+      // Call the helper (which now logs everything)
+      const result = await addManager({
+        team_id: Number(resolvedParams.id),
+        student_id: student.id,
+        paid: false,
+      });
 
-    console.log("✅ addManager() returned:", result);
+      console.log("✅ addManager() returned:", result);
 
-    const refreshed = await selectTeamManagers(Number(resolvedParams.id));
-    console.log("🔁 Refreshed managers:", refreshed);
+      const refreshed = await selectTeamManagers(Number(resolvedParams.id));
+      console.log("🔁 Refreshed managers:", refreshed);
 
-    setManagers(refreshed);
-    setAddableManagers(addableManagers.filter((p) => p.id !== student.id));
-    setAddManagerOpen(false);
+      setManagers(refreshed);
+      setAddableManagers(addableManagers.filter((p) => p.id !== student.id));
+      setAddManagerOpen(false);
 
-    console.groupEnd();
-  } catch (error) {
-    console.error("❌ Error adding manager:", error);
-    console.groupEnd();
-  }
-};
-
-
-const onDeleteManager = async (manager: Manager) => {
-  try {
-    await deleteManager(manager.id);
-    setManagers(managers.filter((m) => m.id !== manager.id));
-    setDeleteManagerIsOpen(false);
-  } catch (err) {
-    console.error("Error deleting manager:", err);
-  }
-};
-
-const reloadManagers = async (data?: Manager[]) => {
-  if (data) setManagers(data);
-  await getPayments(); // refresh finances
-  const refreshedPlayers = await selectTeamPlayers(Number(resolvedParams.id));
-  setPlayers(refreshedPlayers);
-};
-
-
-  const addTeacher = (teacher: string) => {
-    if (!selectedTeachers.includes(teacher)) {
-      const newTeachers = [...selectedTeachers, teacher];
-      setSelectedTeachers(newTeachers);
-      editSportForm.setValue("teachers", newTeachers);
+      console.groupEnd();
+    } catch (error) {
+      console.error("❌ Error adding manager:", error);
+      console.groupEnd();
     }
-    setTeacherSearchOpen(false);
   };
 
-  const removeTeacher = (teacher: string) => {
-    const newTeachers = selectedTeachers.filter((t) => t !== teacher);
-    setSelectedTeachers(newTeachers);
-    editSportForm.setValue("teachers", newTeachers);
+  const onDeleteManager = async (manager: Manager) => {
+    try {
+      await deleteManager(manager.id);
+      setManagers(managers.filter((m) => m.id !== manager.id));
+      setDeleteManagerIsOpen(false);
+    } catch (err) {
+      console.error("Error deleting manager:", err);
+    }
   };
 
-  const getTeacherDisplayName = (email: string) => {
+  const reloadManagers = async (data?: Manager[]) => {
+    if (data) setManagers(data);
+    await getPayments(); // refresh finances
+    const refreshedPlayers = await selectTeamPlayers(Number(resolvedParams.id));
+    setPlayers(refreshedPlayers);
+  };
+
+  const addCoach = (coach: string) => {
+    if (!selectedCoaches.includes(coach)) {
+      const newCoaches = [...selectedCoaches, coach];
+      setSelectedCoaches(newCoaches);
+      editSportForm.setValue("teachers", newCoaches);
+    }
+    setCoachSearchOpen(false);
+  };
+
+  const removeCoach = (coach: string) => {
+    const newCoaches = selectedCoaches.filter((c) => c !== coach);
+    setSelectedCoaches(newCoaches);
+    editSportForm.setValue("teachers", newCoaches);
+  };
+
+  const getCoachDisplayName = (email: string) => {
     const name = email.split("@")[0];
     return name
       .split(".")
@@ -542,7 +511,6 @@ const reloadManagers = async (data?: Manager[]) => {
   };
   const onEditSportSave = async (values: z.infer<typeof editSportSchema>) => {
     try {
-
       const result = await updateSport({
         id: team.id,
         sport: values.sport,
@@ -572,7 +540,6 @@ const reloadManagers = async (data?: Manager[]) => {
 
   const onDeleteTeam = async () => {
     try {
-
       const result = await deleteSport({ id: team.id });
 
       if (result) {
@@ -584,8 +551,6 @@ const reloadManagers = async (data?: Manager[]) => {
       alert("Failed to delete team. Please try again.");
     }
   };
-
-  
 
   return (
     <>
@@ -764,7 +729,7 @@ const reloadManagers = async (data?: Manager[]) => {
                           type="button"
                           className="p-0 h-auto text-gray-500"
                           variant="link"
-                          onClick={() => setTeacherSearchOpen(true)}
+                          onClick={() => setCoachSearchOpen(true)}
                         >
                           Add Coaches
                         </Button>
@@ -772,21 +737,21 @@ const reloadManagers = async (data?: Manager[]) => {
                       <FormControl>
                         <div className="space-y-2">
                           <div className="flex flex-wrap gap-2 min-h-[2.5rem] px-3 py-2 border rounded-md">
-                            {selectedTeachers.length === 0 ? (
+                            {selectedCoaches.length === 0 ? (
                               <div className="text-muted-foreground text-sm">
                                 No coaches selected
                               </div>
                             ) : (
-                              selectedTeachers.map((teacher) => (
+                              selectedCoaches.map((coach) => (
                                 <Badge
-                                  key={teacher}
+                                  key={coach}
                                   variant="secondary"
                                   className="flex items-center gap-1"
                                 >
-                                  {getTeacherDisplayName(teacher)}
+                                  {getCoachDisplayName(coach)}
                                   <X
                                     className="h-3 w-3 cursor-pointer rounded-full"
-                                    onClick={() => removeTeacher(teacher)}
+                                    onClick={() => removeCoach(coach)}
                                   />
                                 </Badge>
                               ))
@@ -853,7 +818,7 @@ const reloadManagers = async (data?: Manager[]) => {
               <div className="text-xl font-semibold">Players</div>
               <Button
                 onClick={() => {
-                  setAddPlayerOpen(true)
+                  setAddPlayerOpen(true);
                 }}
                 className="text-xs h-8"
               >
@@ -984,8 +949,10 @@ const reloadManagers = async (data?: Manager[]) => {
               })}
             />
 
-
-            <AlertDialog open={deleteManagerIsOpen} onOpenChange={setDeleteManagerIsOpen}>
+            <AlertDialog
+              open={deleteManagerIsOpen}
+              onOpenChange={setDeleteManagerIsOpen}
+            >
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>
@@ -999,7 +966,8 @@ const reloadManagers = async (data?: Manager[]) => {
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={() => {
-                      if (toBeDeletedManager) onDeleteManager(toBeDeletedManager);
+                      if (toBeDeletedManager)
+                        onDeleteManager(toBeDeletedManager);
                     }}
                   >
                     Continue
@@ -1008,9 +976,16 @@ const reloadManagers = async (data?: Manager[]) => {
               </AlertDialogContent>
             </AlertDialog>
 
-            <CommandDialog open={addManagerOpen} onOpenChange={setAddManagerOpen}>
+            <CommandDialog
+              open={addManagerOpen}
+              onOpenChange={setAddManagerOpen}
+            >
               <DialogTitle className="sr-only">Add Manager</DialogTitle>
-              <CommandInput placeholder="Search for a manager..." value={filter} onValueChange={setFilter} />
+              <CommandInput
+                placeholder="Search for a manager..."
+                value={filter}
+                onValueChange={setFilter}
+              />
               <CommandList>
                 <CommandEmpty>No results found.</CommandEmpty>
                 <CommandGroup>
@@ -1021,7 +996,9 @@ const reloadManagers = async (data?: Manager[]) => {
                     >
                       <div className="flex flex-col">
                         <span className="font-medium">{manager.name}</span>
-                        <span className="text-sm text-muted-foreground">{manager.email}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {manager.email}
+                        </span>
                       </div>
                     </CommandItem>
                   ))}
@@ -1029,31 +1006,29 @@ const reloadManagers = async (data?: Manager[]) => {
               </CommandList>
             </CommandDialog>
 
-
             <CommandDialog
-              open={teacherSearchOpen}
-              onOpenChange={setTeacherSearchOpen}
+              open={coachSearchOpen}
+              onOpenChange={setCoachSearchOpen}
             >
-              <DialogTitle className="sr-only">Search Teachers</DialogTitle>
-              <CommandInput placeholder="Search for a teacher to add..." />
+              <DialogTitle className="sr-only">Search Coaches</DialogTitle>
+              <CommandInput placeholder="Search for a coach to add..." />
               <CommandList>
-                <CommandEmpty>No teachers found.</CommandEmpty>
+                <CommandEmpty>No coaches found.</CommandEmpty>
                 <CommandGroup>
-                  {availableTeachers
-                    .filter((teacher) => !selectedTeachers.includes(teacher))
-                    .map((teacher) => (
+                  {availableCoaches?.filter((coach) => !selectedCoaches.includes(coach.email))
+                    .map((coach) => (
                       <CommandItem
-                        key={teacher}
-                        value={teacher}
-                        onSelect={() => addTeacher(teacher)}
+                        key={coach.id}
+                        value={coach.email}
+                        onSelect={() => addCoach(coach.email)}
                         className="cursor-pointer"
                       >
                         <div className="flex flex-col">
                           <span className="font-medium">
-                            {getTeacherDisplayName(teacher)}
+                            {coach.name}
                           </span>
                           <span className="text-sm text-muted-foreground">
-                            {teacher}
+                            {coach.email}
                           </span>
                         </div>
                       </CommandItem>
