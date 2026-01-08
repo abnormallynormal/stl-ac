@@ -23,6 +23,8 @@ export const selectablePlayers = async (teamId: number): Promise<Student[]> => {
     query = query.not("id", "in", `(${studentIdsInTeam.join(",")})`);
   }
 
+  query = query.order("name", { ascending: true });
+
   const { data: availableStudents, error: studentsError } = await query;
 
   if (studentsError) {
@@ -199,6 +201,9 @@ export const selectableManagers = async (
   if (studentIdsInManagers.length > 0) {
     query = query.not("id", "in", `(${studentIdsInManagers.join(",")})`);
   }
+
+  query = query.order("name", { ascending: true });
+
   const { data: availableStudents, error: studentsError } = await query;
 
   if (studentsError) {

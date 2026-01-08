@@ -77,7 +77,7 @@ export const createManagerColumns = ({
         if (paidTeamId == null) {
           return (
             <Button
-              className="text-xs h-8"
+              className="text-xs h-8 bg-blue-500 text-white hover:bg-blue-400"
               onClick={async () => {
                 const data = await markManagerAsPaid({
                   managerId: manager.id,

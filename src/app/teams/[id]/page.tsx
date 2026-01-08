@@ -419,11 +419,12 @@ export default function TeamPage({
     }
   }, [team, formInitialized]);
   const filteredPlayers = useMemo(() => {
-    if (!filter.trim()) return addablePlayers;
-    const lowerFilter = filter.toLowerCase();
-    return addablePlayers.filter((player) =>
-      player.name.toLowerCase().includes(lowerFilter)
-    );
+    const players = !filter.trim() 
+      ? addablePlayers 
+      : addablePlayers.filter((player) =>
+          player.name.toLowerCase().includes(filter.toLowerCase())
+        );
+    return players.sort((a, b) => a.name.localeCompare(b.name));
   }, [addablePlayers, filter]);
 
   if (loading || !formInitialized) {
