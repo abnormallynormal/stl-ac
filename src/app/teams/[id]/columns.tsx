@@ -268,7 +268,7 @@ export const createColumns = ({
 
         return (
           <Button className="text-xs h-8 opacity-70" asChild>
-            <a href={`/teams/${paidTeam?.id}`}>
+            <a>
               Paid - {paidTeam?.grade.charAt(0)}
               {paidTeam?.gender.charAt(0)} {paidTeam?.sport}
             </a>
@@ -276,6 +276,7 @@ export const createColumns = ({
         );
       },
     },
+    
     {
       accessorKey: "action",
       header: () => {
