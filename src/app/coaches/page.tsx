@@ -252,7 +252,7 @@ export default function Coaches() {
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="john.doe@ycdsb.ca" />
+                              <Input placeholder="john.doe@ycdsb.ca" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -306,7 +306,7 @@ export default function Coaches() {
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="john.doe@ycdsb.ca" />
+                              <Input placeholder="john.doe@ycdsb.ca" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

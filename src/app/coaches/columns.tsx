@@ -58,13 +58,13 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Coach>[] => [
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => actions.onEdit(team)}>
-              Edit Sport
+              Edit Coach
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive focus:text-destructive focus:bg-destructive/10"
               onClick={() => actions.onDelete(team)}
             >
-              Delete Sport
+              Delete Coach
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
