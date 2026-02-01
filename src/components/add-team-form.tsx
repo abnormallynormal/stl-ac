@@ -1,8 +1,12 @@
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { selectSports, selectData, addSport } from "@/app/functions/teams"
-import { Button } from "@/components/ui/button"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { selectData, addTeam } from "@/app/functions/teams";
+import { selectData as selectSports } from "@/app/functions/sports";
+import { selectData as selectCoaches } from "@/app/functions/coaches";
+import { Coach } from "@/app/coaches/columns";
+import { Sport } from "@/app/sports/columns";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -10,53 +14,70 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { useEffect, useState } from "react"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
-import { DialogTitle } from "@/components/ui/dialog"
-import { X } from "lucide-react"
+} from "@/components/ui/form";
+import { useEffect, useState } from "react";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import {
+  CommandDialog,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+} from "@/components/ui/command";
+import { DialogTitle } from "@/components/ui/dialog";
+import { X } from "lucide-react";
 // Create schema function to include existing teams data for validation
-const createFormSchema = (existingTeams: any[] = []) => z.object({
-  sport: z.string().min(1, {
-    message: "Sport name must be at least 1 character.",
-  }),
-  grade: z.string().min(1, {
-    message: "Grade must be at least 1 character.",
-  }),
-  gender: z.string().min(1, {
-    message: "Gender must be at least 1 character.",
-  }),
-  season: z.string().min(1, {
-    message: "Season must be at least 1 character.",
-  }),
-  teachers: z
-    .array(z.string().email("Invalid email address"))
-    .min(1, "At least one teacher is required"),
-  points: z.number().int().min(0, {
-    message: "Points must be at least 0.",
-  }),
-  year: z.string().min(1, {
-    message: "Year must be at least 1 character.",
-  }),
-}).superRefine((values, ctx) => {
-  // Check for duplicate team with same sport, gender, grade, and season
-  const existingTeam = existingTeams.find(
-    (team) => 
-      team.sport === values.sport &&
-      team.gender === values.gender &&
-      team.grade === values.grade
-  );
-  
-  if (existingTeam) {
-    ctx.addIssue({
-      code: "custom",
-      message: "A team with this sport, gender, and grade combination already exists",
-      path: ["sport"],
+const createFormSchema = (existingTeams: any[] = []) =>
+  z
+    .object({
+      sport: z.string().min(1, {
+        message: "Sport name must be at least 1 character.",
+      }),
+      grade: z.string().min(1, {
+        message: "Grade must be at least 1 character.",
+      }),
+      gender: z.string().min(1, {
+        message: "Gender must be at least 1 character.",
+      }),
+      season: z.string().min(1, {
+        message: "Season must be at least 1 character.",
+      }),
+      teachers: z
+        .array(z.string().email("Invalid email address"))
+        .min(1, "At least one teacher is required"),
+      points: z.number().int().min(0, {
+        message: "Points must be at least 0.",
+      }),
+      year: z.string().min(1, {
+        message: "Year must be at least 1 character.",
+      }),
+    })
+    .superRefine((values, ctx) => {
+      // Check for duplicate team with same sport, gender, grade, and season
+      const existingTeam = existingTeams.find(
+        (team) =>
+          team.sport === values.sport &&
+          team.gender === values.gender &&
+          team.grade === values.grade,
+      );
+
+      if (existingTeam) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "A team with this sport, gender, and grade combination already exists",
+          path: ["sport"],
+        });
+      }
     });
-  }
-});
 
 interface AddTeamFormProps {
   onTeacherSearchOpen?: () => void;
@@ -65,64 +86,31 @@ interface AddTeamFormProps {
   onSuccess?: () => void;
 }
 
-export default function AddTeamForm({ onTeacherSearchOpen, onTeacherSearchClose, onCancel, onSuccess }: AddTeamFormProps = {}){
-  const [sports, setSports] = useState<{sport: string, points: number}[]>([]);
+export default function AddTeamForm({
+  onTeacherSearchOpen,
+  onTeacherSearchClose,
+  onCancel,
+  onSuccess,
+}: AddTeamFormProps = {}) {
+  const [sports, setSports] = useState<Sport[]>([]);
   const [existingTeams, setExistingTeams] = useState<any[]>([]);
   const [teacherSearchOpen, setTeacherSearchOpen] = useState(false);
   const [selectedTeachers, setSelectedTeachers] = useState<string[]>([]);
-  const availableTeachers = [
-    "adam.dandrea@ycdsb.ca",
-    "alessia.landolfi@ycdsb.ca",
-    "alexander.dasilva@ycdsb.ca",
-    "alexandra.defaveri@ycdsb.ca",
-    "alla.al-shaikh@ycdsb.ca",
-    "anthony.petrone@ycdsb.ca",
-    "antonette.montanaro@ycdsb.ca",
-    "brian.villaalvarez@ycdsb.ca",
-    "catharina.wicks@ycdsb.ca",
-    "dan.nero@ycdsb.ca",
-    "daniela.bonello@ycdsb.ca",
-    "david.beck@ycdsb.ca",
-    "david.west@ycdsb.ca",
-    "domenico.coccia@ycdsb.ca",
-    "george.azar@ycdsb.ca",
-    "jennifer.hickey@ycdsb.ca",
-    "jordan.caruso@ycdsb.ca",
-    "julia.loschiavo@ycdsb.ca",
-    "kasia.bak@ycdsb.ca",
-    "lori.gennaro@ycdsb.ca",
-    "lucy.araujo@ycdsb.ca",
-    "manuel.deocampo@ycdsb.ca",
-    "mark.johnson@ycdsb.ca",
-    "martin.nicholls@ycdsb.ca",
-    "melina.tedesco@ycdsb.ca",
-    "michael.merlocco@ycdsb.ca",
-    "michael.morrison@ycdsb.ca",
-    "michael.onorati@ycdsb.ca",
-    "michael.steiner@ycdsb.ca",
-    "michal.kirejczyk@ycdsb.ca",
-    "michele.petrone@ycdsb.ca",
-    "natalie.ligato@ycdsb.ca",
-    "paola.amoroso@ycdsb.ca",
-    "racquel.ventrella@ycdsb.ca",
-    "raimondo.puopolo@ycdsb.ca",
-    "richard.ow@ycdsb.ca",
-    "roberto.niro@ycdsb.ca",
-    "rocky.savoia@ycdsb.ca",
-    "sabrina.buffa@ycdsb.ca",
-    "samantha.maugeri@ycdsb.ca",
-    "stephanie.veitch@ycdsb.ca",
-    "steven.sedran@ycdsb.ca",
-    "tiziana.hayhoe@ycdsb.ca",
-    "vanessa.vitale@ycdsb.ca",
-    "victoria.ah-chin@ycdsb.ca",
-    "julia.braganza@ycdsb.ca",
-    "vanessa.dilecce@ycdsb.ca",
-    "anne.santiago@ycdsb.ca",
-    "jocelyn.shih@ycdsb.ca",
-    "joey.villaneuve@ycdsb.ca",
-    "nicole.romanelli@ycdsb.ca",
-  ];
+  const [availableTeachers, setAvailableTeachers] = useState<Coach[]>([]);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const result = await selectCoaches();
+        if (result) {
+          setAvailableTeachers(result);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    loadData();
+  }, []);
 
   useEffect(() => {
     selectSports().then((data) => setSports(data || []));
@@ -167,19 +155,16 @@ export default function AddTeamForm({ onTeacherSearchOpen, onTeacherSearchClose,
       .join(" ");
   };
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    
     try {
-      const result = await addSport({
+      const result = await addTeam({
         sport: values.sport,
         grade: values.grade,
         gender: values.gender,
         season: values.season,
         year: values.year,
         teachers: values.teachers,
-        points: values.points,
       });
-      
-      
+
       if (result) {
         form.reset();
         setSelectedTeachers([]);
@@ -191,9 +176,12 @@ export default function AddTeamForm({ onTeacherSearchOpen, onTeacherSearchClose,
   }
   return (
     <Form {...form}>
-      <form onSubmit={(e) => {
-        form.handleSubmit(onSubmit)(e);
-      }} className="space-y-4">
+      <form
+        onSubmit={(e) => {
+          form.handleSubmit(onSubmit)(e);
+        }}
+        className="space-y-4"
+      >
         <FormField
           control={form.control}
           name="sport"
@@ -205,7 +193,7 @@ export default function AddTeamForm({ onTeacherSearchOpen, onTeacherSearchClose,
                   onValueChange={(value) => {
                     field.onChange(value);
                     // Find the selected sport and set its points
-                    const selectedSport = sports.find(s => s.sport === value);
+                    const selectedSport = sports.find((s) => s.name === value);
                     if (selectedSport) {
                       form.setValue("points", selectedSport.points);
                     }
@@ -217,10 +205,10 @@ export default function AddTeamForm({ onTeacherSearchOpen, onTeacherSearchClose,
                       <SelectValue placeholder="Select sport" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
-                    {sports.map(({sport, points}) => (
-                      <SelectItem key={sport} value={sport}>
-                        {sport} ({points} points)
+                  <SelectContent className="max-h-[300px] overflow-y-auto">
+                    {sports.map(({ name, points }) => (
+                      <SelectItem key={name} value={name}>
+                        {name} ({points} points)
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -242,7 +230,7 @@ export default function AddTeamForm({ onTeacherSearchOpen, onTeacherSearchClose,
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent>
+                <SelectContent className="max-h-[300px] overflow-y-auto">
                   <SelectItem value="Boys">Boys</SelectItem>
                   <SelectItem value="Girls">Girls</SelectItem>
                   <SelectItem value="Co-ed">Co-ed</SelectItem>
@@ -264,7 +252,7 @@ export default function AddTeamForm({ onTeacherSearchOpen, onTeacherSearchClose,
                     <SelectValue placeholder="Select grade level" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent>
+                <SelectContent className="max-h-[300px] overflow-y-auto">
                   <SelectItem value="Jr.">Junior</SelectItem>
                   <SelectItem value="Sr.">Senior</SelectItem>
                   <SelectItem value="Varsity">Varsity</SelectItem>
@@ -286,7 +274,7 @@ export default function AddTeamForm({ onTeacherSearchOpen, onTeacherSearchClose,
                     <SelectValue placeholder="Select season" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent>
+                <SelectContent className="max-h-[300px] overflow-y-auto">
                   <SelectItem value="Fall">Fall</SelectItem>
                   <SelectItem value="Winter">Winter</SelectItem>
                   <SelectItem value="Spring">Spring</SelectItem>
@@ -345,8 +333,8 @@ export default function AddTeamForm({ onTeacherSearchOpen, onTeacherSearchClose,
           )}
         />
         <div className="flex justify-end gap-2">
-          <Button 
-            type="button" 
+          <Button
+            type="button"
             variant="secondary"
             onClick={() => {
               form.reset();
@@ -356,12 +344,17 @@ export default function AddTeamForm({ onTeacherSearchOpen, onTeacherSearchClose,
           >
             Cancel
           </Button>
-          <Button type="submit" onClick={() => {
-            form.handleSubmit(onSubmit);
-          }}>Submit</Button>
+          <Button
+            type="submit"
+            onClick={() => {
+              form.handleSubmit(onSubmit);
+            }}
+          >
+            Submit
+          </Button>
         </div>
       </form>
-      
+
       <CommandDialog
         open={teacherSearchOpen}
         onOpenChange={(open) => {

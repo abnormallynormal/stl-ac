@@ -11,20 +11,20 @@ import {
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, Ellipsis } from "lucide-react";
 
-export type Team = {
+export type Sport = {
   id: number;
-  sport: string;
+  name: string;
   points: number;
 };
 
 export interface ColumnActions {
-  onEdit: (team: Team) => void;
-  onDelete: (team: Team) => void;
+  onEdit: (Sport: Sport) => void;
+  onDelete: (Sport: Sport) => void;
 }
 
-export const createColumns = (actions: ColumnActions): ColumnDef<Team>[] => [
+export const createColumns = (actions: ColumnActions): ColumnDef<Sport>[] => [
   {
-    accessorKey: "sport",
+    accessorKey: "name",
     header: ({ column }) => {
       return (
         <Button
@@ -47,7 +47,7 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Team>[] => [
       return null;
     },
     cell: ({ row }) => {
-      const team = row.original;
+      const sport = row.original;
 
       return (
         <DropdownMenu>
@@ -57,12 +57,12 @@ export const createColumns = (actions: ColumnActions): ColumnDef<Team>[] => [
           <DropdownMenuContent>
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => actions.onEdit(team)}>
+            <DropdownMenuItem onClick={() => actions.onEdit(sport)}>
               Edit Sport
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive focus:text-destructive focus:bg-destructive/10"
-              onClick={() => actions.onDelete(team)}
+              onClick={() => actions.onDelete(sport)}
             >
               Delete Sport
             </DropdownMenuItem>

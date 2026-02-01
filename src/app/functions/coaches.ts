@@ -62,3 +62,4 @@ export const deleteData = async ({ id }: { id: number }) => {
     return data as Coach[];
   }
 };
+

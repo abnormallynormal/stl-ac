@@ -4,7 +4,19 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Pencil, ArrowUpDown } from "lucide-react";
 export type Team = {
   id: number;
-  sport: string;
+  sport_id: number;
+  sport?: {
+    id: number;
+    name: string;
+    points: number;
+  };
+  team_coaches?: {
+    coaches: {
+      id: number;
+      email: string;
+      name: string;
+    };
+  }[];
   gender: "Boys" | "Girls" | "Co-ed";
   grade: "Jr." | "Sr." | "Varsity";
   season: "Winter" | "Spring" | "Fall";
@@ -22,7 +34,7 @@ export const columns: ColumnDef<Team>[] = [
       const team = row.original;
       return (
         <a href={`/teams/${team.id}`}>
-          {`${team.sport} ${team.grade} ${team.gender}`}
+          {`${team.sport?.name} ${team.grade} ${team.gender}`}
         </a>
       );
     },
@@ -33,7 +45,7 @@ export const columns: ColumnDef<Team>[] = [
     header: "Teachers",
     cell: ({ row }) => {
       const team = row.original;
-      return team.teachers.join(", ");
+      return team.team_coaches?.map(tc => tc.coaches.email).join(", ") ?? "";
     },
   },
   {

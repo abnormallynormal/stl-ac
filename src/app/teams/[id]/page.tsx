@@ -52,8 +52,8 @@ import { useRouter } from "next/navigation";
 import {
   selectData,
   selectSports,
-  updateSport,
-  deleteSport,
+  updateTeam,
+  deleteTeam,
 } from "../../functions/teams";
 import {
   selectablePlayers,
@@ -76,13 +76,14 @@ import {
 } from "@/app/functions/finances";
 import { Finance } from "@/app/finances/columns";
 import { Coach } from "@/app/coaches/columns";
-const createEditSportSchema = (
+import { Sport } from "@/app/sports/columns";
+const createEditTeamSchema = (
   existingTeams: Team[] = [],
   currentTeamId?: number
 ) =>
   z
     .object({
-      sport: z.string().min(1, "Sport is required"),
+      sport_id: z.number().int().min(1, "Sport is required"),
       gender: z.string().min(1, "Gender is required"),
       grade: z.string().min(1, "Grade is required"),
       season: z.string().min(1, "Season is required"),
@@ -98,7 +99,7 @@ const createEditSportSchema = (
       const existingTeam = existingTeams.find(
         (team) =>
           team.id !== currentTeamId &&
-          team.sport === values.sport &&
+          team.sport_id === values.sport_id &&
           team.gender === values.gender &&
           team.grade === values.grade
       );
@@ -119,7 +120,7 @@ export default function TeamPage({
 }) {
   const [data, setData] = useState<Team[]>([]);
   const [finances, setFinances] = useState<Finance[]>();
-  const [sports, setSports] = useState<{ sport: string; points: number }[]>([]);
+  const [sports, setSports] = useState<Sport[]>([]);
   const [selectedSport, setSelectedSport] = useState<string | null>();
   const [availableCoaches, setAvailableCoaches] = useState<Coach[]>();
   const [loading, setLoading] = useState<boolean>(true);
@@ -351,11 +352,11 @@ export default function TeamPage({
 
   const resolvedParams = use(params);
   const team = data.find((item) => item.id === Number(resolvedParams.id));
-  const editSportSchema = createEditSportSchema(data, team?.id);
-  const editSportForm = useForm<z.infer<typeof editSportSchema>>({
-    resolver: zodResolver(editSportSchema),
+  const editTeamSchema = createEditTeamSchema(data, team?.id);
+  const editTeamForm = useForm<z.infer<typeof editTeamSchema>>({
+    resolver: zodResolver(editTeamSchema),
     defaultValues: {
-      sport: "",
+      sport_id: 0,
       gender: "",
       grade: "",
       season: "",
@@ -371,16 +372,17 @@ export default function TeamPage({
 
   useEffect(() => {
     if (team && !formInitialized) {
-      setSelectedCoaches(team.teachers);
-      setSelectedSport(team.sport);
+      const coaches = team.team_coaches?.map(tc => tc.coaches.email) ?? [];
+      setSelectedCoaches(coaches);
+      setSelectedSport(team.sport?.name);
 
-      editSportForm.reset({
-        sport: team.sport,
+      editTeamForm.reset({
+        sport_id: team.sport_id,
         gender: team.gender,
         grade: team.grade,
         season: team.season,
-        teachers: team.teachers,
-        points: team.points,
+        teachers: coaches,
+        points: team.sport?.points ?? 0,
         year: team.year,
         seasonHighlights: team.seasonHighlights || "",
         yearbookMessage: team.yearbookMessage || "",
@@ -491,7 +493,7 @@ export default function TeamPage({
     if (!selectedCoaches.includes(coach)) {
       const newCoaches = [...selectedCoaches, coach];
       setSelectedCoaches(newCoaches);
-      editSportForm.setValue("teachers", newCoaches);
+      editTeamForm.setValue("teachers", newCoaches);
     }
     setCoachSearchOpen(false);
   };
@@ -499,7 +501,7 @@ export default function TeamPage({
   const removeCoach = (coach: string) => {
     const newCoaches = selectedCoaches.filter((c) => c !== coach);
     setSelectedCoaches(newCoaches);
-    editSportForm.setValue("teachers", newCoaches);
+    editTeamForm.setValue("teachers", newCoaches);
   };
 
   const getCoachDisplayName = (email: string) => {
@@ -509,12 +511,13 @@ export default function TeamPage({
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
       .join(" ");
   };
-  const onEditSportSave = async (values: z.infer<typeof editSportSchema>) => {
+  const onEditSportSave = async (values: z.infer<typeof editTeamSchema>) => {
     try {
-      const result = await updateSport({
+      // const selectedSport = sports.find(s => s.id === values.sport_id);
+      const result = await updateTeam({
         id: team.id,
-        sport: values.sport,
-        points: values.points,
+        sport_id: values.sport_id,
+        // sport: selectedSport?.sport || "",
         year: values.year,
         season: values.season,
         grade: values.grade,
@@ -540,7 +543,7 @@ export default function TeamPage({
 
   const onDeleteTeam = async () => {
     try {
-      const result = await deleteSport({ id: team.id });
+      const result = await deleteTeam({ id: team.id });
 
       if (result) {
         // Navigate back to teams page
@@ -557,40 +560,41 @@ export default function TeamPage({
       <Navigation />
       <div className="px-16 py-8">
         <div className="font-bold text-3xl mb-4">
-          {team.grade} {team.gender} {team.sport}
+          {team.grade} {team.gender} {team.sport?.name}
         </div>
         <div className="grid grid-cols-[1fr_2fr] gap-16">
           <div>
             <div className="text-xl font-semibold mb-4">
               Edit Team Information
             </div>
-            <Form {...editSportForm}>
+            <Form {...editTeamForm}>
               <form
-                onSubmit={editSportForm.handleSubmit(onEditSportSave)}
+                onSubmit={editTeamForm.handleSubmit(onEditSportSave)}
                 className="space-y-4"
               >
                 <FormField
-                  control={editSportForm.control}
-                  name="sport"
+                  control={editTeamForm.control}
+                  name="sport_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Sport</FormLabel>
                       <Select
                         onValueChange={(value) => {
-                          field.onChange(value);
-                          setSelectedSport(value);
-                          // Find the selected sport and set its points
+                          const sportId = parseInt(value);
+                          field.onChange(sportId);
+                          // Find the selected sport and set its name and points
                           const selectedSport = sports.find(
-                            (s) => s.sport === value
+                            (s) => s.id === sportId
                           );
                           if (selectedSport) {
-                            editSportForm.setValue(
+                            setSelectedSport(selectedSport.name);
+                            editTeamForm.setValue(
                               "points",
                               selectedSport.points
                             );
                           }
                         }}
-                        value={field.value}
+                        value={field.value?.toString()}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -598,9 +602,9 @@ export default function TeamPage({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {sports.map(({ sport }) => (
-                            <SelectItem key={sport} value={sport}>
-                              {sport}
+                          {sports.map((sport) => (
+                            <SelectItem key={sport.id} value={sport.id.toString()}>
+                              {sport.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -610,7 +614,7 @@ export default function TeamPage({
                   )}
                 />
                 <FormField
-                  control={editSportForm.control}
+                  control={editTeamForm.control}
                   name="gender"
                   render={({ field }) => (
                     <FormItem>
@@ -635,7 +639,7 @@ export default function TeamPage({
                   )}
                 />
                 <FormField
-                  control={editSportForm.control}
+                  control={editTeamForm.control}
                   name="grade"
                   render={({ field }) => (
                     <FormItem>
@@ -660,7 +664,7 @@ export default function TeamPage({
                   )}
                 />
                 <FormField
-                  control={editSportForm.control}
+                  control={editTeamForm.control}
                   name="points"
                   render={({ field }) => (
                     <FormItem>
@@ -671,7 +675,7 @@ export default function TeamPage({
                 />
 
                 <FormField
-                  control={editSportForm.control}
+                  control={editTeamForm.control}
                   name="season"
                   render={({ field }) => (
                     <FormItem>
@@ -696,7 +700,7 @@ export default function TeamPage({
                   )}
                 />
                 <FormField
-                  control={editSportForm.control}
+                  control={editTeamForm.control}
                   name="year"
                   render={({ field }) => (
                     <FormItem>
@@ -719,7 +723,7 @@ export default function TeamPage({
                   )}
                 />
                 <FormField
-                  control={editSportForm.control}
+                  control={editTeamForm.control}
                   name="teachers"
                   render={({ field }) => (
                     <FormItem>
@@ -764,7 +768,7 @@ export default function TeamPage({
                   )}
                 />
                 <FormField
-                  control={editSportForm.control}
+                  control={editTeamForm.control}
                   name="seasonHighlights"
                   render={({ field }) => (
                     <FormItem>
@@ -780,7 +784,7 @@ export default function TeamPage({
                   )}
                 />
                 <FormField
-                  control={editSportForm.control}
+                  control={editTeamForm.control}
                   name="yearbookMessage"
                   render={({ field }) => (
                     <FormItem>
@@ -872,7 +876,7 @@ export default function TeamPage({
                   <AlertDialogHeader>
                     <AlertDialogTitle>
                       Are you absolutely sure you want to delete {team.grade}{" "}
-                      {team.gender} {team.sport}?
+                      {team.gender} {team.sport?.name || ""}?
                     </AlertDialogTitle>
                     <AlertDialogDescription>
                       This action cannot be undone.

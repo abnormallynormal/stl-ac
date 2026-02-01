@@ -6,7 +6,7 @@ import {
   insertData,
   deleteData,
 } from "../functions/sports";
-import { createColumns, Team } from "./columns";
+import { createColumns, Sport } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { DataTable } from "./data-table";
@@ -40,12 +40,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
-export default function Teams() {
+export default function Sports() {
   const [editIsOpen, setEditIsOpen] = useState(false);
   const [addIsOpen, setAddIsOpen] = useState(false);
   const [deleteIsOpen, setDeleteIsOpen] = useState(false);
-  const [teamId, setTeamId] = useState<number>();
-  const [data, setData] = useState<Team[]>([]);
+  const [sportId, setSportId] = useState<number>();
+  const [data, setData] = useState<Sport[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -64,7 +64,7 @@ export default function Teams() {
 
     loadData();
   }, []);
-  const createEditFormSchema = (data: Team[], currentTeamId?: number) =>
+  const createEditFormSchema = (data: Sport[], currentSportId?: number) =>
     z
       .object({
         name: z.string().min(1, {
@@ -73,8 +73,8 @@ export default function Teams() {
         points: z.number().int().min(1),
       })
       .superRefine((values, ctx) => {
-        const existingTeam = data.find((team) => team.sport === values.name);
-        if (existingTeam && existingTeam.id !== currentTeamId) {
+        const existingSport = data.find((sport) => sport.name === values.name);
+        if (existingSport && existingSport.id !== currentSportId) {
           ctx.addIssue({
             code: "custom",
             message: "Sport already exists",
@@ -90,7 +90,7 @@ export default function Teams() {
       points: z.number().int().min(1),
     })
     .superRefine((values, ctx) => {
-      if (data.find((team) => team.sport === values.name)) {
+      if (data.find((sport) => sport.name === values.name)) {
         ctx.addIssue({
           code: "custom",
           message: "Sport already exists",
@@ -106,18 +106,18 @@ export default function Teams() {
       points: undefined,
     },
   });
-  const editFormSchema = createEditFormSchema(data, teamId);
+  const editFormSchema = createEditFormSchema(data, sportId);
   const editForm = useForm<z.infer<typeof editFormSchema>>({
     resolver: zodResolver(editFormSchema),
     defaultValues: {
-      name: data.find((item) => item.id === teamId)?.sport || "",
-      points: data.find((item) => item.id === teamId)?.points || undefined,
+      name: data.find((item) => item.id === sportId)?.name || "",
+      points: data.find((item) => item.id === sportId)?.points || undefined,
     },
   });
   const addOnSubmit = async (values: z.infer<typeof addFormSchema>) => {
     try {
       await insertData({
-        sport: values.name,
+        name: values.name,
         points: values.points,
       });
       const result = await selectData();
@@ -133,20 +133,20 @@ export default function Teams() {
     }
   };
   const editOnSubmit = async (values: z.infer<typeof editFormSchema>) => {
-    if (teamId === undefined) return;
+    if (sportId === undefined) return;
 
     try {
       await updateData({
-        id: teamId,
-        sport: values.name,
+        id: sportId,
+        name: values.name,
         points: values.points,
       });
 
       // Update local state
       setData((prevData) =>
         prevData.map((team) =>
-          team.id === teamId
-            ? { ...team, sport: values.name, points: values.points }
+          team.id === sportId
+            ? { ...team, name: values.name, points: values.points }
             : team
         )
       );
@@ -160,29 +160,29 @@ export default function Teams() {
       console.error("Error updating data:", error);
     }
   };
-  const deleteOnSubmit = async (teamId: number | undefined) => {
-    if (teamId === undefined) return;
+  const deleteOnSubmit = async (sportId: number | undefined) => {
+    if (sportId === undefined) return;
     try {
       await deleteData({
-        id: teamId,
+        id: sportId,
       });
       // Update local state
-      setData((prevData) => prevData.filter((team) => team.id !== teamId));
+      setData((prevData) => prevData.filter((sport) => sport.id !== sportId));
       // Close the dialog
       setDeleteIsOpen(false);
     } catch (error) {
       console.error("Error deleting data:", error);
     }
   };
-  const handleEdit = (team: Team) => {
-    setTeamId(team.id);
-    editForm.setValue("name", team.sport);
-    editForm.setValue("points", team.points);
+  const handleEdit = (sport: Sport) => {
+    setSportId(sport.id);
+    editForm.setValue("name", sport.name);
+    editForm.setValue("points", sport.points);
     setEditIsOpen(true);
   };
 
-  const handleDelete = (team: Team) => {
-    setTeamId(team.id);
+  const handleDelete = (sport: Sport) => {
+    setSportId(sport.id);
     setDeleteIsOpen(true);
   };
 
@@ -340,7 +340,7 @@ export default function Teams() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>
                     Are you absolutely sure you want to delete{" "}
-                    {data.find((team) => team.id === teamId)?.sport}?
+                    {data.find((sport) => sport.id === sportId)?.name}?
                   </AlertDialogTitle>
                   <AlertDialogDescription>
                     This action cannot be undone.
@@ -348,7 +348,7 @@ export default function Teams() {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => deleteOnSubmit(teamId)}>
+                  <AlertDialogAction onClick={() => deleteOnSubmit(sportId)}>
                     Continue
                   </AlertDialogAction>
                 </AlertDialogFooter>
