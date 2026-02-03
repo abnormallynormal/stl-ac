@@ -51,7 +51,11 @@ const createFormSchema = (existingTeams: any[] = []) =>
         message: "Season must be at least 1 character.",
       }),
       teachers: z
-        .array(z.string().email("Invalid email address"))
+        .array(z.object({
+          id: z.number(),
+          name: z.string(),
+          email: z.string().email("Invalid email address"),
+        }))
         .min(1, "At least one teacher is required"),
       points: z.number().int().min(0, {
         message: "Points must be at least 0.",
@@ -64,7 +68,7 @@ const createFormSchema = (existingTeams: any[] = []) =>
       // Check for duplicate team with same sport, gender, grade, and season
       const existingTeam = existingTeams.find(
         (team) =>
-          team.sport === values.sport &&
+          team.sport?.name === values.sport &&
           team.gender === values.gender &&
           team.grade === values.grade,
       );
@@ -95,7 +99,7 @@ export default function AddTeamForm({
   const [sports, setSports] = useState<Sport[]>([]);
   const [existingTeams, setExistingTeams] = useState<any[]>([]);
   const [teacherSearchOpen, setTeacherSearchOpen] = useState(false);
-  const [selectedTeachers, setSelectedTeachers] = useState<string[]>([]);
+  const [selectedTeachers, setSelectedTeachers] = useState<Coach[]>([]);
   const [availableTeachers, setAvailableTeachers] = useState<Coach[]>([]);
   useEffect(() => {
     const loadData = async () => {
@@ -131,20 +135,28 @@ export default function AddTeamForm({
     },
   });
 
-  const addTeacher = (teacher: string) => {
+  const addTeacher = (teacher: Coach) => {
     if (!selectedTeachers.includes(teacher)) {
       const newTeachers = [...selectedTeachers, teacher];
       setSelectedTeachers(newTeachers);
-      form.setValue("teachers", newTeachers);
+      form.setValue("teachers", newTeachers.map((t) => ({
+        id: t.id,
+        name: t.name,
+        email: t.email,
+      })));
     }
     setTeacherSearchOpen(false);
     onTeacherSearchClose?.();
   };
 
-  const removeTeacher = (teacher: string) => {
-    const newTeachers = selectedTeachers.filter((t) => t !== teacher);
+  const removeTeacher = (teacher: Coach) => {
+    const newTeachers = selectedTeachers.filter((t) => t.id !== teacher.id);
     setSelectedTeachers(newTeachers);
-    form.setValue("teachers", newTeachers);
+    form.setValue("teachers", newTeachers.map((t) => ({
+      id: t.id,
+      name: t.name,
+      email: t.email,
+    })));
   };
 
   const getTeacherDisplayName = (email: string) => {
@@ -162,7 +174,7 @@ export default function AddTeamForm({
         gender: values.gender,
         season: values.season,
         year: values.year,
-        teachers: values.teachers,
+        teachers: values.teachers.map((t) => t.id),
       });
 
       if (result) {
@@ -313,11 +325,11 @@ export default function AddTeamForm({
                     ) : (
                       selectedTeachers.map((teacher) => (
                         <Badge
-                          key={teacher}
+                          key={teacher.id}
                           variant="secondary"
                           className="flex items-center gap-1"
                         >
-                          {getTeacherDisplayName(teacher)}
+                          {getTeacherDisplayName(teacher.email)}
                           <X
                             className="h-3 w-3 cursor-pointer rounded-full"
                             onClick={() => removeTeacher(teacher)}
@@ -373,17 +385,17 @@ export default function AddTeamForm({
               .filter((teacher) => !selectedTeachers.includes(teacher))
               .map((teacher) => (
                 <CommandItem
-                  key={teacher}
-                  value={teacher}
+                  key={teacher.id}
+                  value={teacher.email}
                   onSelect={() => addTeacher(teacher)}
                   className="cursor-pointer"
                 >
                   <div className="flex flex-col">
                     <span className="font-medium">
-                      {getTeacherDisplayName(teacher)}
+                      {getTeacherDisplayName(teacher.email)}
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      {teacher}
+                      {teacher.email}
                     </span>
                   </div>
                 </CommandItem>

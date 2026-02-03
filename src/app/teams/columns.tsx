@@ -20,7 +20,6 @@ export type Team = {
   gender: "Boys" | "Girls" | "Co-ed";
   grade: "Jr." | "Sr." | "Varsity";
   season: "Winter" | "Spring" | "Fall";
-  teachers: string[];
   points: number;
   year: string;
   seasonHighlights?: string;

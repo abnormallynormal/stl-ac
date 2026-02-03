@@ -24,7 +24,7 @@ export const columns = ({teams}: {teams: Team[]}): ColumnDef<Finance>[] => [
         <a href={`/teams/${row.original.paid_to_team}`}>
           {team?.grade.charAt(0)}
           {team?.gender.charAt(0)}{" "}
-          {team?.sport}
+          {team?.sport?.name}
         </a>
       );
     }

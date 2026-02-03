@@ -68,7 +68,7 @@ export const createManagerColumns = ({
               }}
             >
               Paid - {paidTeam?.grade.charAt(0)}
-              {paidTeam?.gender.charAt(0)} {paidTeam?.sport}
+              {paidTeam?.gender.charAt(0)} {paidTeam?.sport?.name}
             </Button>
           );
         }
@@ -97,7 +97,7 @@ export const createManagerColumns = ({
             <Button className="text-xs h-8 opacity-70" asChild>
               <a>
                 Paid - {paidTeam?.grade.charAt(0)}
-                {paidTeam?.gender.charAt(0)} {paidTeam?.sport}
+                {paidTeam?.gender.charAt(0)} {paidTeam?.sport?.name}
               </a>
             </Button>
           );

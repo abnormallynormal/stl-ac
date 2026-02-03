@@ -12,7 +12,6 @@ export default function Finances() {
   const [data, setData] = useState<Finance[]>()
   const [teamData, setTeamData] = useState<Team[]>()
   const [filter, setFilter] = useState<string>("");
-  const [filterTeam, setFilterTeam] = useState<string>();
   useEffect(() => {
     const getPayments = async () => {
       try{

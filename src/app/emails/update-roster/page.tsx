@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import Navigation from "@/components/navbar";
 import { DataTable } from "./data-table";
-import { columns, Team } from "./columns";
+import { columns } from "./columns";
+import { Team } from "@/app/teams/columns";
 import { selectData } from "@/app/functions/teams";
 import { Button } from "@/components/ui/button";
 import { Select } from "@radix-ui/react-select";
@@ -49,7 +50,7 @@ export default function EmailPage() {
 
   async function loopTeams() {
     selectedTeams.forEach((team: Team) => {
-      const to = team.teachers;
+      const to = team.team_coaches?.map(tc => tc.coaches.email) ?? [];
       const subject = `Update Student Roster`;
       const link = `https://stl-ac.vercel.app/teams/${team.id}`;
       handleSend({to,subject, link});
@@ -111,10 +112,10 @@ export default function EmailPage() {
           </div>
           <Select value={season} onValueChange={(season) => {
             setSeason(season);
-            setTeamsBySeason(teams.filter((team) => team.season === season))
+            setTeamsBySeason(season === "All" ? teams : teams.filter((team) => team.season === season))
           }}>
             <SelectTrigger className="w-auto">
-              <SelectValue placeholder="Select year" />
+              <SelectValue placeholder="Select season" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All</SelectItem>

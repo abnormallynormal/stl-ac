@@ -2,32 +2,31 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { ColumnDef } from "@tanstack/react-table";
-
-export type Team = {
-  id: number;
-  sport: string;
-  gender: "Boys" | "Girls" | "Co-ed";
-  grade: "Jr." | "Sr." | "Varsity";
-  season: "Winter" | "Spring" | "Fall";
-  teachers: string[];
-  points: number;
-  year: string;
-  seasonHighlights?: string;
-  yearbookMessage?: string;
-};
-
+import {Team} from "@/app/teams/columns";
+import { ArrowUpDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 export const columns = (
   toggleTeam: (team: Team) => void,
   selectedTeams: Team[],
   setSelectedTeams: (teams: Team[]) => void,
-  allTeams: Team[]
+  allTeams: Team[],
 ): ColumnDef<Team>[] => [
   {
     accessorKey: "sport",
-    header: "Team Name",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Team Name
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
     cell: ({ row }) => (
       <span>
-        {row.original.sport +
+        {row.original.sport?.name +
           " " +
           row.original.grade +
           " " +
@@ -40,7 +39,8 @@ export const columns = (
     header: "Emails",
     cell: ({ row }) => (
       <div className="w-[900px] truncate whitespace-normal break-words">
-        {row.original.teachers.join(", ")}
+        {row.original.team_coaches?.map((tc) => tc.coaches.email).join(", ") ??
+          ""}
       </div>
     ),
   },
@@ -54,9 +54,7 @@ export const columns = (
     header: ({ table }) => {
       const allSelected = table
         .getRowModel()
-        .rows.every((row) =>
-          selectedTeams.includes(row.original)
-        );
+        .rows.every((row) => selectedTeams.includes(row.original));
 
       return (
         <div className="flex items-center justify-end gap-3 text-right pr-4">
@@ -69,7 +67,7 @@ export const columns = (
                 .rows.map((row) => row.original.id.toString());
               if (allSelected) {
                 // Uncheck all
-                setSelectedTeams([])
+                setSelectedTeams([]);
               } else {
                 // Check all
                 setSelectedTeams([...allTeams]);

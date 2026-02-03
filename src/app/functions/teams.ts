@@ -56,7 +56,7 @@ export const addTeam = async ({
   season: string;
   grade: string;
   gender: string;
-  teachers: string[]; // array of coach emails
+  teachers: number[]; // array of coach emails
 }) => {
   const supabase = createClient();
 
@@ -64,7 +64,7 @@ export const addTeam = async ({
   const { data: sportData, error: sportError } = await supabase
     .from("sports")
     .select("id, points")
-    .eq("sport", sport)
+    .eq("name", sport)
     .single();
 
   if (sportError || !sportData) {
@@ -92,22 +92,11 @@ export const addTeam = async ({
     return;
   }
 
-  // Step 3: Get coach IDs from emails
-  const { data: coachData, error: coachError } = await supabase
-    .from("coaches")
-    .select("id, email")
-    .in("email", teachers);
-
-  if (coachError) {
-    console.log("Coach lookup error:", coachError);
-    return;
-  }
-
-  // Step 4: Insert into team_coaches junction table
-  if (coachData && coachData.length > 0) {
-    const teamCoachInserts = coachData.map((coach) => ({
+  // Step 3: Insert into team_coaches junction table
+  if (teachers && teachers.length > 0) {
+    const teamCoachInserts = teachers.map((coachId) => ({
       team_id: teamData.id,
-      coach_id: coach.id,
+      coach_id: coachId,
     }));
 
     const { error: junctionError } = await supabase

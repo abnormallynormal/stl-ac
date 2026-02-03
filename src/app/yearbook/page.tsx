@@ -18,7 +18,7 @@ export default function YearbookMessages() {
           data?.map((team) => ({
             team_id: team.id,
             season: `${team.season}`,
-            name: `${team.sport} ${team.grade} ${team.gender}`,
+            name: `${team.sport?.name} ${team.grade} ${team.gender}`,
             message: team.yearbookMessage
               ? `"${team.yearbookMessage.trim()}"`
               : "⚠️ No message yet ⚠️",
