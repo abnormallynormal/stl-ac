@@ -51,11 +51,13 @@ const createFormSchema = (existingTeams: any[] = []) =>
         message: "Season must be at least 1 character.",
       }),
       teachers: z
-        .array(z.object({
-          id: z.number(),
-          name: z.string(),
-          email: z.string().email("Invalid email address"),
-        }))
+        .array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+            email: z.string().email("Invalid email address"),
+          }),
+        )
         .min(1, "At least one teacher is required"),
       points: z.number().int().min(0, {
         message: "Points must be at least 0.",
@@ -139,11 +141,14 @@ export default function AddTeamForm({
     if (!selectedTeachers.includes(teacher)) {
       const newTeachers = [...selectedTeachers, teacher];
       setSelectedTeachers(newTeachers);
-      form.setValue("teachers", newTeachers.map((t) => ({
-        id: t.id,
-        name: t.name,
-        email: t.email,
-      })));
+      form.setValue(
+        "teachers",
+        newTeachers.map((t) => ({
+          id: t.id,
+          name: t.name,
+          email: t.email,
+        })),
+      );
     }
     setTeacherSearchOpen(false);
     onTeacherSearchClose?.();
@@ -152,20 +157,16 @@ export default function AddTeamForm({
   const removeTeacher = (teacher: Coach) => {
     const newTeachers = selectedTeachers.filter((t) => t.id !== teacher.id);
     setSelectedTeachers(newTeachers);
-    form.setValue("teachers", newTeachers.map((t) => ({
-      id: t.id,
-      name: t.name,
-      email: t.email,
-    })));
+    form.setValue(
+      "teachers",
+      newTeachers.map((t) => ({
+        id: t.id,
+        name: t.name,
+        email: t.email,
+      })),
+    );
   };
 
-  const getTeacherDisplayName = (email: string) => {
-    const name = email.split("@")[0];
-    return name
-      .split(".")
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(" ");
-  };
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       const result = await addTeam({
@@ -299,7 +300,7 @@ export default function AddTeamForm({
         <FormField
           control={form.control}
           name="teachers"
-          render={({ field }) => (
+          render={() => (
             <FormItem>
               <div className="flex justify-between items-center">
                 <FormLabel>Coaches</FormLabel>
@@ -329,7 +330,7 @@ export default function AddTeamForm({
                           variant="secondary"
                           className="flex items-center gap-1"
                         >
-                          {getTeacherDisplayName(teacher.email)}
+                          {teacher.name}
                           <X
                             className="h-3 w-3 cursor-pointer rounded-full"
                             onClick={() => removeTeacher(teacher)}
@@ -386,14 +387,12 @@ export default function AddTeamForm({
               .map((teacher) => (
                 <CommandItem
                   key={teacher.id}
-                  value={teacher.email}
+                  value={teacher.name}
                   onSelect={() => addTeacher(teacher)}
                   className="cursor-pointer"
                 >
                   <div className="flex flex-col">
-                    <span className="font-medium">
-                      {getTeacherDisplayName(teacher.email)}
-                    </span>
+                    <span className="font-medium">{teacher.name}</span>
                     <span className="text-sm text-muted-foreground">
                       {teacher.email}
                     </span>

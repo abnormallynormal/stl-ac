@@ -51,10 +51,10 @@ import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   selectData,
-  selectSports,
   updateTeam,
   deleteTeam,
 } from "../../functions/teams";
+import {selectData as selectSports} from "@/app/functions/sports"
 import {
   selectablePlayers,
   selectTeamPlayers,
@@ -1023,7 +1023,7 @@ export default function TeamPage({
                     .map((coach) => (
                       <CommandItem
                         key={coach.id}
-                        value={coach.email}
+                        value={coach.name}
                         onSelect={() => addCoach(coach.email)}
                         className="cursor-pointer"
                       >

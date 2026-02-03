@@ -31,17 +31,6 @@ export const selectData = async () => {
   }
 };
 
-export const selectSports = async () => {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("sports")
-    .select("id, name, points");
-  if (!error) {
-    return data as { id: number; name: string; points: number }[];
-  } else {
-    console.log(error);
-  }
-};
 
 export const addTeam = async ({
   sport,
