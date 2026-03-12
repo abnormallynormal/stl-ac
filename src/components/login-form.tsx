@@ -22,7 +22,8 @@ export function LoginForm({
   defaultTab = "login",
   ...props
 }: LoginFormProps) {
-  const [page, setPage] = useState<"login" | "signup">(defaultTab);
+  // const [page, setPage] = useState<"login" | "signup">(defaultTab);
+  const page: "login" = "login";
   const [loginState, loginAction, isLoginPending] = useActionState(login, null);
   const [signupState, signupAction, isSignupPending] = useActionState(signup, null);
   
@@ -89,7 +90,7 @@ export function LoginForm({
                 </Button>
               </div>
             </div>
-            <div className="mt-4 text-center text-sm">
+            {/* <div className="mt-4 text-center text-sm">
               {page === "login"
                 ? "Don't have an account? "
                 : "Already have an account? "}
@@ -99,7 +100,7 @@ export function LoginForm({
               >
                 {page === "login" ? "Sign up" : "Login"}
               </a>
-            </div>
+            </div> */}
           </form>
         </CardContent>
       </Card>
