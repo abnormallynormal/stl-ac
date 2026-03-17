@@ -105,6 +105,16 @@ export default function Navigation() {
                   <Link href="/emails">Email</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
+
+              <NavigationMenuItem>
+                <NavigationMenuLink
+                  asChild
+                  className={navigationMenuTriggerStyle()}
+                >
+                  <Link href="/admins">Admins</Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+
             </NavigationMenuList>
           </NavigationMenu>
           <ModeToggle />

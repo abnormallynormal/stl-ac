@@ -22,8 +22,8 @@ export function LoginForm({
   defaultTab = "login",
   ...props
 }: LoginFormProps) {
-  // const [page, setPage] = useState<"login" | "signup">(defaultTab);
-  const page: "login" = "login";
+  const [page, setPage] = useState<"login" | "signup">(defaultTab);
+  // const page: "login" = "login";
   const [loginState, loginAction, isLoginPending] = useActionState(login, null);
   const [signupState, signupAction, isSignupPending] = useActionState(signup, null);
   
@@ -34,11 +34,11 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>{page === "login" ? "Login to your account" : "Sign up for an account"}</CardTitle>
+          <CardTitle>{page === "login" ? "Login to your account" : "Add an admin account"}</CardTitle>
           <CardDescription>
             {page === "login"
               ? "Enter your email below to login to your account"
-              : "Enter your email below to sign up for an account"}
+              : "Enter the email below to sign up a new admin"}
           </CardDescription>
         </CardHeader>
         <CardContent>
