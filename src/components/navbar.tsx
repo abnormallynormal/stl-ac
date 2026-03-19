@@ -66,6 +66,9 @@ export default function Navigation() {
                     <DropdownMenuItem asChild>
                       <Link href="/awards">MVPs/LCAs</Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/topathletes">Top Athletes</Link>
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </NavigationMenuItem>
