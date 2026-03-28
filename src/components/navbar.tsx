@@ -55,6 +55,9 @@ export default function Navigation() {
                       <Link href="/finances">Finances</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
+                      <Link href="/coaches">Coaches</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
                       <Link href="/points">Points</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
@@ -82,14 +85,14 @@ export default function Navigation() {
                 </NavigationMenuLink>
               </NavigationMenuItem>
 
-              <NavigationMenuItem>
+              {/* <NavigationMenuItem>
                 <NavigationMenuLink
                   asChild
                   className={navigationMenuTriggerStyle()}
                 >
                   <Link href="/coaches">Coaches</Link>
                 </NavigationMenuLink>
-              </NavigationMenuItem>
+              </NavigationMenuItem> */}
 
               <NavigationMenuItem>
                 <NavigationMenuLink

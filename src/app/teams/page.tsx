@@ -25,7 +25,6 @@ export default function TeamList() {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedYear, setSelectedYear] = useState<string>("2025-26");
   const [addFormOpen, setAddFormOpen] = useState(false);
-  const [teacherSearchActive, setTeacherSearchActive] = useState(false);
   const filteredData = data.filter((team) => team.year === selectedYear);
 
   useEffect(() => {
@@ -79,16 +78,10 @@ export default function TeamList() {
         </div>
         <DataTable columns={columns} data={filteredData} />
         <Dialog open={addFormOpen} onOpenChange={setAddFormOpen}>
-          <DialogContent
-            className={
-              teacherSearchActive ? "opacity-0 pointer-events-none" : ""
-            }
-          >
+          <DialogContent>
             <DialogHeader>
               <DialogTitle className="mb-4">Add Team</DialogTitle>
               <AddTeamForm
-                onTeacherSearchOpen={() => setTeacherSearchActive(true)}
-                onTeacherSearchClose={() => setTeacherSearchActive(false)}
                 onCancel={() => setAddFormOpen(false)}
                 onSuccess={async () => {
                   setAddFormOpen(false);

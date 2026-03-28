@@ -39,7 +39,7 @@ export const columns = (
     header: "Emails",
     cell: ({ row }) => (
       <div className="w-[900px] truncate whitespace-normal break-words">
-        {row.original.team_coaches?.map((tc) => tc.coaches.email).join(", ") ??
+        {row.original.team_coaches2?.map((tc) => tc.coach).join(", ") ??
           ""}
       </div>
     ),

@@ -6,9 +6,7 @@ export const selectData = async () => {
   const { data, error } = await supabase.from("teams").select(`
       *,
       sport:sports!sport_id (id, name, points),
-      team_coaches (
-        coaches (id, email, name)
-      )
+      team_coaches2 (coach)
     `);
   if (!error) {
     console.log(data);
@@ -45,7 +43,7 @@ export const addTeam = async ({
   season: string;
   grade: string;
   gender: string;
-  teachers: number[]; // array of coach emails
+  teachers: string[]; // array of coach emails/names
 }) => {
   const supabase = createClient();
 
@@ -81,16 +79,28 @@ export const addTeam = async ({
     return;
   }
 
-  // Step 3: Insert into team_coaches junction table
-  if (teachers && teachers.length > 0) {
-    const teamCoachInserts = teachers.map((coachId) => ({
+  // Step 3: Insert into team_coaches2 table
+  const normalizedTeachers = Array.from(
+    new Set(
+      (teachers ?? [])
+        .map((coach) => coach.trim())
+        .filter((coach) => coach.length > 0)
+    )
+  );
+
+  if (normalizedTeachers.length > 0) {
+    const teamCoachInserts = normalizedTeachers.map((coach) => ({
       team_id: teamData.id,
-      coach_id: coachId,
+      coach,
     }));
 
     const { error: junctionError } = await supabase
-      .from("team_coaches")
-      .insert(teamCoachInserts);
+      .from("team_coaches2")
+      .upsert(teamCoachInserts, {
+        onConflict: "team_id,coach",
+        ignoreDuplicates: true,
+      })
+      .select();
 
     if (junctionError) {
       console.log("Team-coach assignment error:", junctionError);
@@ -118,7 +128,7 @@ export const updateTeam = async ({
   season: string;
   grade: string;
   gender: string;
-  teachers: string[]; // array of coach emails
+  teachers: string[]; // array of coach emails/names
   seasonHighlights: string;
   yearbookMessage: string;
 }) => {
@@ -147,7 +157,7 @@ export const updateTeam = async ({
 
   // Step 2: Delete existing coach assignments
   const { error: deleteError } = await supabase
-    .from("team_coaches")
+    .from("team_coaches2")
     .delete()
     .eq("team_id", id);
 
@@ -156,27 +166,28 @@ export const updateTeam = async ({
     return;
   }
 
-  // Step 3: Get coach IDs from emails
-  const { data: coachData, error: coachError } = await supabase
-    .from("coaches")
-    .select("id, email")
-    .in("email", teachers);
+  // Step 3: Insert new coach assignments
+  const normalizedTeachers = Array.from(
+    new Set(
+      (teachers ?? [])
+        .map((coach) => coach.trim())
+        .filter((coach) => coach.length > 0)
+    )
+  );
 
-  if (coachError) {
-    console.log("Coach lookup error:", coachError);
-    return;
-  }
-
-  // Step 4: Insert new coach assignments
-  if (coachData && coachData.length > 0) {
-    const teamCoachInserts = coachData.map((coach) => ({
+  if (normalizedTeachers.length > 0) {
+    const teamCoachInserts = normalizedTeachers.map((coach) => ({
       team_id: id,
-      coach_id: coach.id,
+      coach,
     }));
 
     const { error: junctionError } = await supabase
-      .from("team_coaches")
-      .insert(teamCoachInserts);
+      .from("team_coaches2")
+      .upsert(teamCoachInserts, {
+        onConflict: "team_id,coach",
+        ignoreDuplicates: true,
+      })
+      .select();
 
     if (junctionError) {
       console.log("Team-coach assignment error:", junctionError);
@@ -189,7 +200,7 @@ export const updateTeam = async ({
 
 export const deleteTeam = async ({ id }: { id: number }) => {
   const supabase = createClient();
-  // The team_coaches entries will be deleted automatically due to ON DELETE CASCADE
+  // The team_coaches2 entries will be deleted automatically due to ON DELETE CASCADE
   const { data, error } = await supabase
     .from("teams")
     .delete()

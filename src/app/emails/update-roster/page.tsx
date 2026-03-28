@@ -50,7 +50,7 @@ export default function EmailPage() {
 
   async function loopTeams() {
     selectedTeams.forEach((team: Team) => {
-      const to = team.team_coaches?.map(tc => tc.coaches.email) ?? [];
+      const to = team.team_coaches2?.map((tc) => tc.coach) ?? [];
       const subject = `Update Student Roster`;
       const link = `https://stl-ac.vercel.app/teams/${team.id}`;
       handleSend({to,subject, link});

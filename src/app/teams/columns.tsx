@@ -10,12 +10,8 @@ export type Team = {
     name: string;
     points: number;
   };
-  team_coaches?: {
-    coaches: {
-      id: number;
-      email: string;
-      name: string;
-    };
+  team_coaches2?: {
+    coach: string;
   }[];
   gender: "Boys" | "Girls" | "Co-ed";
   grade: "Jr." | "Sr." | "Varsity";
@@ -44,7 +40,7 @@ export const columns: ColumnDef<Team>[] = [
     header: "Teachers",
     cell: ({ row }) => {
       const team = row.original;
-      return team.team_coaches?.map(tc => tc.coaches.email).join(", ") ?? "";
+      return team.team_coaches2?.map((tc) => tc.coach).join(", ") ?? "";
     },
   },
   {

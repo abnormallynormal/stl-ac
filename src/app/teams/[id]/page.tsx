@@ -5,7 +5,6 @@ import { Team } from "../columns";
 import { Player, createColumns } from "./columns";
 import { Manager, createManagerColumns } from "./managerColumns";
 import { DataTable } from "./data-table";
-import { selectData as selectCoaches } from "@/app/functions/coaches";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,9 +45,10 @@ import {
   CommandGroup,
   CommandItem,
 } from "@/components/ui/command";
-import { DialogTitle } from "@/components/ui/dialog";
+import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { selectData as selectCoaches } from "@/app/functions/coaches";
 import {
   selectData,
   updateTeam,
@@ -75,13 +75,13 @@ import {
   markManagerAsUnpaid,
 } from "@/app/functions/finances";
 import { Finance } from "@/app/finances/columns";
-import { Coach } from "@/app/coaches/columns";
 import { Sport } from "@/app/sports/columns";
+import { Coach } from "@/app/coaches/columns";
 const createEditTeamSchema = (
   existingTeams: Team[] = [],
   currentTeamId?: number
 ) =>
-  z
+      z
     .object({
       sport_id: z.number().int().min(1, "Sport is required"),
       gender: z.string().min(1, "Gender is required"),
@@ -122,7 +122,7 @@ export default function TeamPage({
   const [finances, setFinances] = useState<Finance[]>();
   const [sports, setSports] = useState<Sport[]>([]);
   const [selectedSport, setSelectedSport] = useState<string | null>();
-  const [availableCoaches, setAvailableCoaches] = useState<Coach[]>();
+  const [availableCoaches, setAvailableCoaches] = useState<Coach[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteIsOpen, setDeleteIsOpen] = useState(false);
@@ -130,7 +130,9 @@ export default function TeamPage({
   const [addPlayerOpen, setAddPlayerOpen] = useState(false);
   const [coachSearchOpen, setCoachSearchOpen] = useState(false);
   const [selectedCoaches, setSelectedCoaches] = useState<string[]>([]);
+  const [coachDraft, setCoachDraft] = useState("");
   const [deleteTeamIsOpen, setDeleteTeamIsOpen] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [managers, setManagers] = useState<Manager[]>([]);
   const [addableManagers, setAddableManagers] = useState<Student[]>([]);
   const [addManagerOpen, setAddManagerOpen] = useState(false);
@@ -226,6 +228,19 @@ export default function TeamPage({
     };
 
     loadData();
+  }, []);
+  useEffect(() => {
+    const loadCoaches = async () => {
+      try {
+        const coachesResult = await selectCoaches();
+        if (coachesResult) {
+          setAvailableCoaches(coachesResult);
+        }
+      } catch (err) {
+        console.error("Error fetching coaches:", err);
+      }
+    };
+    loadCoaches();
   }, []);
   const [addablePlayers, setAddablePlayers] = useState<Student[]>([]);
   const [filter, setFilter] = useState<string>("");
@@ -336,20 +351,6 @@ export default function TeamPage({
     loadAddableManagers();
   }, []);
 
-  useEffect(() => {
-    const loadCoaches = async () => {
-    try {
-      const coachesResult = await selectCoaches();
-      if (coachesResult) {
-        setAvailableCoaches(coachesResult);
-      }
-    } catch (err) {
-      console.error("Error fetching coaches:", err);
-    }
-  };
-  loadCoaches();
-  }, []);
-
   const resolvedParams = use(params);
   const team = data.find((item) => item.id === Number(resolvedParams.id));
   const editTeamSchema = createEditTeamSchema(data, team?.id);
@@ -372,7 +373,7 @@ export default function TeamPage({
 
   useEffect(() => {
     if (team && !formInitialized) {
-      const coaches = team.team_coaches?.map(tc => tc.coaches.email) ?? [];
+      const coaches = team.team_coaches2?.map((tc) => tc.coach) ?? [];
       setSelectedCoaches(coaches);
       setSelectedSport(team.sport?.name);
 
@@ -489,19 +490,10 @@ export default function TeamPage({
     setPlayers(refreshedPlayers);
   };
 
-  const addCoach = (coach: string) => {
-    if (!selectedCoaches.includes(coach)) {
-      const newCoaches = [...selectedCoaches, coach];
-      setSelectedCoaches(newCoaches);
-      editTeamForm.setValue("teachers", newCoaches);
-    }
-    setCoachSearchOpen(false);
-  };
-
   const removeCoach = (coach: string) => {
     const newCoaches = selectedCoaches.filter((c) => c !== coach);
     setSelectedCoaches(newCoaches);
-    editTeamForm.setValue("teachers", newCoaches);
+    editTeamForm.setValue("teachers", newCoaches, { shouldValidate: true });
   };
 
   const getCoachDisplayName = (email: string) => {
@@ -511,8 +503,16 @@ export default function TeamPage({
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
       .join(" ");
   };
+  const addCoach = (coach: string) => {
+    const trimmed = coach.trim();
+    if (!trimmed || selectedCoaches.includes(trimmed)) return;
+    const newCoaches = [...selectedCoaches, trimmed];
+    setSelectedCoaches(newCoaches);
+    editTeamForm.setValue("teachers", newCoaches, { shouldValidate: true });
+  };
   const onEditSportSave = async (values: z.infer<typeof editTeamSchema>) => {
     try {
+      setSaveError(null);
       // const selectedSport = sports.find(s => s.id === values.sport_id);
       const result = await updateTeam({
         id: team.id,
@@ -533,7 +533,7 @@ export default function TeamPage({
         if (refreshedData) {
           setData(refreshedData);
         }
-        alert("Team updated successfully!");
+        alert("Saved successfully!");
       }
     } catch (error) {
       console.error("Error updating team:", error);
@@ -569,7 +569,10 @@ export default function TeamPage({
             </div>
             <Form {...editTeamForm}>
               <form
-                onSubmit={editTeamForm.handleSubmit(onEditSportSave)}
+                onSubmit={editTeamForm.handleSubmit(
+                  onEditSportSave,
+                  () => setSaveError("Please fix the highlighted fields.")
+                )}
                 className="space-y-4"
               >
                 <FormField
@@ -799,7 +802,10 @@ export default function TeamPage({
                     </FormItem>
                   )}
                 />
-                <div className="flex justify-between">
+                {saveError ? (
+                  <div className="text-sm text-destructive">{saveError}</div>
+                ) : null}
+                <div className="flex justify-between items-center">
                   <Button
                     type="button"
                     variant="destructive"
@@ -893,6 +899,9 @@ export default function TeamPage({
             </AlertDialog>
             <CommandDialog open={addPlayerOpen} onOpenChange={setAddPlayerOpen}>
               <DialogTitle className="sr-only">Add Player</DialogTitle>
+              <DialogDescription className="sr-only">
+                Search and add a player to this team.
+              </DialogDescription>
               <CommandInput
                 placeholder="Search for a player to add..."
                 value={filter}
@@ -985,6 +994,9 @@ export default function TeamPage({
               onOpenChange={setAddManagerOpen}
             >
               <DialogTitle className="sr-only">Add Manager</DialogTitle>
+              <DialogDescription className="sr-only">
+                Search and add a manager to this team.
+              </DialogDescription>
               <CommandInput
                 placeholder="Search for a manager..."
                 value={filter}
@@ -1015,31 +1027,66 @@ export default function TeamPage({
               onOpenChange={setCoachSearchOpen}
             >
               <DialogTitle className="sr-only">Search Coaches</DialogTitle>
-              <CommandInput placeholder="Search for a coach to add..." />
+              <DialogDescription className="sr-only">
+                Search and add coach emails for this team.
+              </DialogDescription>
+              <CommandInput
+                placeholder="Search for a coach email to add..."
+                value={coachDraft}
+                onValueChange={(value) => setCoachDraft(value)}
+              />
               <CommandList>
-                <CommandEmpty>No coaches found.</CommandEmpty>
+                <CommandEmpty>
+                  {coachDraft.trim() ? "No matches." : "No coaches found."}
+                </CommandEmpty>
                 <CommandGroup>
-                  {availableCoaches?.filter((coach) => !selectedCoaches.includes(coach.email))
+                  {availableCoaches
+                    ?.filter(
+                      (coach) =>
+                        coach.coach
+                          .toLowerCase()
+                          .includes(coachDraft.trim().toLowerCase()) &&
+                        !selectedCoaches.includes(coach.coach)
+                    )
                     .map((coach) => (
                       <CommandItem
-                        key={coach.id}
-                        value={coach.name}
-                        onSelect={() => addCoach(coach.email)}
+                        key={coach.coach}
+                        value={coach.coach}
+                        onSelect={() => {
+                          addCoach(coach.coach);
+                          setCoachSearchOpen(false);
+                          setCoachDraft("");
+                        }}
                         className="cursor-pointer"
                       >
                         <div className="flex flex-col">
                           <span className="font-medium">
-                            {coach.name}
+                            {getCoachDisplayName(coach.coach)}
                           </span>
                           <span className="text-sm text-muted-foreground">
-                            {coach.email}
+                            {coach.coach}
                           </span>
                         </div>
                       </CommandItem>
                     ))}
+                  {coachDraft.trim() &&
+                    !selectedCoaches.includes(coachDraft.trim()) && (
+                      <CommandItem
+                        value={coachDraft.trim()}
+                        onSelect={() => {
+                          addCoach(coachDraft.trim());
+                          setCoachSearchOpen(false);
+                          setCoachDraft("");
+                        }}
+                        className="cursor-pointer"
+                      >
+                        Add "{coachDraft.trim()}"
+                      </CommandItem>
+                    )}
                 </CommandGroup>
               </CommandList>
             </CommandDialog>
+
           </div>
         </div>
       </div>
