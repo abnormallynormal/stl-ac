@@ -5,7 +5,9 @@ export const selectData = async () => {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("top_athletes")
-    .select("id, name, gender, grade, points, yraa, ofsaa, mvp, lca");
+    .select(
+      "id, name, gender, grade, team_count, team, yraa, ofsaa, mvp, lca"
+    );
   if (!data) {
     throw new Error(error?.message ?? "Unable to fetch top athletes");
   }
@@ -14,23 +16,29 @@ export const selectData = async () => {
 
 export const insertData = async ({
   name,
-  points,
+  gender,
+  grade,
+  team_count,
+  team,
   yraa,
   ofsaa,
   mvp,
   lca,
 }: {
   name: string;
-  points: number;
-  yraa: boolean;
-  ofsaa: boolean;
-  mvp: boolean;
-  lca: boolean;
+  gender: string;
+  grade: number;
+  team_count: number;
+  team: string;
+  yraa: number;
+  ofsaa: number;
+  mvp: number;
+  lca: number;
 }) => {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("top_athletes")
-    .insert({ name, points, yraa, ofsaa, mvp, lca })
+    .insert({ name, gender, grade, team_count, team, yraa, ofsaa, mvp, lca })
     .select();
   if (error) {
     console.log(error);
@@ -42,7 +50,10 @@ export const insertData = async ({
 export const updateData = async ({
   id,
   name,
-  points,
+  gender,
+  grade,
+  team_count,
+  team,
   yraa,
   ofsaa,
   mvp,
@@ -50,16 +61,19 @@ export const updateData = async ({
 }: {
   id: number;
   name: string;
-  points: number;
-  yraa: boolean;
-  ofsaa: boolean;
-  mvp: boolean;
-  lca: boolean;
+  gender: string;
+  grade: number;
+  team_count: number;
+  team: string;
+  yraa: number;
+  ofsaa: number;
+  mvp: number;
+  lca: number;
 }) => {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("top_athletes")
-    .update({ name, points, yraa, ofsaa, mvp, lca })
+    .update({ name, gender, grade, team_count, team, yraa, ofsaa, mvp, lca })
     .eq("id", id)
     .select();
   if (error) {

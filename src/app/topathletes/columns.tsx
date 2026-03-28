@@ -8,7 +8,8 @@ export type TopAthlete = {
   name: string;
   gender: string;
   grade: number;
-  points: number;
+  team_count: number;
+  team: string;
   yraa: number;
   ofsaa: number;
   mvp: number;
@@ -18,6 +19,7 @@ export type TopAthlete = {
 export const createColumns = (): ColumnDef<TopAthlete>[] => [
   {
     accessorKey: "name",
+    meta: { className: "w-[35%]" },
     header: ({ column }) => {
       return (
         <Button
@@ -31,27 +33,8 @@ export const createColumns = (): ColumnDef<TopAthlete>[] => [
     },
   },
   {
-    accessorKey: "points",
-    header: "Points",
-  },
-  {
-    accessorKey: "yraa",
-    header: "YRAA",
-    cell: ({ row }) => (row.original.yraa === 0 ? "-" : row.original.yraa),
-  },
-  {
-    accessorKey: "ofsaa",
-    header: "OFSAA",
-    cell: ({ row }) => (row.original.ofsaa === 0 ? "-" : row.original.ofsaa),
-  },
-  {
-    accessorKey: "mvp",
-    header: "MVP",
-    cell: ({ row }) => (row.original.mvp === 0 ? "-" : row.original.mvp),
-  },
-  {
-    accessorKey: "lca",
-    header: "LCA",
-    cell: ({ row }) => (row.original.lca === 0 ? "-" : row.original.lca),
+    accessorKey: "team",
+    meta: { className: "w-[65%]" },
+    header: "Team",
   },
 ];

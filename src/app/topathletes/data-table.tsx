@@ -42,18 +42,21 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="overflow-hidden rounded-md border-2">
-      <Table>
+      <Table className="table-fixed w-full">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
+                const meta = header.column.columnDef.meta as
+                  | { className?: string }
+                  | undefined;
                 return (
                   <TableHead
                     key={header.id}
                     className={
                       header.column.id === "actions"
                         ? "text-right px-4 py-2"
-                        : "px-4 py-2"
+                        : `px-4 py-2 ${meta?.className ?? ""}`.trim()
                     }
                   >
                     {header.isPlaceholder
@@ -76,14 +79,23 @@ export function DataTable<TData, TValue>({
                 data-state={row.getIsSelected() && "selected"}
               >
                 {row.getVisibleCells().map((cell) => (
+                  (() => {
+                    const meta = cell.column.columnDef.meta as
+                      | { className?: string }
+                      | undefined;
+                    return (
                   <TableCell
                     key={cell.id}
                     className={
-                      cell.column.id === "actions" ? "text-end px-4" : " px-4"
+                      cell.column.id === "actions"
+                        ? "text-end px-4"
+                        : `px-4 ${meta?.className ?? ""}`.trim()
                     }
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
+                    );
+                  })()
                 ))}
               </TableRow>
             ))

@@ -8,12 +8,12 @@ import { useState, useEffect } from "react";
 export default function TopAthletes() {
   const [data, setData] = useState<TopAthlete[]>([]);
   const [loading, setLoading] = useState(true);
-  const pointsThreshold = 25;
-  const pointsMultiplier = 1;
-  const yraaMultiplier = 5;
-  const ofsaaMultiplier = 20;
-  const mvpMultiplier = 9;
-  const lcaMultiplier = 9;
+  const teamCountThreshold = 3;
+  const teamCountMultiplier = 1;
+  const yRaaMultiplier = 0.5;
+  const ofsaaMultiplier = 2;
+  const mvpMultiplier = 1;
+  const lcaMultiplier = 0.5;
 
   useEffect(() => {
     const loadData = async () => {
@@ -39,23 +39,16 @@ export default function TopAthletes() {
     (value ?? "").trim().toLowerCase();
 
   const filteredData = data.filter((athlete) => {
-    const points = safeNumber(athlete.points);
-    const yraa = safeNumber(athlete.yraa);
+    const teamCount = safeNumber(athlete.team_count);
     const ofsaa = safeNumber(athlete.ofsaa);
     const mvp = safeNumber(athlete.mvp);
     const lca = safeNumber(athlete.lca);
-    return (
-      points >= pointsThreshold ||
-      yraa >= 1 ||
-      ofsaa >= 1 ||
-      mvp >= 1 ||
-      lca >= 1
-    );
+    return teamCount >= teamCountThreshold || ofsaa >= 1 || mvp >= 1 || lca >= 1;
   });
 
   const getMeritScore = (athlete: TopAthlete) =>
-    safeNumber(athlete.points) * pointsMultiplier +
-    safeNumber(athlete.yraa) * yraaMultiplier +
+    safeNumber(athlete.team_count) * teamCountMultiplier +
+    safeNumber(athlete.yraa) * yRaaMultiplier +
     safeNumber(athlete.ofsaa) * ofsaaMultiplier +
     safeNumber(athlete.mvp) * mvpMultiplier +
     safeNumber(athlete.lca) * lcaMultiplier;
