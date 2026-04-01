@@ -1080,7 +1080,7 @@ export default function TeamPage({
                         }}
                         className="cursor-pointer"
                       >
-                        Add "{coachDraft.trim()}"
+                        Add &quot;{coachDraft.trim()}&quot;
                       </CommandItem>
                     )}
                 </CommandGroup>
