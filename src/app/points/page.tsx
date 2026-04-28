@@ -38,6 +38,7 @@ export default function Points() {
               student_id: student.id,
               name: student.name,
               points: student.points,
+              grade: student.grade,
             }))
         );
         const prevData = await selectPreviousWinners();
@@ -103,7 +104,12 @@ export default function Points() {
           winner.student_id === student.student_id &&
           winner.award === "Outstanding Contribution"
       );
-      if (!prevOutstandingWinner && student.points >= 100) {
+      if (
+        !prevOutstandingWinner &&
+        student.points >= 100 &&
+        student.grade === 12 &&
+        student
+      ) {
         if(prevWinner){
           await updateWinner({id: student.student_id, award: "Outstanding Contribution", year: new Date().getFullYear()});
         } else {
@@ -206,7 +212,11 @@ export default function Points() {
                           winner.award === "Outstanding Contribution";
                         return match;
                       });
-                      return student.points >= 100 && !hasWonBefore;
+                      return (
+                        student.points >= 100 &&
+                        student.grade === 12 &&
+                        !hasWonBefore
+                      );
                     });
 
                     return filtered && filtered.length > 0 ? (

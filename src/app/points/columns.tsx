@@ -6,6 +6,7 @@ export type PlayerWithPoints = {
   student_id: number;
   name: string;
   points: number;
+  grade: number;
 };
 export const columns: ColumnDef<PlayerWithPoints>[] = [
   {

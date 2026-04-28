@@ -37,7 +37,7 @@ export function DataTable<TData, TValue>({
       desc: false,
     },
     {
-      id: "name",
+      id: "team",
       desc: false,
     },
   ]);
@@ -102,8 +102,14 @@ export function DataTable<TData, TValue>({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
+                  const headerPaddingClass =
+                    header.id === "team"
+                      ? "pl-4 pr-0 py-2"
+                      : header.id === "coaches"
+                      ? "pl-0 pr-4 py-2"
+                      : "px-4 py-2";
                   return (
-                    <TableHead key={header.id} className="px-4 py-2">
+                    <TableHead key={header.id} className={headerPaddingClass}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -123,14 +129,22 @@ export function DataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-4 py-2">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const cellPaddingClass =
+                      cell.column.id === "team"
+                        ? "pl-4 pr-0 py-2"
+                        : cell.column.id === "coaches"
+                        ? "pl-0 pr-0 py-2"
+                        : "px-4 py-2";
+                    return (
+                      <TableCell key={cell.id} className={cellPaddingClass}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             ) : (

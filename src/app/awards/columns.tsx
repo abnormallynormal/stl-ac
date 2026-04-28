@@ -5,7 +5,8 @@ import { ColumnDef } from "@tanstack/react-table";
 export type Awards = {
   team_id: number;
   season: string;
-  name: string;
+  team: string;
+  coaches: string;
   mvp: string;
   lca: string;
 };
@@ -16,10 +17,18 @@ const seasonOrder: Record<string, number> = {
 };
 export const columns: ColumnDef<Awards>[] = [
   {
-    accessorKey: "name",
-    header: "Name",
+    accessorKey: "team",
+    header: "Team",
     cell: ({ row }) => {
-      return <a href={`/teams/${row.original.team_id}`}>{row.getValue("name")}</a>;
+      return <a href={`/teams/${row.original.team_id}`}>{row.getValue("team")}</a>;
+    },
+  },
+  {
+    accessorKey: "coaches",
+    header: "Coaches",
+    cell: ({ row }) => {
+      const coaches = row.getValue("coaches") as string;
+      return <div className="whitespace-pre-line">{coaches}</div>;
     },
   },
   {

@@ -37,7 +37,10 @@ export default function AwardsList() {
             return {
               team_id: team.id,
               season: `${team.season}`,
-              name: `${team.sport?.name} ${team.grade} ${team.gender}`,
+              team: `${team.sport?.name} ${team.grade} ${team.gender}`,
+              coaches:
+                team.team_coaches2?.map((coach) => coach.coach).join("\n") ||
+                "No coach assigned",
               mvp: formatName(mvpPlayer?.name),
               lca: formatName(lcaPlayer?.name),
             };
