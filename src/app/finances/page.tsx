@@ -7,6 +7,13 @@ import { getFinances } from "../functions/finances";
 import { selectData } from "../functions/teams";
 import { Team } from "../teams/columns";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export default function Finances() {
   const [data, setData] = useState<Finance[]>()
@@ -59,6 +66,19 @@ export default function Finances() {
     // Filter by grade if any grade filters are selected
     return nameMatch;
   });
+
+  const sortedEmails = [
+    ...new Set(
+      (data ?? [])
+        .map((student) => student.email?.trim())
+        .filter((email): email is string => Boolean(email))
+    ),
+  ].sort((a, b) => a.localeCompare(b));
+
+  const copyEmails = async () => {
+    await navigator.clipboard.writeText(sortedEmails.join("\n"));
+  };
+
   return (
     <>
       <Navigation />
@@ -74,6 +94,41 @@ export default function Finances() {
               />
             </div>
           </div>
+          <Accordion type="single" collapsible className="w-full mb-4">
+            <AccordionItem value="email-list">
+              <AccordionTrigger className="w-full py-4 hover:no-underline">
+                <div className="flex items-center gap-3">
+                  <div className="text-lg font-semibold">Email List</div>
+                  <Button asChild variant="outline" size="sm">
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void copyEmails();
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          void copyEmails();
+                        }
+                      }}
+                    >
+                      Copy Emails
+                    </span>
+                  </Button>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <ul className="list-disc pl-6">
+                  {sortedEmails.map((email) => (
+                    <li key={email}>{email}</li>
+                  ))}
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
           <DataTable
             columns={columns({ teams: teamData ?? [] })}
             data={filteredData ?? []}

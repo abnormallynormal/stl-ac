@@ -8,6 +8,7 @@ import { Team } from "../teams/columns";
 export type Finance = {
   student_id: number;
   name: string;
+  email?: string | null;
   paid_to_team: number | null;
 };
 export const columns = ({teams}: {teams: Team[]}): ColumnDef<Finance>[] => [
