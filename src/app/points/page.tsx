@@ -200,7 +200,7 @@ export default function Points() {
                     <div className="font-semibold text-2xl hover:underline mb-1">
                       Outstanding Contribution
                     </div>
-                    <div className="text-lg">Gr. 12: 100+ points</div>
+                    <div className="text-lg">Gr. 12 & 100+ points</div>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
@@ -284,7 +284,7 @@ export default function Points() {
                     <div className="font-semibold text-2xl hover:underline mb-1">
                       Letter of Merit
                     </div>
-                    <div className="text-lg">60 points</div>
+                    <div className="text-lg">70 points</div>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
@@ -297,7 +297,7 @@ export default function Points() {
                         return match;
                       });
                       return (
-                        student.points >= 60 &&
+                        student.points >= 70 &&
                         student.points < 90 &&
                         !hasWonBefore
                       );
