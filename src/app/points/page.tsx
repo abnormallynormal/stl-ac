@@ -128,7 +128,7 @@ export default function Points() {
       if (
         !prevDistinctionWinner &&
         student.points >= 90 &&
-        student.points < 100
+        (student.points < 100 || student.grade !== 12)
       ) {
         if (prevWinner) {
           await updateWinner({
@@ -256,7 +256,7 @@ export default function Points() {
                       });
                       return (
                         student.points >= 90 &&
-                        student.points < 100 &&
+                        (student.points < 100 || student.grade !== 12) &&
                         !hasWonBefore
                       );
                     });
