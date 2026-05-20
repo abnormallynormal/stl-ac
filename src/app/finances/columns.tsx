@@ -1,6 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
 import { Team } from "../teams/columns";
 
 // This type is used to define the shape of our data.
@@ -11,10 +12,28 @@ export type Finance = {
   email?: string | null;
   paid_to_team: number | null;
 };
-export const columns = ({teams}: {teams: Team[]}): ColumnDef<Finance>[] => [
+export const columns = ({
+  teams,
+  onCopyNames,
+}: {
+  teams: Team[];
+  onCopyNames: () => void;
+}): ColumnDef<Finance>[] => [
   {
     accessorKey: "name",
-    header: "Name",
+    header: () => (
+      <div className="flex items-center gap-4">
+        <span>Name</span>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-black hover:text-black"
+          onClick={onCopyNames}
+        >
+          Copy Names
+        </Button>
+      </div>
+    ),
   },
   {
     accessorKey: "paid_to_team",

@@ -79,6 +79,15 @@ export default function Finances() {
     await navigator.clipboard.writeText(sortedEmails.join("\n"));
   };
 
+  const sortedNames = (data ?? [])
+    .map((student) => student.name?.trim())
+    .filter((name): name is string => Boolean(name))
+    .sort((a, b) => a.localeCompare(b));
+
+  const copyNames = async () => {
+    await navigator.clipboard.writeText(sortedNames.join("\n"));
+  };
+
   return (
     <>
       <Navigation />
@@ -130,7 +139,10 @@ export default function Finances() {
             </AccordionItem>
           </Accordion>
           <DataTable
-            columns={columns({ teams: teamData ?? [] })}
+            columns={columns({
+              teams: teamData ?? [],
+              onCopyNames: () => void copyNames(),
+            })}
             data={filteredData ?? []}
           />
         </div>
