@@ -4,6 +4,7 @@ import { DataTable } from "./data-table";
 import { columns, Yearbook } from "./columns";
 import { useEffect, useState } from "react";
 import { selectData } from "../functions/teams";
+import { Button } from "@/components/ui/button";
 import SeasonHighlights from "../highlights/page";
 export default function YearbookMessages() {
   const [data, setData] = useState<Yearbook[]>();
@@ -30,13 +31,25 @@ export default function YearbookMessages() {
     };
     getYearbookMessages();
   }, []);
+  
+  const copyMessages = async () => {
+    const formatted = (data ?? [])
+      .map((entry) => `${entry.name}\n${entry.message}`)
+      .join("\n\n");
+    await navigator.clipboard.writeText(formatted);
+  };
 
   return (
     <>
       <Navigation />
       <div className="px-16 py-8">
         <div className="justify-self-center w-full">
-          <div className="font-bold text-3xl mb-4">Yearbook Messages</div>
+          <div className="mb-4 flex flex-row items-center gap-3 whitespace-nowrap">
+            <div className="font-bold text-3xl">Yearbook Messages</div>
+            <Button variant="outline" size="sm" onClick={() => void copyMessages()}>
+                Copy Messages
+            </Button>
+          </div>
         </div>
         <DataTable columns={columns} data={data ?? []} />
       </div>
