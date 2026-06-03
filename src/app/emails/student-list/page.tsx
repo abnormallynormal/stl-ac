@@ -15,8 +15,7 @@ To make the update process easier, could you please send me the extract in .xlsx
 First Name
 Last Name
 Grade
-Student Number
-Sex
+Gender
 Email
 
 Thank you.`);

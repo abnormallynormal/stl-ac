@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 export default function Coaches() {
   const [data, setData] = useState<Coach[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortByLastName, setSortByLastName] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -39,9 +40,23 @@ export default function Coaches() {
     );
   }
 
+  const getLastNameFromEmail = (email: string) => {
+    const localPart = email.split("@")[0] ?? "";
+    const nameParts = localPart.split(".").filter(Boolean);
+    return nameParts[nameParts.length - 1] ?? localPart;
+  };
+
+  const sortedData = sortByLastName
+    ? [...data].sort((a, b) =>
+        getLastNameFromEmail(a.coach).localeCompare(
+          getLastNameFromEmail(b.coach)
+        )
+      )
+    : data;
+
   const copyCoaches = async () => {
-    const formatted = (data ?? [])
-      .map((entry, index) => `${index+1}\t${entry.coach}`)
+    const formatted = (sortedData ?? [])
+      .map((entry, index) => `${index + 1}\t${entry.coach}`)
       .join("\n");
     await navigator.clipboard.writeText(formatted);
   };
@@ -53,11 +68,21 @@ export default function Coaches() {
         <div className="max-w-4xl justify-self-center w-full">
           <div className="flex mb-4 items-center gap-3">
             <div className="font-bold text-3xl">Coaches</div>
-            <Button variant="outline" size="sm" onClick={() => void copyCoaches()}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void copyCoaches()}
+            >
               Copy Coaches
             </Button>
           </div>
-          <DataTable columns={columns} data={data} />
+          <DataTable
+            columns={columns({
+              onToggleLastNameSort: () =>
+                setSortByLastName((current) => !current),
+            })}
+            data={sortedData}
+          />
         </div>
       </div>
     </>

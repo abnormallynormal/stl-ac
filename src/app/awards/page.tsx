@@ -5,6 +5,7 @@ import { columns, Awards } from "./columns";
 import { useEffect, useState } from "react";
 import { selectData } from "../functions/teams";
 import { selectAllPlayers } from "../functions/team";
+import { Button } from "@/components/ui/button";
 export default function AwardsList() {
   const [data, setData] = useState<Awards[]>();
   useEffect(() => {
@@ -53,12 +54,35 @@ export default function AwardsList() {
     getAwards();
   }, []);
 
+  const copyAwards = async () => {
+    const formatted = (data ?? [])
+      .map((entry) => {
+        const coaches = entry.coaches
+          .split("\n")
+          .map((coach) => coach.trim())
+          .filter(Boolean)
+          .join(",");
+
+        return [entry.team, coaches, entry.season, entry.mvp, entry.lca].join(
+          "\t"
+        );
+      })
+      .join("\n");
+
+    await navigator.clipboard.writeText(formatted);
+  };
+
   return (
     <>
       <Navigation />
       <div className="px-16 py-8">
         <div className="justify-self-center w-full">
-          <div className="font-bold text-3xl mb-4">MVP and LCA List</div>
+          <div className="mb-4 flex flex-row items-center gap-3 whitespace-nowrap">
+            <div className="font-bold text-3xl">MVP and LCA List</div>
+            <Button variant="outline" size="sm" onClick={() => void copyAwards()}>
+              Copy Awards
+            </Button>
+          </div>
         </div>
         <DataTable columns={columns} data={data ?? []} />
       </div>

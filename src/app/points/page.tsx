@@ -175,6 +175,36 @@ export default function Points() {
         }))
     );
   }
+
+  const copyWinners = async () => {
+    const outstandingAchievement = (data ?? [])
+      .filter((entry) => entry.points >= 100)
+      .map((entry) => `${entry.name}`)
+      .join("\n");
+
+    const letterDistinction = (data ?? [])
+      .filter((entry) => entry.points < 100 && entry.points>=90)
+      .map((entry) => `${entry.name}`)
+      .join("\n");
+
+    const letterMerit = (data ?? [])
+      .filter((entry) => entry.points > 90 && entry.points >=70)
+      .map((entry) => `${entry.name}`)
+      .join("\n");
+
+    const formatted = [
+      "Outstanding Achievement",
+      outstandingAchievement,
+      "",
+      "Letter of Distinction",
+      letterDistinction,
+      "",
+      "Letter of Merit",
+      letterMerit,
+    ].join("\n");
+    await navigator.clipboard.writeText(formatted);
+  };
+
   return (
     <>
       <Navigation />
@@ -185,25 +215,28 @@ export default function Points() {
               <div className="font-bold text-4xl">
                 This year&apos;s recipients
               </div>
-              <Button onClick={updateRecipients}>Archive recipients</Button>
+              <Button variant="outline" size="sm" onClick={() => void copyWinners()}>
+                Copy Winners
+              </Button>
+              {/* <Button onClick={updateRecipients}>Archive recipients</Button> */}
             </div>
-            <a
+            {/* <a
               className="text-lg font-semibold hover:underline"
               href="/points/previous-winners"
             >
               View past recipients
-            </a>
-            <Accordion type="multiple" className="w-full mb-8">
-              <AccordionItem value="outstanding-contribution">
-                <AccordionTrigger>
+            </a> */}
+            {/* <Accordion type="multiple" className="w-full mb-8">
+              <AccordionItem value="outstanding-contribution"> */}
+                {/* <AccordionTrigger> */}
                   <div>
-                    <div className="font-semibold text-2xl hover:underline mb-1">
+                    <div className="font-semibold text-2xl hover:underline mb-1 mt-3">
                       Outstanding Contribution
                     </div>
                     <div className="text-lg">Gr. 12 & 100+ points</div>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent>
+                {/* </AccordionTrigger>
+                <AccordionContent> */}
                   {(() => {
                     const filtered = data?.filter((student) => {
                       const hasWonBefore = prevWinners?.some((winner) => {
@@ -234,18 +267,18 @@ export default function Points() {
                       </div>
                     );
                   })()}
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="letter-of-distinction">
-                <AccordionTrigger>
+                {/* </AccordionContent>
+              </AccordionItem> */}
+              {/* <AccordionItem value="letter-of-distinction">
+                <AccordionTrigger> */}
                   <div>
-                    <div className="font-semibold text-2xl hover:underline mb-1">
+                    <div className="font-semibold text-2xl hover:underline mb-1 mt-4">
                       Letter of Distinction
                     </div>
                     <div className="text-lg">90 points</div>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent>
+                {/* </AccordionTrigger>
+                <AccordionContent> */}
                   {(() => {
                     const filtered = data?.filter((student) => {
                       const hasWonBefore = prevWinners?.some((winner) => {
@@ -276,18 +309,18 @@ export default function Points() {
                       </div>
                     );
                   })()}
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="letter-of-merit">
-                <AccordionTrigger>
+                {/* </AccordionContent>
+              </AccordionItem> */}
+              {/* <AccordionItem value="letter-of-merit">
+                <AccordionTrigger> */}
                   <div>
-                    <div className="font-semibold text-2xl hover:underline mb-1">
+                    <div className="font-semibold text-2xl hover:underline mb-1 mt-4">
                       Letter of Merit
                     </div>
                     <div className="text-lg">70 points</div>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent>
+                {/* </AccordionTrigger>
+                <AccordionContent> */}
                   {(() => {
                     const filtered = data?.filter((student) => {
                       const hasWonBefore = prevWinners?.some((winner) => {
@@ -318,11 +351,11 @@ export default function Points() {
                       </div>
                     );
                   })()}
-                </AccordionContent>
+                {/* </AccordionContent>
               </AccordionItem>
-            </Accordion>
+            </Accordion> */}
           </div>
-          <div className="font-bold text-3xl mb-4">Points</div>
+          <div className="font-bold text-3xl mb-3 mt-4">Points</div>
           <div className="flex items-center gap-4 mb-2">
             <Input
               placeholder="Filter by name"
