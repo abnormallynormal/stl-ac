@@ -14,6 +14,7 @@ export type TopAthlete = {
   ofsaa: number;
   mvp: number;
   lca: number;
+  year: string;
 };
 
 export const createColumns = (): ColumnDef<TopAthlete>[] => [

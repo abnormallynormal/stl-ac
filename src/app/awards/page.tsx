@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { selectData } from "../functions/teams";
 import { selectAllPlayers } from "../functions/team";
 import { Button } from "@/components/ui/button";
+import { CURRENT_SCHOOL_YEAR } from "@/lib/constants";
 export default function AwardsList() {
   const [data, setData] = useState<Awards[]>();
   useEffect(() => {
@@ -13,39 +14,45 @@ export default function AwardsList() {
       try {
         const teams = await selectData();
         console.log(teams)
-        if (!data) {
-          console.log("Error fetching players");
+        if (!teams) {
+          console.log("Error fetching teams");
         }
         const players = await selectAllPlayers();
         console.log(players)
-        if (!data) {
+        if (!players) {
           console.log("Error fetching players");
         }
         setData(
-          teams?.map((team) => {
-            const mvpPlayer = players?.find((player) => player.team_id === team.id && player.mvp);
-            const lcaPlayer = players?.find((player) => player.team_id === team.id && player.lca);
-            
-            // Convert "Last First Middle..." to "First Middle... Last"
-            const formatName = (name: string | undefined) => {
-              if (!name) return "No selection yet";
-              const parts = name.trim().split(" ");
-              if (parts.length < 2) return name;
-              const [lastName, ...firstNames] = parts;
-              return `${firstNames.join(" ")} ${lastName}`;
-            };
-            
-            return {
-              team_id: team.id,
-              season: `${team.season}`,
-              team: `${team.sport?.name} ${team.grade} ${team.gender}`,
-              coaches:
-                team.team_coaches2?.map((coach) => coach.coach).join("\n") ||
-                "No coach assigned",
-              mvp: formatName(mvpPlayer?.name),
-              lca: formatName(lcaPlayer?.name),
-            };
-          })
+          teams
+            ?.filter((team) => team.year === CURRENT_SCHOOL_YEAR)
+            .map((team) => {
+              const mvpPlayer = players?.find(
+                (player) => player.team_id === team.id && player.mvp
+              );
+              const lcaPlayer = players?.find(
+                (player) => player.team_id === team.id && player.lca
+              );
+
+              // Convert "Last First Middle..." to "First Middle... Last"
+              const formatName = (name: string | undefined) => {
+                if (!name) return "No selection yet";
+                const parts = name.trim().split(" ");
+                if (parts.length < 2) return name;
+                const [lastName, ...firstNames] = parts;
+                return `${firstNames.join(" ")} ${lastName}`;
+              };
+
+              return {
+                team_id: team.id,
+                season: `${team.season}`,
+                team: `${team.sport?.name} ${team.grade} ${team.gender}`,
+                coaches:
+                  team.team_coaches2?.map((coach) => coach.coach).join("\n") ||
+                  "No coach assigned",
+                mvp: formatName(mvpPlayer?.name),
+                lca: formatName(lcaPlayer?.name),
+              };
+            })
         );
       } catch {
         console.log("Error fetching players");

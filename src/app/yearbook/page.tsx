@@ -5,7 +5,7 @@ import { columns, Yearbook } from "./columns";
 import { useEffect, useState } from "react";
 import { selectData } from "../functions/teams";
 import { Button } from "@/components/ui/button";
-import SeasonHighlights from "../highlights/page";
+import { CURRENT_SCHOOL_YEAR } from "@/lib/constants";
 export default function YearbookMessages() {
   const [data, setData] = useState<Yearbook[]>();
   useEffect(() => {
@@ -16,14 +16,16 @@ export default function YearbookMessages() {
           console.log("Error fetching players");
         }
         setData(
-          data?.map((team) => ({
+          data
+            ?.filter((team) => team.year === CURRENT_SCHOOL_YEAR)
+            .map((team) => ({
             team_id: team.id,
             season: `${team.season}`,
             name: `${team.sport?.name} ${team.grade} ${team.gender}`,
             message: team.yearbookMessage
               ? `"${team.yearbookMessage.trim()}"`
               : "⚠️ No message yet ⚠️",
-          }))
+            }))
         );
       } catch {
         console.log("Error fetching players");

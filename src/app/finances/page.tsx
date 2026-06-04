@@ -8,6 +8,7 @@ import { selectData } from "../functions/teams";
 import { Team } from "../teams/columns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { CURRENT_SCHOOL_YEAR } from "@/lib/constants";
 import {
   Accordion,
   AccordionContent,
@@ -47,7 +48,10 @@ export default function Finances() {
     };
     getTeams();
   }, []);
-  const filteredData = data?.filter((student) => {
+  const currentYearData =
+    data?.filter((student) => student.year === CURRENT_SCHOOL_YEAR) ?? [];
+
+  const filteredData = currentYearData.filter((student) => {
     // Filter by name - check both "Last, First" and "First Last" formats
     const filterLower = filter.toLowerCase();
     const nameLower = student.name.toLowerCase();
@@ -69,7 +73,7 @@ export default function Finances() {
 
   const sortedEmails = [
     ...new Set(
-      (data ?? [])
+      currentYearData
         .map((student) => student.email?.trim())
         .filter((email): email is string => Boolean(email))
     ),
@@ -79,7 +83,7 @@ export default function Finances() {
     await navigator.clipboard.writeText(sortedEmails.join("\n"));
   };
 
-  const sortedNames = (data ?? [])
+  const sortedNames = currentYearData
     .map((student) => student.name?.trim())
     .filter((name): name is string => Boolean(name))
     .sort((a, b) => a.localeCompare(b));

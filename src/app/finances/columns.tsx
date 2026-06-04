@@ -11,6 +11,7 @@ export type Finance = {
   name: string;
   email?: string | null;
   paid_to_team: number | null;
+  year: string;
 };
 export const columns = ({
   teams,

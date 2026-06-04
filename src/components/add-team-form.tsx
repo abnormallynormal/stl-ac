@@ -21,6 +21,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { CURRENT_SCHOOL_YEAR } from "@/lib/constants";
 // Create schema function to include existing teams data for validation
 const createFormSchema = (existingTeams: any[] = []) =>
   z
@@ -90,7 +91,7 @@ export default function AddTeamForm({
       gender: "",
       season: "",
       points: 10, // Default points value
-      year: "2025-26", // Set to current year
+      year: CURRENT_SCHOOL_YEAR, // Set to current year
     },
   });
 

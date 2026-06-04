@@ -5,6 +5,7 @@ import { ArrowUpDown } from "lucide-react";
 
 export type Coach = {
   coach: string;
+  year: string;
 };
 
 export const columns = ({

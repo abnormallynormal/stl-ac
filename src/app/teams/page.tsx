@@ -20,10 +20,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { CURRENT_SCHOOL_YEAR, SCHOOL_YEARS } from "@/lib/constants";
 export default function TeamList() {
   const [data, setData] = useState<Team[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [selectedYear, setSelectedYear] = useState<string>("2025-26");
+  const [selectedYear, setSelectedYear] = useState<string>(CURRENT_SCHOOL_YEAR);
   const [addFormOpen, setAddFormOpen] = useState(false);
   const filteredData = data.filter((team) => team.year === selectedYear);
 
@@ -68,9 +69,11 @@ export default function TeamList() {
                 <SelectValue placeholder="Select year" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="2025-26">2025-26</SelectItem>
-                <SelectItem value="2024-25">2024-25</SelectItem>
-                <SelectItem value="2023-24">2023-24</SelectItem>
+                {SCHOOL_YEARS.map((year) => (
+                  <SelectItem key={year} value={year}>
+                    {year}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

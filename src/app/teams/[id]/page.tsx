@@ -69,6 +69,7 @@ import {
 } from "@/app/functions/team";
 import { selectData as selectStudents } from "@/app/functions/students";
 import { Input } from "@/components/ui/input";
+import { CURRENT_SCHOOL_YEAR } from "@/lib/constants";
 import {
   getFinances,
   markManagerAsPaid,
@@ -718,7 +719,9 @@ export default function TeamPage({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="2025-26">2025-26</SelectItem>
+                          <SelectItem value={CURRENT_SCHOOL_YEAR}>
+                            {CURRENT_SCHOOL_YEAR}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

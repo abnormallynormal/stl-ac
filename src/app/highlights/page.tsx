@@ -5,6 +5,7 @@ import { columns, Highlights } from "./columns";
 import { useEffect, useState } from "react";
 import { selectData } from "../functions/teams";
 import { Button } from "@/components/ui/button";
+import { CURRENT_SCHOOL_YEAR } from "@/lib/constants";
 export default function SeasonHighlights() {
   const [data, setData] = useState<Highlights[]>();
 
@@ -16,14 +17,16 @@ export default function SeasonHighlights() {
           console.log("Error fetching players");
         }
         setData(
-          data?.map((team) => ({
+          data
+            ?.filter((team) => team.year === CURRENT_SCHOOL_YEAR)
+            .map((team) => ({
             team_id: team.id,
             season: `${team.season}`,
             name: `${team.sport?.name} ${team.grade} ${team.gender}`,
             highlight: team.seasonHighlights
               ? `"${team.seasonHighlights.trim()}"`
               : "⚠️ No message yet ⚠️",
-          }))
+            }))
         );
       } catch {
         console.log("Error fetching players");

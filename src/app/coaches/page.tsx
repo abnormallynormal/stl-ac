@@ -5,6 +5,7 @@ import { columns, Coach } from "./columns";
 import { DataTable } from "./data-table";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { CURRENT_SCHOOL_YEAR } from "@/lib/constants";
 
 export default function Coaches() {
   const [data, setData] = useState<Coach[]>([]);
@@ -46,13 +47,17 @@ export default function Coaches() {
     return nameParts[nameParts.length - 1] ?? localPart;
   };
 
+  const currentYearData = data.filter(
+    (coach) => coach.year === CURRENT_SCHOOL_YEAR
+  );
+
   const sortedData = sortByLastName
-    ? [...data].sort((a, b) =>
+    ? [...currentYearData].sort((a, b) =>
         getLastNameFromEmail(a.coach).localeCompare(
           getLastNameFromEmail(b.coach)
         )
       )
-    : data;
+    : currentYearData;
 
   const copyCoaches = async () => {
     const formatted = (sortedData ?? [])

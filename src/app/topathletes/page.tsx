@@ -4,6 +4,7 @@ import { selectData } from "../functions/topathletes";
 import { createColumns, TopAthlete } from "./columns";
 import { DataTable } from "./data-table";
 import { useState, useEffect } from "react";
+import { CURRENT_SCHOOL_YEAR } from "@/lib/constants";
 
 export default function TopAthletes() {
   const [data, setData] = useState<TopAthlete[]>([]);
@@ -38,7 +39,11 @@ export default function TopAthletes() {
   const normalizeGender = (value: string | null | undefined) =>
     (value ?? "").trim().toLowerCase();
 
-  const filteredData = data.filter((athlete) => {
+  const currentYearData = data.filter(
+    (athlete) => athlete.year === CURRENT_SCHOOL_YEAR
+  );
+
+  const filteredData = currentYearData.filter((athlete) => {
     const teamCount = safeNumber(athlete.team_count);
     const ofsaa = safeNumber(athlete.ofsaa);
     const mvp = safeNumber(athlete.mvp);

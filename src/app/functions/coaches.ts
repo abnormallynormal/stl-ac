@@ -4,7 +4,7 @@ export const selectData = async () => {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("coaches2")
-    .select("coach")
+    .select("coach, year")
     .order("coach", { ascending: true });
   if (!data) {
     throw new Error(error?.message ?? "Unable to fetch coaches");

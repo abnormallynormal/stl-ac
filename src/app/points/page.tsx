@@ -230,7 +230,7 @@ export default function Points() {
               <AccordionItem value="outstanding-contribution"> */}
                 {/* <AccordionTrigger> */}
                   <div>
-                    <div className="font-semibold text-2xl hover:underline mb-1 mt-3">
+                    <div className="font-semibold text-2xl mb-1 mt-3">
                       Outstanding Contribution
                     </div>
                     <div className="text-lg">Gr. 12 & 100+ points</div>
@@ -272,7 +272,7 @@ export default function Points() {
               {/* <AccordionItem value="letter-of-distinction">
                 <AccordionTrigger> */}
                   <div>
-                    <div className="font-semibold text-2xl hover:underline mb-1 mt-4">
+                    <div className="font-semibold text-2xl mb-1 mt-4">
                       Letter of Distinction
                     </div>
                     <div className="text-lg">90 points</div>
@@ -314,7 +314,7 @@ export default function Points() {
               {/* <AccordionItem value="letter-of-merit">
                 <AccordionTrigger> */}
                   <div>
-                    <div className="font-semibold text-2xl hover:underline mb-1 mt-4">
+                    <div className="font-semibold text-2xl mb-1 mt-4">
                       Letter of Merit
                     </div>
                     <div className="text-lg">70 points</div>

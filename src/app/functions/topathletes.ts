@@ -6,7 +6,7 @@ export const selectData = async () => {
   const { data, error } = await supabase
     .from("top_athletes")
     .select(
-      "id, name, gender, grade, team_count, team, yraa, ofsaa, mvp, lca"
+      "id, name, gender, grade, team_count, team, yraa, ofsaa, mvp, lca, year"
     );
   if (!data) {
     throw new Error(error?.message ?? "Unable to fetch top athletes");
