@@ -5,8 +5,9 @@ import { columns, Yearbook } from "./columns";
 import { useEffect, useState } from "react";
 import { selectData } from "../functions/teams";
 import { Button } from "@/components/ui/button";
-import { CURRENT_SCHOOL_YEAR } from "@/lib/constants";
+import { useSchoolYear } from "@/lib/school-year-context";
 export default function YearbookMessages() {
+  const { selectedYear } = useSchoolYear();
   const [data, setData] = useState<Yearbook[]>();
   useEffect(() => {
     const getYearbookMessages = async () => {
@@ -17,7 +18,7 @@ export default function YearbookMessages() {
         }
         setData(
           data
-            ?.filter((team) => team.year === CURRENT_SCHOOL_YEAR)
+            ?.filter((team) => team.year === selectedYear)
             .map((team) => ({
             team_id: team.id,
             season: `${team.season}`,

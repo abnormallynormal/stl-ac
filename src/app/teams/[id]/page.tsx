@@ -69,7 +69,7 @@ import {
 } from "@/app/functions/team";
 import { selectData as selectStudents } from "@/app/functions/students";
 import { Input } from "@/components/ui/input";
-import { CURRENT_SCHOOL_YEAR } from "@/lib/constants";
+import { useSchoolYear } from "@/lib/school-year-context";
 import {
   getFinances,
   markManagerAsPaid,
@@ -120,6 +120,7 @@ export default function TeamPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const { selectedYear } = useSchoolYear();
   const [data, setData] = useState<Team[]>([]);
   const [finances, setFinances] = useState<Finance[]>();
   const [sports, setSports] = useState<Sport[]>([]);
@@ -492,9 +493,10 @@ export default function TeamPage({
   };
 
   const removeCoach = (coach: string) => {
+    const trimmed = coach.trim();
     const newCoaches = editTeamForm
       .getValues("teachers")
-      .filter((c) => c !== coach);
+      .filter((c) => c.trim() !== trimmed);
     editTeamForm.setValue("teachers", newCoaches, {
       shouldDirty: true,
       shouldTouch: true,
@@ -511,9 +513,9 @@ export default function TeamPage({
   };
   const addCoach = (coach: string) => {
     const trimmed = coach.trim();
-    const currentCoaches = editTeamForm.getValues("teachers");
+    const currentCoaches = editTeamForm.getValues("teachers").map(c => c.trim());
     if (!trimmed || currentCoaches.includes(trimmed)) return;
-    const newCoaches = [...currentCoaches, trimmed];
+    const newCoaches = [...editTeamForm.getValues("teachers"), trimmed];
     editTeamForm.setValue("teachers", newCoaches, {
       shouldDirty: true,
       shouldTouch: true,
@@ -751,8 +753,8 @@ export default function TeamPage({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value={CURRENT_SCHOOL_YEAR}>
-                            {CURRENT_SCHOOL_YEAR}
+                          <SelectItem value={selectedYear}>
+                            {selectedYear}
                           </SelectItem>
                         </SelectContent>
                       </Select>
@@ -784,7 +786,7 @@ export default function TeamPage({
                                 No coaches selected
                               </div>
                             ) : (
-                              field.value.map((coach) => (
+                              Array.from(new Set(field.value.map(c => c.trim()))).map((coach) => (
                                 <Badge
                                   key={coach}
                                   variant="secondary"
@@ -1075,20 +1077,20 @@ export default function TeamPage({
                   {coachDraft.trim() ? "No matches." : "No coaches found."}
                 </CommandEmpty>
                 <CommandGroup>
-                  {availableCoaches
-                    ?.filter(
+                  {Array.from(new Set(availableCoaches?.map(c => c.coach.trim()) ?? []))
+                    .filter(
                       (coach) =>
-                        coach.coach
+                        coach
                           .toLowerCase()
                           .includes(coachDraft.trim().toLowerCase()) &&
-                        !selectedCoaches.includes(coach.coach)
+                        !selectedCoaches.map(c => c.trim()).includes(coach)
                     )
                     .map((coach) => (
                       <CommandItem
-                        key={coach.coach}
-                        value={coach.coach}
+                        key={coach}
+                        value={coach}
                         onSelect={() => {
-                          addCoach(coach.coach);
+                          addCoach(coach);
                           setCoachSearchOpen(false);
                           setCoachDraft("");
                         }}
@@ -1096,10 +1098,10 @@ export default function TeamPage({
                       >
                         <div className="flex flex-col">
                           <span className="font-medium">
-                            {getCoachDisplayName(coach.coach)}
+                            {getCoachDisplayName(coach)}
                           </span>
                           <span className="text-sm text-muted-foreground">
-                            {coach.coach}
+                            {coach}
                           </span>
                         </div>
                       </CommandItem>

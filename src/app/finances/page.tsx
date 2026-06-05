@@ -8,7 +8,7 @@ import { selectData } from "../functions/teams";
 import { Team } from "../teams/columns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { CURRENT_SCHOOL_YEAR } from "@/lib/constants";
+import { useSchoolYear } from "@/lib/school-year-context";
 import {
   Accordion,
   AccordionContent,
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/accordion";
 
 export default function Finances() {
+  const { selectedYear } = useSchoolYear();
   const [data, setData] = useState<Finance[]>()
   const [teamData, setTeamData] = useState<Team[]>()
   const [filter, setFilter] = useState<string>("");
@@ -49,7 +50,7 @@ export default function Finances() {
     getTeams();
   }, []);
   const currentYearData =
-    data?.filter((student) => student.year === CURRENT_SCHOOL_YEAR) ?? [];
+    data?.filter((student) => student.year === selectedYear) ?? [];
 
   const filteredData = currentYearData.filter((student) => {
     // Filter by name - check both "Last, First" and "First Last" formats

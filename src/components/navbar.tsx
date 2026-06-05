@@ -18,8 +18,15 @@ import { Button } from "./ui/button";
 import { createClient } from "@/lib/supabase/client";
 import Logout from "./logout";
 import { ChevronDown } from "lucide-react";
+import { useSchoolYear } from "@/lib/school-year-context";
+import { SCHOOL_YEARS } from "@/lib/constants";
+import { usePathname } from "next/navigation";
 
 export default function Navigation() {
+  const { selectedYear, setSelectedYear } = useSchoolYear();
+  const pathname = usePathname();
+  const isTeamDetailPage = /^\/teams\/\d+/.test(pathname);
+
   async function signOut() {
     const supabase = createClient();
     const { error } = await supabase.auth.signOut();
@@ -27,10 +34,24 @@ export default function Navigation() {
   return (
     <>
       <div className="px-16 pt-4 flex justify-between items-center w-full">
-        <div className="flex items-center h-16">
+        <div className="flex items-center h-16 gap-6">
           <Link href="/" className="text-2xl font-bold">
             STL Athletics
           </Link>
+          {!isTeamDetailPage && (
+            <DropdownMenu>
+              <DropdownMenuTrigger className={`${navigationMenuTriggerStyle()} border rounded-md`}>
+                {selectedYear} <ChevronDown className="ml-2 h-3 w-3" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="p-2">
+                {SCHOOL_YEARS.map((year) => (
+                  <DropdownMenuItem key={year} onClick={() => setSelectedYear(year)}>
+                    {year}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
         <div className="flex items-center gap-2">

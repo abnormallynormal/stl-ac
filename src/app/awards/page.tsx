@@ -6,8 +6,9 @@ import { useEffect, useState } from "react";
 import { selectData } from "../functions/teams";
 import { selectAllPlayers } from "../functions/team";
 import { Button } from "@/components/ui/button";
-import { CURRENT_SCHOOL_YEAR } from "@/lib/constants";
+import { useSchoolYear } from "@/lib/school-year-context";
 export default function AwardsList() {
+  const { selectedYear } = useSchoolYear();
   const [data, setData] = useState<Awards[]>();
   useEffect(() => {
     const getAwards = async () => {
@@ -24,7 +25,7 @@ export default function AwardsList() {
         }
         setData(
           teams
-            ?.filter((team) => team.year === CURRENT_SCHOOL_YEAR)
+            ?.filter((team) => team.year === selectedYear)
             .map((team) => {
               const mvpPlayer = players?.find(
                 (player) => player.team_id === team.id && player.mvp

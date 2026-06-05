@@ -4,9 +4,10 @@ import { selectData } from "../functions/topathletes";
 import { createColumns, TopAthlete } from "./columns";
 import { DataTable } from "./data-table";
 import { useState, useEffect } from "react";
-import { CURRENT_SCHOOL_YEAR } from "@/lib/constants";
+import { useSchoolYear } from "@/lib/school-year-context";
 
 export default function TopAthletes() {
+  const { selectedYear } = useSchoolYear();
   const [data, setData] = useState<TopAthlete[]>([]);
   const [loading, setLoading] = useState(true);
   const teamCountThreshold = 3;
@@ -40,7 +41,7 @@ export default function TopAthletes() {
     (value ?? "").trim().toLowerCase();
 
   const currentYearData = data.filter(
-    (athlete) => athlete.year === CURRENT_SCHOOL_YEAR
+    (athlete) => athlete.year === selectedYear
   );
 
   const filteredData = currentYearData.filter((athlete) => {

@@ -22,7 +22,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { CURRENT_SCHOOL_YEAR } from "@/lib/constants";
+import { useSchoolYear } from "@/lib/school-year-context";
 // Create schema function to include existing teams data for validation
 const createFormSchema = (existingTeams: Team[] = []) =>
   z
@@ -68,16 +68,15 @@ const createFormSchema = (existingTeams: Team[] = []) =>
     });
 
 interface AddTeamFormProps {
-  year?: string;
   onCancel?: () => void;
   onSuccess?: () => void;
 }
 
 export default function AddTeamForm({
-  year = CURRENT_SCHOOL_YEAR,
   onCancel,
   onSuccess,
 }: AddTeamFormProps = {}) {
+  const { selectedYear } = useSchoolYear();
   const [sports, setSports] = useState<Sport[]>([]);
   const [existingTeams, setExistingTeams] = useState<Team[]>([]);
 
@@ -95,7 +94,7 @@ export default function AddTeamForm({
       gender: "",
       season: "",
       points: 10, // Default points value
-      year, // Set to the year currently selected on the Teams page
+      year: selectedYear, // Set to the year currently selected in the navbar
     },
   });
 

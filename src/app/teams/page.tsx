@@ -1,14 +1,6 @@
 "use client";
 import Navigation from "@/components/navbar";
 import AddTeamForm from "@/components/add-team-form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
 import { Team, columns } from "./columns";
 import { DataTable } from "./data-table";
 import { Button } from "@/components/ui/button";
@@ -20,11 +12,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CURRENT_SCHOOL_YEAR, SCHOOL_YEARS } from "@/lib/constants";
+import { useSchoolYear } from "@/lib/school-year-context";
 export default function TeamList() {
+  const { selectedYear, setSelectedYear } = useSchoolYear();
   const [data, setData] = useState<Team[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [selectedYear, setSelectedYear] = useState<string>(CURRENT_SCHOOL_YEAR);
   const [addFormOpen, setAddFormOpen] = useState(false);
   const filteredData = data.filter((team) => team.year === selectedYear);
 
@@ -60,23 +52,8 @@ export default function TeamList() {
     <>
       <Navigation />
       <div className="px-16 py-8">
-        <div className="text-3xl font-bold mb-2">Team List</div>
         <div className="flex justify-between items-center mb-8">
-          <div className="flex gap-4 items-center">
-            <span>Select a year:</span>
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-auto">
-                <SelectValue placeholder="Select year" />
-              </SelectTrigger>
-              <SelectContent>
-                {SCHOOL_YEARS.map((year) => (
-                  <SelectItem key={year} value={year}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <div className="text-3xl font-bold">Team List</div>
           <Button onClick={() => setAddFormOpen(true)}>Add Team</Button>
         </div>
         <DataTable columns={columns} data={filteredData} />

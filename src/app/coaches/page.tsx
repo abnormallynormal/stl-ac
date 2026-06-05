@@ -5,9 +5,10 @@ import { columns, Coach } from "./columns";
 import { DataTable } from "./data-table";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { CURRENT_SCHOOL_YEAR } from "@/lib/constants";
+import { useSchoolYear } from "@/lib/school-year-context";
 
 export default function Coaches() {
+  const { selectedYear } = useSchoolYear();
   const [data, setData] = useState<Coach[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortByLastName, setSortByLastName] = useState(false);
@@ -48,7 +49,7 @@ export default function Coaches() {
   };
 
   const currentYearData = data.filter(
-    (coach) => coach.year === CURRENT_SCHOOL_YEAR
+    (coach) => coach.year === selectedYear
   );
 
   const sortedData = sortByLastName
