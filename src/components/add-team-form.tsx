@@ -4,6 +4,7 @@ import { z } from "zod";
 import { selectData, addTeam } from "@/app/functions/teams";
 import { selectData as selectSports } from "@/app/functions/sports";
 import { Sport } from "@/app/sports/columns";
+import type { Team } from "@/app/teams/columns";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -23,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import { CURRENT_SCHOOL_YEAR } from "@/lib/constants";
 // Create schema function to include existing teams data for validation
-const createFormSchema = (existingTeams: any[] = []) =>
+const createFormSchema = (existingTeams: Team[] = []) =>
   z
     .object({
       sport: z.string().min(1, {
@@ -52,7 +53,8 @@ const createFormSchema = (existingTeams: any[] = []) =>
         (team) =>
           team.sport?.name === values.sport &&
           team.gender === values.gender &&
-          team.grade === values.grade,
+          team.grade === values.grade &&
+          team.year === values.year,
       );
 
       if (existingTeam) {
@@ -66,16 +68,18 @@ const createFormSchema = (existingTeams: any[] = []) =>
     });
 
 interface AddTeamFormProps {
+  year?: string;
   onCancel?: () => void;
   onSuccess?: () => void;
 }
 
 export default function AddTeamForm({
+  year = CURRENT_SCHOOL_YEAR,
   onCancel,
   onSuccess,
 }: AddTeamFormProps = {}) {
   const [sports, setSports] = useState<Sport[]>([]);
-  const [existingTeams, setExistingTeams] = useState<any[]>([]);
+  const [existingTeams, setExistingTeams] = useState<Team[]>([]);
 
   useEffect(() => {
     selectSports().then((data) => setSports(data || []));
@@ -91,9 +95,13 @@ export default function AddTeamForm({
       gender: "",
       season: "",
       points: 10, // Default points value
-      year: CURRENT_SCHOOL_YEAR, // Set to current year
+      year, // Set to the year currently selected on the Teams page
     },
   });
+
+  useEffect(() => {
+    form.setValue("year", year);
+  }, [form, year]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -102,7 +110,7 @@ export default function AddTeamForm({
         grade: values.grade,
         gender: values.gender,
         season: values.season,
-        year: values.year,
+        year,
         teachers: [],
       });
 

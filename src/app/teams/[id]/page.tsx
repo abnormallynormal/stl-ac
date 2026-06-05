@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { type FieldErrors, useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
@@ -102,7 +102,8 @@ const createEditTeamSchema = (
           team.id !== currentTeamId &&
           team.sport_id === values.sport_id &&
           team.gender === values.gender &&
-          team.grade === values.grade
+          team.grade === values.grade &&
+          team.year === values.year
       );
 
       if (existingTeam && existingTeam.id !== currentTeamId) {
@@ -110,7 +111,7 @@ const createEditTeamSchema = (
           code: "custom",
           message:
             "A team with this sport, gender, and grade combination already exists",
-          path: ["sport"],
+          path: ["sport_id"],
         });
       }
     });
@@ -130,7 +131,6 @@ export default function TeamPage({
   const [toBeDeleted, setToBeDeleted] = useState<Player | null>(null);
   const [addPlayerOpen, setAddPlayerOpen] = useState(false);
   const [coachSearchOpen, setCoachSearchOpen] = useState(false);
-  const [selectedCoaches, setSelectedCoaches] = useState<string[]>([]);
   const [coachDraft, setCoachDraft] = useState("");
   const [deleteTeamIsOpen, setDeleteTeamIsOpen] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -369,13 +369,13 @@ export default function TeamPage({
       yearbookMessage: "",
     },
   });
+  const selectedCoaches = editTeamForm.watch("teachers") ?? [];
 
   const [formInitialized, setFormInitialized] = useState(false);
 
   useEffect(() => {
     if (team && !formInitialized) {
       const coaches = team.team_coaches2?.map((tc) => tc.coach) ?? [];
-      setSelectedCoaches(coaches);
       setSelectedSport(team.sport?.name);
 
       editTeamForm.reset({
@@ -492,9 +492,14 @@ export default function TeamPage({
   };
 
   const removeCoach = (coach: string) => {
-    const newCoaches = selectedCoaches.filter((c) => c !== coach);
-    setSelectedCoaches(newCoaches);
-    editTeamForm.setValue("teachers", newCoaches, { shouldValidate: true });
+    const newCoaches = editTeamForm
+      .getValues("teachers")
+      .filter((c) => c !== coach);
+    editTeamForm.setValue("teachers", newCoaches, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
   };
 
   const getCoachDisplayName = (email: string) => {
@@ -506,10 +511,33 @@ export default function TeamPage({
   };
   const addCoach = (coach: string) => {
     const trimmed = coach.trim();
-    if (!trimmed || selectedCoaches.includes(trimmed)) return;
-    const newCoaches = [...selectedCoaches, trimmed];
-    setSelectedCoaches(newCoaches);
-    editTeamForm.setValue("teachers", newCoaches, { shouldValidate: true });
+    const currentCoaches = editTeamForm.getValues("teachers");
+    if (!trimmed || currentCoaches.includes(trimmed)) return;
+    const newCoaches = [...currentCoaches, trimmed];
+    editTeamForm.setValue("teachers", newCoaches, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+  };
+  const getValidationErrorMessage = (
+    errors: FieldErrors<z.infer<typeof editTeamSchema>>
+  ) => {
+    const messages = [
+      errors.sport_id?.message,
+      errors.gender?.message,
+      errors.grade?.message,
+      errors.season?.message,
+      errors.year?.message,
+      errors.teachers?.message,
+      errors.points?.message,
+      errors.seasonHighlights?.message,
+      errors.yearbookMessage?.message,
+    ].filter(Boolean);
+
+    return messages.length > 0
+      ? messages.join(" ")
+      : "Please fix the highlighted fields.";
   };
   const onEditSportSave = async (values: z.infer<typeof editTeamSchema>) => {
     try {
@@ -535,10 +563,14 @@ export default function TeamPage({
           setData(refreshedData);
         }
         alert("Saved successfully!");
+      } else {
+        setSaveError(
+          "Unable to save team. Please check the coach assignments and try again."
+        );
       }
     } catch (error) {
       console.error("Error updating team:", error);
-      alert("Failed to update team. Please try again.");
+      setSaveError("Failed to update team. Please try again.");
     }
   };
 
@@ -572,7 +604,7 @@ export default function TeamPage({
               <form
                 onSubmit={editTeamForm.handleSubmit(
                   onEditSportSave,
-                  () => setSaveError("Please fix the highlighted fields.")
+                  (errors) => setSaveError(getValidationErrorMessage(errors))
                 )}
                 className="space-y-4"
               >
@@ -747,12 +779,12 @@ export default function TeamPage({
                       <FormControl>
                         <div className="space-y-2">
                           <div className="flex flex-wrap gap-2 min-h-[2.5rem] px-3 py-2 border rounded-md">
-                            {selectedCoaches.length === 0 ? (
+                            {field.value.length === 0 ? (
                               <div className="text-muted-foreground text-sm">
                                 No coaches selected
                               </div>
                             ) : (
-                              selectedCoaches.map((coach) => (
+                              field.value.map((coach) => (
                                 <Badge
                                   key={coach}
                                   variant="secondary"
