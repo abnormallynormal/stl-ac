@@ -99,8 +99,8 @@ export default function AddTeamForm({
   });
 
   useEffect(() => {
-    form.setValue("year", year);
-  }, [form, year]);
+    form.setValue("year", selectedYear);
+  }, [form, selectedYear]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -109,7 +109,7 @@ export default function AddTeamForm({
         grade: values.grade,
         gender: values.gender,
         season: values.season,
-        year,
+        year: selectedYear,
         teachers: [],
       });
 
