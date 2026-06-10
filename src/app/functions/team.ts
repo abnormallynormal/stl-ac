@@ -44,7 +44,7 @@ export const selectTeamPlayers = async (teamId: number) => {
   if (!error) {
     return data as Player[];
   } else {
-    // console.log(error);
+    // //  console.log(error);
     throw new Error(error.message);
   }
 };
@@ -98,7 +98,7 @@ export const addPlayer = async ({
   if (!error) {
     return data as Player[];
   } else {
-    // console.log(error);
+    // //  console.log(error);
     throw new Error(error.message);
   }
 };
@@ -113,7 +113,7 @@ export const deletePlayer = async (playerId: number) => {
   if (!error) {
     return data as Player[];
   } else {
-    // console.log(error);
+    // //  console.log(error);
     throw new Error(error.message);
   }
 };
@@ -136,7 +136,7 @@ export const updateCheckbox = async ({
   if (!error) {
     return data as Player[];
   } else {
-    // console.log(error);
+    // //  console.log(error);
     throw new Error(error.message);
   }
 };
@@ -171,7 +171,7 @@ export const updateRadio = async ({
     return others as Player[];
   }
   if (error) {
-    // console.log(error ?? othersError);
+    // //  console.log(error ?? othersError);
     throw new Error(error.message);
   }
   if (othersError) {
@@ -230,7 +230,7 @@ export const addManager = async (manager: {
   paid: boolean;
 }) => {
   // console.group("🧩 addManager() DEBUG");
-  // console.log("➡️ Payload received:", manager);
+  // //  console.log("➡️ Payload received:", manager);
 
   const supabase = createClient();
   const { data, error } = await supabase
@@ -238,7 +238,7 @@ export const addManager = async (manager: {
     .insert(manager)
     .select();
 
-  // console.log("📥 Supabase response:", { data, error });
+  // //  console.log("📥 Supabase response:", { data, error });
 
   if (error) {
     // console.error("❌ Supabase insert error:", error);
@@ -246,7 +246,7 @@ export const addManager = async (manager: {
     throw error;
   }
 
-  // console.log("✅ Insert successful:", data);
+  // //  console.log("✅ Insert successful:", data);
   // console.groupEnd();
   return data;
 };

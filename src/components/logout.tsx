@@ -11,7 +11,7 @@ export default function Logout() {
       router.push("/login");
     }
     else{
-      console.log(error);
+      //  console.log(error);
     }
   }
   return(

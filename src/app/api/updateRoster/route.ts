@@ -32,7 +32,7 @@ async function sendSingleEmail(
 
 export async function POST(req: Request) {
   const timestamp = new Date().toISOString();
-  console.log(`\n[${timestamp}] 📩 Incoming bulk email request`);
+  //  console.log(`\n[${timestamp}] 📩 Incoming bulk email request`);
 
   try {
     const { to, subject, text, html } = await req.json();
@@ -66,8 +66,8 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log(`📧 Preparing to send ${to.length} emails`);
-    console.log("✅ Environment variables loaded correctly");
+    //  console.log(`📧 Preparing to send ${to.length} emails`);
+    //  console.log("✅ Environment variables loaded correctly");
 
     // Create transporter
     const transporter = nodemailer.createTransport({
@@ -84,9 +84,9 @@ export async function POST(req: Request) {
 
     // Verify SMTP connection
     try {
-      console.log("🔌 Verifying SMTP connection...");
+      //  console.log("🔌 Verifying SMTP connection...");
       await transporter.verify();
-      console.log("✅ SMTP connection verified successfully");
+      //  console.log("✅ SMTP connection verified successfully");
     } catch (verifyError) {
       console.error("❌ SMTP verification failed:", verifyError);
       return NextResponse.json(
@@ -102,14 +102,14 @@ export async function POST(req: Request) {
     };
 
     // Process emails in batches with rate limiting
-    console.log(`🚀 Sending emails in batches of ${BATCH_SIZE}...`);
+    //  console.log(`🚀 Sending emails in batches of ${BATCH_SIZE}...`);
     
     for (let i = 0; i < to.length; i += BATCH_SIZE) {
       const batch = to.slice(i, i + BATCH_SIZE);
       const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
       const totalBatches = Math.ceil(to.length / BATCH_SIZE);
       
-      console.log(`📦 Processing batch ${batchNumber}/${totalBatches} (${batch.length} emails)`);
+      //  console.log(`📦 Processing batch ${batchNumber}/${totalBatches} (${batch.length} emails)`);
 
       // Send emails in current batch with individual delays
       for (let j = 0; j < batch.length; j++) {
@@ -126,7 +126,7 @@ export async function POST(req: Request) {
           );
           
           results.successful.push(email);
-          console.log(`✅ Sent to ${email} (${i + j + 1}/${to.length}) - MessageID: ${info.messageId}`);
+          //  console.log(`✅ Sent to ${email} (${i + j + 1}/${to.length}) - MessageID: ${info.messageId}`);
           
           // Add delay between individual emails (except for the last email in the last batch)
           if (i + j < to.length - 1) {
@@ -143,7 +143,7 @@ export async function POST(req: Request) {
 
       // Add delay between batches (except after the last batch)
       if (i + BATCH_SIZE < to.length) {
-        console.log(`⏳ Waiting ${DELAY_BETWEEN_BATCHES}ms before next batch...`);
+        //  console.log(`⏳ Waiting ${DELAY_BETWEEN_BATCHES}ms before next batch...`);
         await delay(DELAY_BETWEEN_BATCHES);
       }
     }
@@ -157,7 +157,7 @@ export async function POST(req: Request) {
       failed: results.failed.length,
     };
 
-    console.log("📊 Email sending complete:", summary);
+    //  console.log("📊 Email sending complete:", summary);
 
     return NextResponse.json({
       success: true,

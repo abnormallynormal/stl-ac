@@ -29,7 +29,7 @@ export default function Points() {
       try {
         const data = await selectData();
         if (!data) {
-          console.log("Error fetching players");
+          // console.log("Error fetching players");
         }
         setData(
           data
@@ -43,9 +43,9 @@ export default function Points() {
         );
         const prevData = await selectPreviousWinners();
         if (!prevData) {
-          console.log("Error fetching players");
+          // console.log("Error fetching players");
         }
-        console.log("Previous winners raw data:", prevData);
+        // console.log("Previous winners raw data:", prevData);
         setPrevWinners(
           prevData
             ?.filter((winner) => winner.student_points?.points > 0)
@@ -57,15 +57,15 @@ export default function Points() {
               award: winner.award,
             }))
         );
-        console.log(
-          "Mapped previous winners:",
-          prevData?.map((winner) => ({
-            student_id: winner.id,
-            award: winner.award,
-          }))
-        );
+        // console.log(
+        //   "Mapped previous winners:",
+        //   prevData?.map((winner) => ({
+        //     student_id: winner.id,
+        //     award: winner.award,
+        //   }))
+        // );
       } catch {
-        console.log("Error fetching players");
+        // console.log("Error fetching players");
       }
     };
     getPoints();

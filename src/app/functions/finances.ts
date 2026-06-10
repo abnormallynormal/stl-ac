@@ -25,7 +25,7 @@ export async function markAsPaid({
   if (selectError) {
     throw new Error(selectError.message);
   }
-  console.log(players);
+  //  console.log(players);
   return (players ?? []) as Player[];
 }
 export async function markAsUnpaid({
@@ -51,7 +51,7 @@ export async function markAsUnpaid({
   if (selectError) {
     throw new Error(selectError.message);
   }
-  console.log(players);
+  //  console.log(players);
   return (players ?? []) as Player[];
 }
 
@@ -61,7 +61,7 @@ export async function getFinances() {
   if (error) {
     throw new Error(error.message);
   }
-  console.log(data);
+  //  console.log(data);
   const sortedData = (data as Finance[])
     .map((student) => {
       let firstName = "";

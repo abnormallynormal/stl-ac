@@ -14,7 +14,7 @@ export default function YearbookMessages() {
       try {
         const data = await selectData();
         if (!data) {
-          console.log("Error fetching players");
+          //  console.log("Error fetching players");
         }
         setData(
           data
@@ -29,7 +29,7 @@ export default function YearbookMessages() {
             }))
         );
       } catch {
-        console.log("Error fetching players");
+        //  console.log("Error fetching players");
       }
     };
     getYearbookMessages();

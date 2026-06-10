@@ -450,7 +450,7 @@ export default function TeamPage({
   const addManagerHandler = async (student: Student) => {
     try {
       console.group("🧩 ADD MANAGER HANDLER DEBUG");
-      console.log("➡️ Adding manager for:", student);
+      //  console.log("➡️ Adding manager for:", student);
 
       // Call the helper (which now logs everything)
       const result = await addManager({
@@ -459,10 +459,10 @@ export default function TeamPage({
         paid: false,
       });
 
-      console.log("✅ addManager() returned:", result);
+      //  console.log("✅ addManager() returned:", result);
 
       const refreshed = await selectTeamManagers(Number(resolvedParams.id));
-      console.log("🔁 Refreshed managers:", refreshed);
+      //  console.log("🔁 Refreshed managers:", refreshed);
 
       setManagers(refreshed);
       setAddableManagers(addableManagers.filter((p) => p.id !== student.id));

@@ -6,7 +6,7 @@ export const selectData = async () => {
   if (!error) {
     return data as Sport[];
   } else {
-    console.log(error);
+    //  console.log(error);
   }
 };
 export const insertData = async ({
@@ -22,7 +22,7 @@ export const insertData = async ({
     .insert({ name, points })
     .select();
   if (error) {
-    console.log(error);
+    //  console.log(error);
   } else {
     return data as Sport[];
   }
@@ -44,7 +44,7 @@ export const updateData = async ({
     .select();
   await supabase.from("teams").update({ name, points }).eq("sport_id", id);
   if (error) {
-    console.log(error);
+    //  console.log(error);
   } else {
     return data as Sport[];
   }
@@ -57,7 +57,7 @@ export const deleteData = async ({ id }: { id: number }) => {
     .eq("id", id)
     .select();
   if (error) {
-    console.log(error);
+    //  console.log(error);
   } else {
     return data as Sport[];
   }

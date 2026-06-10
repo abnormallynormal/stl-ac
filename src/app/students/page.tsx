@@ -74,7 +74,7 @@ export default function Students() {
           setData([]);
         }
       } catch (error) {
-        console.log(error);
+        //  console.log(error);
       }
     };
     loadData();

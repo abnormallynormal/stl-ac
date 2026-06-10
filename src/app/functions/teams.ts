@@ -9,7 +9,7 @@ export const selectData = async () => {
       team_coaches2 (coach)
     `);
   if (!error) {
-    console.log(data);
+    //  console.log(data);
     // Sort the data alphabetically by sport, then grade, then gender
     const sortedData = (data as Team[]).sort((a, b) => {
       // First sort by sport
@@ -25,7 +25,7 @@ export const selectData = async () => {
     });
     return sortedData as Team[];
   } else {
-    console.log(error);
+    //  console.log(error);
   }
 };
 
@@ -55,7 +55,7 @@ export const addTeam = async ({
     .single();
 
   if (sportError || !sportData) {
-    console.log("Sport not found:", sportError);
+    //  console.log("Sport not found:", sportError);
     return;
   }
 
@@ -75,7 +75,7 @@ export const addTeam = async ({
     .single();
 
   if (teamError || !teamData) {
-    console.log("Team creation error:", teamError);
+    //  console.log("Team creation error:", teamError);
     return;
   }
 
@@ -103,7 +103,7 @@ export const addTeam = async ({
       .select();
 
     if (junctionError) {
-      console.log("Team-coach assignment error:", junctionError);
+      //  console.log("Team-coach assignment error:", junctionError);
       return;
     }
   }
@@ -151,7 +151,7 @@ export const updateTeam = async ({
     .single();
 
   if (teamError) {
-    console.log("Team update error:", teamError);
+    //  console.log("Team update error:", teamError);
     return;
   }
 
@@ -162,7 +162,7 @@ export const updateTeam = async ({
     .eq("team_id", id);
 
   if (deleteError) {
-    console.log("Delete coaches error:", deleteError);
+    //  console.log("Delete coaches error:", deleteError);
     return;
   }
 
@@ -190,7 +190,7 @@ export const updateTeam = async ({
       .select();
 
     if (junctionError) {
-      console.log("Team-coach assignment error:", junctionError);
+      //  console.log("Team-coach assignment error:", junctionError);
       return;
     }
   }
@@ -207,7 +207,7 @@ export const deleteTeam = async ({ id }: { id: number }) => {
     .eq("id", id)
     .select();
   if (error) {
-    console.log(error);
+    //  console.log(error);
   } else {
     return data as Team[];
   }

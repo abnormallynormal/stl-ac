@@ -14,14 +14,14 @@ export default function AwardsList() {
     const getAwards = async () => {
       try {
         const teams = await selectData();
-        console.log(teams)
+        //  console.log(teams)
         if (!teams) {
-          console.log("Error fetching teams");
+          //  console.log("Error fetching teams");
         }
         const players = await selectAllPlayers();
-        console.log(players)
+        //  console.log(players)
         if (!players) {
-          console.log("Error fetching players");
+          //  console.log("Error fetching players");
         }
         setData(
           teams
@@ -56,7 +56,7 @@ export default function AwardsList() {
             })
         );
       } catch {
-        console.log("Error fetching players");
+        //  console.log("Error fetching players");
       }
     };
     getAwards();

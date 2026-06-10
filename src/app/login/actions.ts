@@ -23,7 +23,7 @@ export async function login(prevState: ActionResult | null, formData: FormData):
   const { error } = await supabase.auth.signInWithPassword(data);
 
   if (error) {
-    console.log(error)
+    //  console.log(error)
     
     let errorMessage = "Login failed. Please check your credentials.";
     
@@ -56,7 +56,7 @@ export async function signup(
   const { data: authData, error } = await supabase.auth.signUp(data);
 
   if (error) {
-    console.log("Signup error:", error);
+    //  console.log("Signup error:", error);
     return { error: error.message };
   }
 

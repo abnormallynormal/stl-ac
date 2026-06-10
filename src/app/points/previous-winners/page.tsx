@@ -13,7 +13,7 @@ export default function PreviousWinners() {
       try {
         const data = await selectPreviousWinners();
         if (!data) {
-          console.log("Error fetching players");
+          //  console.log("Error fetching players");
         }
         setWinners(
           data.map((winner) => {
@@ -35,7 +35,7 @@ export default function PreviousWinners() {
         );
         
       } catch {
-        console.log("Error fetching players");
+        //  console.log("Error fetching players");
       }
     };
     getPoints();
