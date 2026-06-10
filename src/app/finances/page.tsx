@@ -21,16 +21,17 @@ export default function Finances() {
   const [data, setData] = useState<Finance[]>()
   const [teamData, setTeamData] = useState<Team[]>()
   const [filter, setFilter] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   useEffect(() => {
     const getPayments = async () => {
       try{
         const data = await getFinances();
-        if(!data){
-          //  console.log("Error fetching finances")
-        }
         setData(data)
       } catch {
-        //  console.log("Error fetching finances")
+        setFetchError("Failed to load finances. Please try again.");
+      } finally {
+        setLoading(false);
       }
     }
     getPayments();
@@ -39,12 +40,9 @@ export default function Finances() {
     const getTeams = async () => {
       try {
         const data = await selectData();
-        if (!data) {
-          //  console.log("Error fetching teams");
-        }
         setTeamData(data);
       } catch {
-        //  console.log("Error fetching teams");
+        setFetchError("Failed to load teams. Please try again.");
       }
     };
     getTeams();
@@ -100,6 +98,9 @@ export default function Finances() {
         <div className="max-w-4xl justify-self-center w-full">
           <div className="mb-2 justify-between">
             <div className="font-bold text-3xl mb-4">Finances</div>
+            {fetchError && (
+              <p className="text-sm text-destructive mb-2">{fetchError}</p>
+            )}
             <div className="flex items-center">
               <Input
                 placeholder="Filter by name"
@@ -149,6 +150,7 @@ export default function Finances() {
               onCopyNames: () => void copyNames(),
             })}
             data={filteredData ?? []}
+            isLoading={loading}
           />
         </div>
       </div>

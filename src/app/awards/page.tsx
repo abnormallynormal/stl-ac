@@ -10,19 +10,15 @@ import { useSchoolYear } from "@/lib/school-year-context";
 export default function AwardsList() {
   const { selectedYear } = useSchoolYear();
   const [data, setData] = useState<Awards[]>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     const getAwards = async () => {
       try {
-        const teams = await selectData();
-        //  console.log(teams)
-        if (!teams) {
-          //  console.log("Error fetching teams");
-        }
-        const players = await selectAllPlayers();
-        //  console.log(players)
-        if (!players) {
-          //  console.log("Error fetching players");
-        }
+        const [teams, players] = await Promise.all([
+          selectData(),
+          selectAllPlayers(),
+        ]);
         setData(
           teams
             ?.filter((team) => team.year === selectedYear)
@@ -56,7 +52,9 @@ export default function AwardsList() {
             })
         );
       } catch {
-        //  console.log("Error fetching players");
+        setError("Failed to load data. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
     getAwards();
@@ -92,7 +90,8 @@ export default function AwardsList() {
             </Button>
           </div>
         </div>
-        <DataTable columns={columns} data={data ?? []} />
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <DataTable columns={columns} data={data ?? []} isLoading={loading} />
       </div>
     </>
   );

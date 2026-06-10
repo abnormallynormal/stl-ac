@@ -2,7 +2,10 @@ import { createClient } from "@/lib/supabase/client";
 import { Student } from "../students/columns";
 import { Player } from "../teams/[id]/columns";
 
-export const selectablePlayers = async (teamId: number): Promise<Student[]> => {
+export const selectablePlayers = async (
+  teamId: number,
+  search = ""
+): Promise<Student[]> => {
   const supabase = createClient();
   const { data: players, error: playersError } = await supabase
     .from("players")
@@ -10,8 +13,7 @@ export const selectablePlayers = async (teamId: number): Promise<Student[]> => {
     .eq("team_id", teamId);
 
   if (playersError) {
-    console.error("Error fetching players:", playersError);
-    return [];
+    throw new Error(playersError.message);
   }
 
   const studentIdsInTeam =
@@ -23,13 +25,18 @@ export const selectablePlayers = async (teamId: number): Promise<Student[]> => {
     query = query.not("id", "in", `(${studentIdsInTeam.join(",")})`);
   }
 
-  query = query.order("name", { ascending: true });
+  // Server-side name search so we don't load every student into the client.
+  const trimmedSearch = search.trim();
+  if (trimmedSearch) {
+    query = query.ilike("name", `%${trimmedSearch}%`);
+  }
+
+  query = query.order("name", { ascending: true }).limit(50);
 
   const { data: availableStudents, error: studentsError } = await query;
 
   if (studentsError) {
-    console.error("Error fetching students:", studentsError);
-    return [];
+    throw new Error(studentsError.message);
   }
 
   return availableStudents as Student[];
@@ -44,7 +51,6 @@ export const selectTeamPlayers = async (teamId: number) => {
   if (!error) {
     return data as Player[];
   } else {
-    // //  console.log(error);
     throw new Error(error.message);
   }
 };
@@ -98,7 +104,6 @@ export const addPlayer = async ({
   if (!error) {
     return data as Player[];
   } else {
-    // //  console.log(error);
     throw new Error(error.message);
   }
 };
@@ -113,7 +118,6 @@ export const deletePlayer = async (playerId: number) => {
   if (!error) {
     return data as Player[];
   } else {
-    // //  console.log(error);
     throw new Error(error.message);
   }
 };
@@ -136,7 +140,6 @@ export const updateCheckbox = async ({
   if (!error) {
     return data as Player[];
   } else {
-    // //  console.log(error);
     throw new Error(error.message);
   }
 };
@@ -171,7 +174,6 @@ export const updateRadio = async ({
     return others as Player[];
   }
   if (error) {
-    // //  console.log(error ?? othersError);
     throw new Error(error.message);
   }
   if (othersError) {
@@ -180,7 +182,8 @@ export const updateRadio = async ({
 };
 
 export const selectableManagers = async (
-  teamId: number
+  teamId: number,
+  search = ""
 ): Promise<Student[]> => {
   const supabase = createClient();
 
@@ -190,8 +193,7 @@ export const selectableManagers = async (
     .eq("team_id", teamId);
 
   if (managersError) {
-    console.error("Error fetching managers:", managersError);
-    return [];
+    throw new Error(managersError.message);
   }
 
   const studentIdsInManagers =
@@ -202,13 +204,18 @@ export const selectableManagers = async (
     query = query.not("id", "in", `(${studentIdsInManagers.join(",")})`);
   }
 
-  query = query.order("name", { ascending: true });
+  // Server-side name search so we don't load every student into the client.
+  const trimmedSearch = search.trim();
+  if (trimmedSearch) {
+    query = query.ilike("name", `%${trimmedSearch}%`);
+  }
+
+  query = query.order("name", { ascending: true }).limit(50);
 
   const { data: availableStudents, error: studentsError } = await query;
 
   if (studentsError) {
-    console.error("Error fetching available students:", studentsError);
-    return [];
+    throw new Error(studentsError.message);
   }
 
   return availableStudents as Student[];
@@ -229,25 +236,16 @@ export const addManager = async (manager: {
   student_id: number;
   paid: boolean;
 }) => {
-  // console.group("🧩 addManager() DEBUG");
-  // //  console.log("➡️ Payload received:", manager);
-
   const supabase = createClient();
   const { data, error } = await supabase
     .from("managers")
     .insert(manager)
     .select();
 
-  // //  console.log("📥 Supabase response:", { data, error });
-
   if (error) {
-    // console.error("❌ Supabase insert error:", error);
-    // console.groupEnd();
     throw error;
   }
 
-  // //  console.log("✅ Insert successful:", data);
-  // console.groupEnd();
   return data;
 };
 
@@ -263,7 +261,7 @@ export const deleteManager = async (managerId: number) => {
 export const updateManagerPaid = async (managerId: number, value: boolean) => {
   const supabase = createClient();
 
-  // 1️⃣ Find which student this manager corresponds to
+  // Find which student this manager corresponds to
   const { data: manager, error: managerError } = await supabase
     .from("managers")
     .select("student_id")
@@ -271,34 +269,21 @@ export const updateManagerPaid = async (managerId: number, value: boolean) => {
     .single();
 
   if (managerError || !manager) {
-    console.error("❌ Manager lookup failed:", managerError);
     throw managerError;
   }
 
-  // 2️⃣ Update this manager’s paid field
+  // Update this manager's paid field
   const { error: updateError } = await supabase
     .from("managers")
     .update({ paid: value })
     .eq("id", managerId);
 
   if (updateError) {
-    console.error("❌ Error updating manager paid:", updateError);
     throw updateError;
   }
 
-  // 3️⃣ If marked paid, sync to all other teams via finances view
+  // If marked paid, sync to all related player + manager rows for this student
   if (value) {
-    const { data: finance, error: financeError } = await supabase
-      .from("finances")
-      .select("paid_to_team")
-      .eq("student_id", manager.student_id)
-      .maybeSingle();
-
-    if (financeError) {
-      console.error("❌ Finance lookup error:", financeError);
-    }
-
-    // Update all related player + manager rows for this student
     await Promise.all([
       supabase
         .from("players")

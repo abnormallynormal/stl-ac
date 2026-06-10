@@ -10,9 +10,6 @@ export default function Logout() {
     if(!error){
       router.push("/login");
     }
-    else{
-      //  console.log(error);
-    }
   }
   return(
     <Button onClick={signOut}>

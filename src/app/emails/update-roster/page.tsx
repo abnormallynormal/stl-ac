@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
 
 export default function EmailPage() {
   const [message, setMessage] = useState(
@@ -23,12 +24,22 @@ export default function EmailPage() {
   const [selectedTeams, setSelectedTeams] = useState<Team[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamsBySeason, setTeamsBySeason] = useState<Team[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   useEffect(() => {
     const fetchTeams = async () => {
-      const data = await selectData();
-      if (data) {
-        setTeams(data);
-        setTeamsBySeason(data)
+      try {
+        const data = await selectData();
+        if (data) {
+          setTeams(data);
+          setTeamsBySeason(data)
+        }
+      } catch {
+        setFetchError("Failed to load teams. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
     fetchTeams();
@@ -49,12 +60,22 @@ export default function EmailPage() {
     season === "All" ? teams : teams.filter((t) => t.season === season);
 
   async function loopTeams() {
-    selectedTeams.forEach((team: Team) => {
-      const to = team.team_coaches2?.map((tc) => tc.coach) ?? [];
-      const subject = `Update Student Roster`;
-      const link = `https://stl-ac.vercel.app/teams/${team.id}`;
-      handleSend({to,subject, link});
-    })
+    setActionError(null);
+    setIsSending(true);
+    try {
+      await Promise.all(
+        selectedTeams.map((team: Team) => {
+          const to = team.team_coaches2?.map((tc) => tc.coach) ?? [];
+          const subject = `Update Student Roster`;
+          const link = `https://stl-ac.vercel.app/teams/${team.id}`;
+          return handleSend({ to, subject, link });
+        })
+      );
+    } catch {
+      setActionError("Failed to send emails. Please try again.");
+    } finally {
+      setIsSending(false);
+    }
   }
 
   async function handleSend({
@@ -126,9 +147,14 @@ export default function EmailPage() {
           </Select>
         </div>
 
+        {fetchError && (
+          <p className="text-sm text-destructive mb-2">{fetchError}</p>
+        )}
+
         <DataTable
           columns={columns(toggleTeam, selectedTeams, setSelectedTeams, teamsBySeason)}
           data={filteredTeams}
+          isLoading={loading}
         />
 
         <div className="p-6 mb-20">
@@ -143,9 +169,13 @@ export default function EmailPage() {
           <Button
             className="text-white px-4 py-2 rounded"
             onClick={loopTeams}
+            disabled={isSending}
           >
-            Send
+            {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send"}
           </Button>
+          {actionError && (
+            <p className="text-sm text-destructive mt-2">{actionError}</p>
+          )}
         </div>
       </div>
     </>

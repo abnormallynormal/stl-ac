@@ -9,13 +9,12 @@ import { useSchoolYear } from "@/lib/school-year-context";
 export default function YearbookMessages() {
   const { selectedYear } = useSchoolYear();
   const [data, setData] = useState<Yearbook[]>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     const getYearbookMessages = async () => {
       try {
         const data = await selectData();
-        if (!data) {
-          //  console.log("Error fetching players");
-        }
         setData(
           data
             ?.filter((team) => team.year === selectedYear)
@@ -25,11 +24,13 @@ export default function YearbookMessages() {
             name: `${team.sport?.name} ${team.grade} ${team.gender}`,
             message: team.yearbookMessage
               ? `"${team.yearbookMessage.trim()}"`
-              : "⚠️ No message yet ⚠️",
+              : "No message yet",
             }))
         );
       } catch {
-        //  console.log("Error fetching players");
+        setError("Failed to load data. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
     getYearbookMessages();
@@ -54,7 +55,8 @@ export default function YearbookMessages() {
             </Button>
           </div>
         </div>
-        <DataTable columns={columns} data={data ?? []} />
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <DataTable columns={columns} data={data ?? []} isLoading={loading} />
       </div>
     </>
   );

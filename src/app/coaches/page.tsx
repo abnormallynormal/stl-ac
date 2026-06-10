@@ -5,6 +5,7 @@ import { columns, Coach } from "./columns";
 import { DataTable } from "./data-table";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { useSchoolYear } from "@/lib/school-year-context";
 
 export default function Coaches() {
@@ -12,6 +13,9 @@ export default function Coaches() {
   const [data, setData] = useState<Coach[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortByLastName, setSortByLastName] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [copyError, setCopyError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -21,7 +25,7 @@ export default function Coaches() {
           setData(result);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        setLoadError("Failed to load coaches. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -29,18 +33,6 @@ export default function Coaches() {
 
     loadData();
   }, []);
-
-  if (loading) {
-    return (
-      <div className="px-16 py-8">
-        <div className="max-w-4xl justify-self-center w-full">
-          <div className="flex justify-center items-center h-32">
-            <div>Loading...</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const getLastNameFromEmail = (email: string) => {
     const localPart = email.split("@")[0] ?? "";
@@ -61,10 +53,18 @@ export default function Coaches() {
     : currentYearData;
 
   const copyCoaches = async () => {
-    const formatted = (sortedData ?? [])
-      .map((entry, index) => `${index + 1}\t${entry.coach}`)
-      .join("\n");
-    await navigator.clipboard.writeText(formatted);
+    setCopyError(null);
+    setIsCopying(true);
+    try {
+      const formatted = (sortedData ?? [])
+        .map((entry, index) => `${index + 1}\t${entry.coach}`)
+        .join("\n");
+      await navigator.clipboard.writeText(formatted);
+    } catch (error) {
+      setCopyError("Failed to copy coaches. Please try again.");
+    } finally {
+      setIsCopying(false);
+    }
   };
 
   return (
@@ -78,16 +78,27 @@ export default function Coaches() {
               variant="outline"
               size="sm"
               onClick={() => void copyCoaches()}
+              disabled={isCopying}
             >
-              Copy Coaches
+              {isCopying ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Copy Coaches"
+              )}
             </Button>
           </div>
+          {(loadError || copyError) && (
+            <p className="text-sm text-destructive mb-2">
+              {loadError ?? copyError}
+            </p>
+          )}
           <DataTable
             columns={columns({
               onToggleLastNameSort: () =>
                 setSortByLastName((current) => !current),
             })}
             data={sortedData}
+            isLoading={loading}
           />
         </div>
       </div>

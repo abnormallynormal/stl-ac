@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type FieldErrors, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
@@ -35,7 +35,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { useState, use, useEffect, useMemo } from "react";
+import { useState, use, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   CommandDialog,
@@ -46,7 +46,7 @@ import {
   CommandItem,
 } from "@/components/ui/command";
 import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { selectData as selectCoaches } from "@/app/functions/coaches";
 import {
@@ -121,6 +121,9 @@ export default function TeamPage({
   params: Promise<{ id: string }>;
 }) {
   const { selectedYear } = useSchoolYear();
+  const resolvedParams = use(params);
+  const teamId = Number(resolvedParams.id);
+
   const [data, setData] = useState<Team[]>([]);
   const [finances, setFinances] = useState<Finance[]>();
   const [sports, setSports] = useState<Sport[]>([]);
@@ -128,6 +131,7 @@ export default function TeamPage({
   const [availableCoaches, setAvailableCoaches] = useState<Coach[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [deleteIsOpen, setDeleteIsOpen] = useState(false);
   const [toBeDeleted, setToBeDeleted] = useState<Player | null>(null);
   const [addPlayerOpen, setAddPlayerOpen] = useState(false);
@@ -135,13 +139,26 @@ export default function TeamPage({
   const [coachDraft, setCoachDraft] = useState("");
   const [deleteTeamIsOpen, setDeleteTeamIsOpen] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeletingTeam, setIsDeletingTeam] = useState(false);
   const [managers, setManagers] = useState<Manager[]>([]);
-  const [addableManagers, setAddableManagers] = useState<Student[]>([]);
   const [addManagerOpen, setAddManagerOpen] = useState(false);
   const [toBeDeletedManager, setToBeDeletedManager] = useState<Manager | null>(
     null
   );
   const [deleteManagerIsOpen, setDeleteManagerIsOpen] = useState(false);
+
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [allStudents, setAllStudents] = useState<Student[]>([]);
+
+  // Add Player / Add Manager dialogs use server-side search (see effects below)
+  // instead of loading every student into memory and filtering on the client.
+  const [addablePlayers, setAddablePlayers] = useState<Student[]>([]);
+  const [playerSearch, setPlayerSearch] = useState("");
+  const [playerSearchLoading, setPlayerSearchLoading] = useState(false);
+  const [addableManagers, setAddableManagers] = useState<Student[]>([]);
+  const [managerSearch, setManagerSearch] = useState("");
+  const [managerSearchLoading, setManagerSearchLoading] = useState(false);
 
   const router = useRouter();
   const getPayments = async () => {
@@ -150,9 +167,8 @@ export default function TeamPage({
       if (financesResult) {
         setFinances(financesResult);
       }
-    } catch (error) {
-      console.error("Error getting finances:", error);
-      alert("Failed to get finances. Please try again.");
+    } catch {
+      setActionError("Failed to load payment information. Please try again.");
     }
   };
   const columns = createColumns({
@@ -206,23 +222,36 @@ export default function TeamPage({
     finances: finances ?? [],
   });
 
+  // Initial data load — all independent fetches run in parallel.
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [teamsResult, sportsResult] = await Promise.all([
+        const [
+          teamsResult,
+          sportsResult,
+          coachesResult,
+          playersResult,
+          studentsResult,
+          managersResult,
+          financesResult,
+        ] = await Promise.all([
           selectData(),
           selectSports(),
+          selectCoaches(),
+          selectTeamPlayers(teamId),
+          selectStudents(),
+          selectTeamManagers(teamId),
+          getFinances(),
         ]);
 
-        if (teamsResult) {
-          setData(teamsResult);
-        }
-        if (sportsResult) {
-          setSports(sportsResult);
-        }
-        getPayments();
+        if (teamsResult) setData(teamsResult);
+        if (sportsResult) setSports(sportsResult);
+        if (coachesResult) setAvailableCoaches(coachesResult);
+        if (playersResult) setPlayers(playersResult);
+        if (studentsResult) setAllStudents(studentsResult);
+        if (managersResult) setManagers(managersResult);
+        if (financesResult) setFinances(financesResult);
       } catch (err) {
-        console.error("Error fetching data:", err);
         setError(err instanceof Error ? err.message : "Failed to load data");
       } finally {
         setLoading(false);
@@ -230,131 +259,71 @@ export default function TeamPage({
     };
 
     loadData();
-  }, []);
-  useEffect(() => {
-    const loadCoaches = async () => {
-      try {
-        const coachesResult = await selectCoaches();
-        if (coachesResult) {
-          setAvailableCoaches(coachesResult);
-        }
-      } catch (err) {
-        console.error("Error fetching coaches:", err);
-      }
-    };
-    loadCoaches();
-  }, []);
-  const [addablePlayers, setAddablePlayers] = useState<Student[]>([]);
-  const [filter, setFilter] = useState<string>("");
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [allStudents, setAllStudents] = useState<Student[]>([]);
-  useEffect(() => {
-    const loadPlayers = async () => {
-      try {
-        const playersResult = await selectTeamPlayers(
-          Number(resolvedParams.id)
-        );
-        if (playersResult) {
-          setPlayers(playersResult);
-        }
-      } catch (err) {
-        console.error("Error fetching players data:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to load players data"
-        );
-      }
-    };
+  }, [teamId]);
 
-    loadPlayers();
-  }, []);
+  // Debounced server-side search for the Add Player dialog.
   useEffect(() => {
-    const loadAddablePlayers = async () => {
+    if (!addPlayerOpen) return;
+    let active = true;
+    setPlayerSearchLoading(true);
+    const handle = setTimeout(async () => {
       try {
-        const playersResult = await selectablePlayers(
-          Number(resolvedParams.id)
-        );
-        if (playersResult) {
-          // selectablePlayers returns a Student[]; assert to Player[] to satisfy the state typing
-          setAddablePlayers(playersResult as unknown as Student[]);
-        }
-      } catch (err) {
-        console.error("Error fetching players data:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to load players data"
-        );
+        const results = await selectablePlayers(teamId, playerSearch);
+        if (active) setAddablePlayers(results);
+      } catch {
+        if (active)
+          setActionError("Failed to search players. Please try again.");
+      } finally {
+        if (active) setPlayerSearchLoading(false);
       }
+    }, 250);
+    return () => {
+      active = false;
+      clearTimeout(handle);
     };
+  }, [playerSearch, addPlayerOpen, teamId]);
 
-    loadAddablePlayers();
-  }, []);
+  // Debounced server-side search for the Add Manager dialog.
+  useEffect(() => {
+    if (!addManagerOpen) return;
+    let active = true;
+    setManagerSearchLoading(true);
+    const handle = setTimeout(async () => {
+      try {
+        const results = await selectableManagers(teamId, managerSearch);
+        if (active) setAddableManagers(results);
+      } catch {
+        if (active)
+          setActionError("Failed to search students. Please try again.");
+      } finally {
+        if (active) setManagerSearchLoading(false);
+      }
+    }, 250);
+    return () => {
+      active = false;
+      clearTimeout(handle);
+    };
+  }, [managerSearch, addManagerOpen, teamId]);
+
   const onDeletePlayer = async (player: Player) => {
+    setActionError(null);
     try {
       await deletePlayerApi(player.id);
-      setPlayers(players.filter((p) => p.id !== player.id));
-      try {
-        const playersResult = await selectablePlayers(
-          Number(resolvedParams.id)
-        );
-        if (playersResult) {
-          // selectablePlayers returns a Student[]; assert to Player[] to satisfy the state typing
-          setAddablePlayers(playersResult as unknown as Student[]);
-        }
-      } catch (err) {
-        console.error("Error fetching players data:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to load players data"
-        );
-      }
+      setPlayers((prev) => prev.filter((p) => p.id !== player.id));
       setDeleteIsOpen(false);
+      // Refresh the add-player results so the removed player is selectable again.
+      if (addPlayerOpen) {
+        const results = await selectablePlayers(teamId, playerSearch);
+        setAddablePlayers(results);
+      }
     } catch (err) {
-      console.error("Error deleting player:", err);
-      setError(err instanceof Error ? err.message : "Failed to delete player");
+      setActionError(
+        err instanceof Error ? err.message : "Failed to delete player"
+      );
     }
   };
-  useEffect(() => {
-    const loadAllStudents = async () => {
-      try {
-        const studentsResult = await selectStudents();
-        if (studentsResult) {
-          setAllStudents(studentsResult);
-        }
-      } catch (err) {
-        console.error("Error fetching all students data:", err);
-      }
-    };
 
-    loadAllStudents();
-  }, []);
-
-  useEffect(() => {
-    const loadManagers = async () => {
-      try {
-        const managersResult = await selectTeamManagers(
-          Number(resolvedParams.id)
-        );
-        if (managersResult) setManagers(managersResult);
-      } catch (err) {
-        console.error("Error fetching managers:", err);
-      }
-    };
-    loadManagers();
-  }, []);
-  useEffect(() => {
-    const loadAddableManagers = async () => {
-      try {
-        const managersResult = await selectableManagers(
-          Number(resolvedParams.id)
-        );
-        if (managersResult) setAddableManagers(managersResult);
-      } catch (err) {
-        console.error("Error fetching selectable managers:", err);
-      }
-    };
-    loadAddableManagers();
-  }, []);
-
-  const resolvedParams = use(params);
-  const team = data.find((item) => item.id === Number(resolvedParams.id));
+  const team = data.find((item) => item.id === teamId);
   const editTeamSchema = createEditTeamSchema(data, team?.id);
   const editTeamForm = useForm<z.infer<typeof editTeamSchema>>({
     resolver: zodResolver(editTeamSchema),
@@ -394,14 +363,6 @@ export default function TeamPage({
       setFormInitialized(true);
     }
   }, [team, formInitialized]);
-  const filteredPlayers = useMemo(() => {
-    const players = !filter.trim()
-      ? addablePlayers
-      : addablePlayers.filter((player) =>
-          player.name.toLowerCase().includes(filter.toLowerCase())
-        );
-    return players.sort((a, b) => a.name.localeCompare(b.name));
-  }, [addablePlayers, filter]);
 
   if (loading || !formInitialized) {
     return <div className="px-16 py-8">Loading team data...</div>;
@@ -416,9 +377,10 @@ export default function TeamPage({
   }
 
   const addPlayer = async (player: Student) => {
+    setActionError(null);
     try {
       const result = await addPlayerApi({
-        team_id: Number(resolvedParams.id),
+        team_id: teamId,
         student_id: Number(player.id),
         yraa: false,
         ofsaa: false,
@@ -427,68 +389,57 @@ export default function TeamPage({
         paid: false,
       });
       if (result) {
-        // Refresh the players list
-        const refreshedPlayers = await selectTeamPlayers(
-          Number(resolvedParams.id)
-        );
+        const refreshedPlayers = await selectTeamPlayers(teamId);
         if (refreshedPlayers) {
           setPlayers(refreshedPlayers);
         }
-
-        // Update addable players list
-        setAddablePlayers(addablePlayers.filter((p) => p.id !== player.id));
-
-        // Close the dialog
+        setAddablePlayers((prev) => prev.filter((p) => p.id !== player.id));
         setAddPlayerOpen(false);
       }
     } catch (error) {
-      console.error("Error adding player:", error);
-      setError(error instanceof Error ? error.message : "Failed to add player");
+      setActionError(
+        error instanceof Error ? error.message : "Failed to add player"
+      );
     }
   };
 
   const addManagerHandler = async (student: Student) => {
+    setActionError(null);
     try {
-      console.group("🧩 ADD MANAGER HANDLER DEBUG");
-      //  console.log("➡️ Adding manager for:", student);
-
-      // Call the helper (which now logs everything)
-      const result = await addManager({
-        team_id: Number(resolvedParams.id),
+      await addManager({
+        team_id: teamId,
         student_id: student.id,
         paid: false,
       });
 
-      //  console.log("✅ addManager() returned:", result);
-
-      const refreshed = await selectTeamManagers(Number(resolvedParams.id));
-      //  console.log("🔁 Refreshed managers:", refreshed);
-
+      const refreshed = await selectTeamManagers(teamId);
       setManagers(refreshed);
-      setAddableManagers(addableManagers.filter((p) => p.id !== student.id));
+      setAddableManagers((prev) => prev.filter((p) => p.id !== student.id));
       setAddManagerOpen(false);
-
-      console.groupEnd();
     } catch (error) {
-      console.error("❌ Error adding manager:", error);
-      console.groupEnd();
+      setActionError(
+        error instanceof Error ? error.message : "Failed to add manager"
+      );
     }
   };
 
   const onDeleteManager = async (manager: Manager) => {
+    setActionError(null);
     try {
       await deleteManager(manager.id);
-      setManagers(managers.filter((m) => m.id !== manager.id));
+      setManagers((prev) => prev.filter((m) => m.id !== manager.id));
       setDeleteManagerIsOpen(false);
     } catch (err) {
-      console.error("Error deleting manager:", err);
+      setActionError(
+        err instanceof Error ? err.message : "Failed to delete manager"
+      );
     }
   };
 
   const reloadManagers = async (data?: Manager[]) => {
     if (data) setManagers(data);
     await getPayments(); // refresh finances
-    const refreshedPlayers = await selectTeamPlayers(Number(resolvedParams.id));
+    const refreshedPlayers = await selectTeamPlayers(teamId);
     setPlayers(refreshedPlayers);
   };
 
@@ -522,33 +473,13 @@ export default function TeamPage({
       shouldValidate: true,
     });
   };
-  const getValidationErrorMessage = (
-    errors: FieldErrors<z.infer<typeof editTeamSchema>>
-  ) => {
-    const messages = [
-      errors.sport_id?.message,
-      errors.gender?.message,
-      errors.grade?.message,
-      errors.season?.message,
-      errors.year?.message,
-      errors.teachers?.message,
-      errors.points?.message,
-      errors.seasonHighlights?.message,
-      errors.yearbookMessage?.message,
-    ].filter(Boolean);
-
-    return messages.length > 0
-      ? messages.join(" ")
-      : "Please fix the highlighted fields.";
-  };
   const onEditSportSave = async (values: z.infer<typeof editTeamSchema>) => {
+    setSaveError(null);
+    setIsSaving(true);
     try {
-      setSaveError(null);
-      // const selectedSport = sports.find(s => s.id === values.sport_id);
       const result = await updateTeam({
         id: team.id,
         sport_id: values.sport_id,
-        // sport: selectedSport?.sport || "",
         year: values.year,
         season: values.season,
         grade: values.grade,
@@ -564,29 +495,34 @@ export default function TeamPage({
         if (refreshedData) {
           setData(refreshedData);
         }
-        alert("Saved successfully!");
       } else {
         setSaveError(
           "Unable to save team. Please check the coach assignments and try again."
         );
       }
-    } catch (error) {
-      console.error("Error updating team:", error);
+    } catch {
       setSaveError("Failed to update team. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const onDeleteTeam = async () => {
+    setActionError(null);
+    setIsDeletingTeam(true);
     try {
       const result = await deleteTeam({ id: team.id });
 
       if (result) {
         // Navigate back to teams page
         router.push("/teams");
+      } else {
+        setActionError("Failed to delete team. Please try again.");
       }
-    } catch (error) {
-      console.error("Error deleting team:", error);
-      alert("Failed to delete team. Please try again.");
+    } catch {
+      setActionError("Failed to delete team. Please try again.");
+    } finally {
+      setIsDeletingTeam(false);
     }
   };
 
@@ -597,6 +533,9 @@ export default function TeamPage({
         <div className="font-bold text-3xl mb-4">
           {team.grade} {team.gender} {team.sport?.name}
         </div>
+        {actionError && (
+          <p className="mb-4 text-sm text-destructive">{actionError}</p>
+        )}
         <div className="grid grid-cols-[1fr_2fr] gap-16">
           <div>
             <div className="text-xl font-semibold mb-4">
@@ -604,9 +543,8 @@ export default function TeamPage({
             </div>
             <Form {...editTeamForm}>
               <form
-                onSubmit={editTeamForm.handleSubmit(
-                  onEditSportSave,
-                  (errors) => setSaveError(getValidationErrorMessage(errors))
+                onSubmit={editTeamForm.handleSubmit(onEditSportSave, () =>
+                  setSaveError("Please fix the highlighted fields above.")
                 )}
                 className="space-y-4"
               >
@@ -839,9 +777,9 @@ export default function TeamPage({
                     </FormItem>
                   )}
                 />
-                {saveError ? (
-                  <div className="text-sm text-destructive">{saveError}</div>
-                ) : null}
+                {saveError && (
+                  <p className="text-sm text-destructive">{saveError}</p>
+                )}
                 <div className="flex justify-between items-center">
                   <Button
                     type="button"
@@ -851,10 +789,16 @@ export default function TeamPage({
                     Delete Team
                   </Button>
                   <div className="gap-2 flex">
-                    <Button type="button" variant="secondary">
+                    <Button type="button" variant="secondary" disabled={isSaving}>
                       Cancel
                     </Button>
-                    <Button type="submit">Save</Button>
+                    <Button type="submit" disabled={isSaving}>
+                      {isSaving ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Save"
+                      )}
+                    </Button>
                   </div>
                 </div>
               </form>
@@ -926,36 +870,53 @@ export default function TeamPage({
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={onDeleteTeam}>
-                      Continue
+                    <AlertDialogCancel disabled={isDeletingTeam}>
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onDeleteTeam();
+                      }}
+                      disabled={isDeletingTeam}
+                    >
+                      {isDeletingTeam ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Continue"
+                      )}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
             </AlertDialog>
-            <CommandDialog open={addPlayerOpen} onOpenChange={setAddPlayerOpen}>
+            <CommandDialog
+              open={addPlayerOpen}
+              onOpenChange={(open) => {
+                setAddPlayerOpen(open);
+                if (!open) setPlayerSearch("");
+              }}
+              shouldFilter={false}
+            >
               <DialogTitle className="sr-only">Add Player</DialogTitle>
               <DialogDescription className="sr-only">
                 Search and add a player to this team.
               </DialogDescription>
               <CommandInput
                 placeholder="Search for a player to add..."
-                value={filter}
-                onValueChange={(e) => setFilter(e)}
+                value={playerSearch}
+                onValueChange={setPlayerSearch}
               />
               <CommandList>
-                <CommandEmpty>No results found.</CommandEmpty>
+                <CommandEmpty>
+                  {playerSearchLoading ? "Searching..." : "No results found."}
+                </CommandEmpty>
                 <CommandGroup>
-                  {filteredPlayers.map((player) => (
+                  {addablePlayers.map((player) => (
                     <CommandItem
                       key={player.id}
-                      value={`$(player.id) ${player.email} $(player.name)`}
-                      onSelect={() => {
-                        addPlayer(player);
-                        setAddPlayerOpen(false);
-                      }}
-                      // className="cursor-pointer"
+                      value={String(player.id)}
+                      onSelect={() => addPlayer(player)}
                     >
                       <div className="flex flex-col">
                         <span className="font-medium">{player.name}</span>
@@ -1028,7 +989,11 @@ export default function TeamPage({
 
             <CommandDialog
               open={addManagerOpen}
-              onOpenChange={setAddManagerOpen}
+              onOpenChange={(open) => {
+                setAddManagerOpen(open);
+                if (!open) setManagerSearch("");
+              }}
+              shouldFilter={false}
             >
               <DialogTitle className="sr-only">Add Manager</DialogTitle>
               <DialogDescription className="sr-only">
@@ -1036,15 +1001,18 @@ export default function TeamPage({
               </DialogDescription>
               <CommandInput
                 placeholder="Search for a manager..."
-                value={filter}
-                onValueChange={setFilter}
+                value={managerSearch}
+                onValueChange={setManagerSearch}
               />
               <CommandList>
-                <CommandEmpty>No results found.</CommandEmpty>
+                <CommandEmpty>
+                  {managerSearchLoading ? "Searching..." : "No results found."}
+                </CommandEmpty>
                 <CommandGroup>
                   {addableManagers.map((manager) => (
                     <CommandItem
                       key={manager.id}
+                      value={String(manager.id)}
                       onSelect={() => addManagerHandler(manager)}
                     >
                       <div className="flex flex-col">

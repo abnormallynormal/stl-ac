@@ -41,10 +41,9 @@ export const insertData = async ({
     .insert({ name, gender, grade, team_count, team, yraa, ofsaa, mvp, lca })
     .select();
   if (error) {
-    //  console.log(error);
-  } else {
-    return data as TopAthlete[];
+    throw new Error(error.message);
   }
+  return data as TopAthlete[];
 };
 
 export const updateData = async ({
@@ -77,10 +76,9 @@ export const updateData = async ({
     .eq("id", id)
     .select();
   if (error) {
-    //  console.log(error);
-  } else {
-    return data as TopAthlete[];
+    throw new Error(error.message);
   }
+  return data as TopAthlete[];
 };
 
 export const deleteData = async ({ id }: { id: number }) => {
@@ -91,8 +89,7 @@ export const deleteData = async ({ id }: { id: number }) => {
     .eq("id", id)
     .select();
   if (error) {
-    //  console.log(error);
-  } else {
-    return data as TopAthlete[];
+    throw new Error(error.message);
   }
+  return data as TopAthlete[];
 };

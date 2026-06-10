@@ -8,29 +8,19 @@ import { selectData } from "../functions/students";
 import { selectPreviousWinners, addWinner, updateWinner } from "../functions/awards";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
-import { Filter } from "lucide-react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 export default function Points() {
   const [data, setData] = useState<PlayerWithPoints[]>();
   const [prevWinners, setPrevWinners] = useState<PreviousWinner[]>();
   const [filter, setFilter] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   useEffect(() => {
     const getPoints = async () => {
       try {
-        const data = await selectData();
-        if (!data) {
-          // console.log("Error fetching players");
-        }
+        const [data, prevData] = await Promise.all([
+          selectData(),
+          selectPreviousWinners(),
+        ]);
         setData(
           data
             ?.filter((student) => student.points > 0)
@@ -41,11 +31,6 @@ export default function Points() {
               grade: student.grade,
             }))
         );
-        const prevData = await selectPreviousWinners();
-        if (!prevData) {
-          // console.log("Error fetching players");
-        }
-        // console.log("Previous winners raw data:", prevData);
         setPrevWinners(
           prevData
             ?.filter((winner) => winner.student_points?.points > 0)
@@ -57,15 +42,10 @@ export default function Points() {
               award: winner.award,
             }))
         );
-        // console.log(
-        //   "Mapped previous winners:",
-        //   prevData?.map((winner) => ({
-        //     student_id: winner.id,
-        //     award: winner.award,
-        //   }))
-        // );
       } catch {
-        // console.log("Error fetching players");
+        setFetchError("Failed to load points data. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
     getPoints();
@@ -218,25 +198,16 @@ export default function Points() {
               <Button variant="outline" size="sm" onClick={() => void copyWinners()}>
                 Copy Winners
               </Button>
-              {/* <Button onClick={updateRecipients}>Archive recipients</Button> */}
             </div>
-            {/* <a
-              className="text-lg font-semibold hover:underline"
-              href="/points/previous-winners"
-            >
-              View past recipients
-            </a> */}
-            {/* <Accordion type="multiple" className="w-full mb-8">
-              <AccordionItem value="outstanding-contribution"> */}
-                {/* <AccordionTrigger> */}
+            {fetchError && (
+              <p className="text-sm text-destructive">{fetchError}</p>
+            )}
                   <div>
                     <div className="font-semibold text-2xl mb-1 mt-3">
                       Outstanding Contribution
                     </div>
                     <div className="text-lg">Gr. 12 & 100+ points</div>
                   </div>
-                {/* </AccordionTrigger>
-                <AccordionContent> */}
                   {(() => {
                     const filtered = data?.filter((student) => {
                       const hasWonBefore = prevWinners?.some((winner) => {
@@ -267,18 +238,12 @@ export default function Points() {
                       </div>
                     );
                   })()}
-                {/* </AccordionContent>
-              </AccordionItem> */}
-              {/* <AccordionItem value="letter-of-distinction">
-                <AccordionTrigger> */}
                   <div>
                     <div className="font-semibold text-2xl mb-1 mt-4">
                       Letter of Distinction
                     </div>
                     <div className="text-lg">90 points</div>
                   </div>
-                {/* </AccordionTrigger>
-                <AccordionContent> */}
                   {(() => {
                     const filtered = data?.filter((student) => {
                       const hasWonBefore = prevWinners?.some((winner) => {
@@ -309,18 +274,12 @@ export default function Points() {
                       </div>
                     );
                   })()}
-                {/* </AccordionContent>
-              </AccordionItem> */}
-              {/* <AccordionItem value="letter-of-merit">
-                <AccordionTrigger> */}
                   <div>
                     <div className="font-semibold text-2xl mb-1 mt-4">
                       Letter of Merit
                     </div>
                     <div className="text-lg">70 points</div>
                   </div>
-                {/* </AccordionTrigger>
-                <AccordionContent> */}
                   {(() => {
                     const filtered = data?.filter((student) => {
                       const hasWonBefore = prevWinners?.some((winner) => {
@@ -351,9 +310,6 @@ export default function Points() {
                       </div>
                     );
                   })()}
-                {/* </AccordionContent>
-              </AccordionItem>
-            </Accordion> */}
           </div>
           <div className="font-bold text-3xl mb-3 mt-4">Points</div>
           <div className="flex items-center gap-4 mb-2">
@@ -362,50 +318,9 @@ export default function Points() {
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
             />
-            {/* <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="secondary" size="icon">
-                  <Filter />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-72 mr-4">
-                <div className="flex flex-col gap-2">
-                  <div className="font-semibold mb-2">Filter by points</div>
-                  <Input
-                    placeholder="Lower bound"
-                    type="number"
-                    value={pointsFilter?.lower}
-                    onChange={(e) =>
-                      setPointsFilter((prev) => ({
-                        lower: Number(e.target.value),
-                        upper: prev?.upper,
-                      }))
-                    }
-                  />
-                  <Input
-                    placeholder="Upper bound"
-                    type="number"
-                    value={pointsFilter?.upper}
-                    onChange={(e) =>
-                      setPointsFilter((prev) => ({
-                        lower: prev?.lower,
-                        upper: Number(e.target.value),
-                      }))
-                    }
-                  />
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setPointsFilter(undefined)}
-                  >
-                    Clear Filters
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover> */}
           </div>
         </div>
-        <DataTable columns={columns} data={filteredData ?? []} />
+        <DataTable columns={columns} data={filteredData ?? []} isLoading={loading} />
       </div>
     </>
   );

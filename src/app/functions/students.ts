@@ -50,8 +50,6 @@ export const selectData = async () => {
       .map(({ _lastName, _firstName, ...student }) => student); // Remove temp sorting fields
 
     return sortedData as Student[];
-  } else {
-    //  console.log(error);
   }
 };
 export const addPlayer = async ({ name, email, grade }: Student) => {
@@ -73,8 +71,6 @@ export const addPlayer = async ({ name, email, grade }: Student) => {
     .select();
   if (!error) {
     return data as Student[];
-  } else {
-    //  console.log(error);
   }
 };
 export const deletePlayer = async (playerId: number) => {
@@ -86,8 +82,6 @@ export const deletePlayer = async (playerId: number) => {
     .select();
   if (!error) {
     return data as Student[];
-  } else {
-    //  console.log(error);
   }
 };
 
@@ -106,7 +100,5 @@ export const updatePlayer = async ({ id, name, email, grade }: Student) => {
     .select();
   if (!error) {
     return data as Student[];
-  } else {
-    //  console.log(error);
   }
 };

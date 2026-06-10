@@ -4,6 +4,7 @@ import Navigation from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
 
 export default function EmailPage() {
   const [to, setTo] = useState("");
@@ -19,16 +20,26 @@ Gender
 Email
 
 Thank you.`);
+  const [isSending, setIsSending] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   async function handleSend() {
-    const res = await fetch("/api/sendEmail", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ to, subject, text: message }),
-    });
+    setActionError(null);
+    setIsSending(true);
+    try {
+      const res = await fetch("/api/sendEmail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to, subject, text: message }),
+      });
 
-    const data = await res.json();
-    alert(data.success ? "Email sent!" : "Failed to send email.");
+      const data = await res.json();
+      alert(data.success ? "Email sent!" : "Failed to send email.");
+    } catch {
+      setActionError("Failed to send email. Please try again.");
+    } finally {
+      setIsSending(false);
+    }
   }
 
   return (
@@ -58,7 +69,12 @@ Thank you.`);
           value={message}
           onChange={(e) => setMessage(e.target.value)}
         />
-        <Button onClick={handleSend}>Send</Button>
+        <Button onClick={handleSend} disabled={isSending}>
+          {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send"}
+        </Button>
+        {actionError && (
+          <p className="text-sm text-destructive mt-2">{actionError}</p>
+        )}
       </div>
     </>
   );

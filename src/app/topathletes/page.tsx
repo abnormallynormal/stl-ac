@@ -10,6 +10,7 @@ export default function TopAthletes() {
   const { selectedYear } = useSchoolYear();
   const [data, setData] = useState<TopAthlete[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const teamCountThreshold = 3;
   const teamCountMultiplier = 1;
   const yRaaMultiplier = 0.5;
@@ -24,8 +25,8 @@ export default function TopAthletes() {
         if (result) {
           setData(result);
         }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      } catch {
+        setError("Failed to load data. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -84,18 +85,6 @@ export default function TopAthletes() {
     return gender === "female" && grade >= 11;
   });
 
-  if (loading) {
-    return (
-      <div className="px-16 py-8">
-        <div className="max-w-4xl justify-self-center w-full">
-          <div className="flex justify-center items-center h-32">
-            <div>Loading...</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       <Navigation />
@@ -104,22 +93,23 @@ export default function TopAthletes() {
           <div className="flex mb-4 justify-between">
             <div className="font-bold text-3xl">Top Athletes</div>
           </div>
+          {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="space-y-8">
             <div className="space-y-2">
               <div className="font-semibold text-2xl">Jr Boys</div>
-              <DataTable columns={columns} data={jrBoys} />
+              <DataTable columns={columns} data={jrBoys} isLoading={loading} />
             </div>
             <div className="space-y-2">
               <div className="font-semibold text-2xl">Jr Girls</div>
-              <DataTable columns={columns} data={jrGirls} />
+              <DataTable columns={columns} data={jrGirls} isLoading={loading} />
             </div>
             <div className="space-y-2">
               <div className="font-semibold text-2xl">Sr Boys</div>
-              <DataTable columns={columns} data={srBoys} />
+              <DataTable columns={columns} data={srBoys} isLoading={loading} />
             </div>
             <div className="space-y-2">
               <div className="font-semibold text-2xl">Sr Girls</div>
-              <DataTable columns={columns} data={srGirls} />
+              <DataTable columns={columns} data={srGirls} isLoading={loading} />
             </div>
           </div>
         </div>
