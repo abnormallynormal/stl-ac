@@ -62,23 +62,33 @@ export default function AwardsList() {
     getAwards();
   }, []);
 
-  const copyAwards = async () => {
-    const formatted = (data ?? [])
-      .map((entry) => {
-        const coaches = entry.coaches
-          .split("\n")
-          .map((coach) => coach.trim())
-          .filter(Boolean)
-          .join(",");
+  const seasonOrder: Record<string, number> = {
+  Fall: 1,
+  Winter: 2,
+  Spring: 3,
+};
 
-        return [entry.team, coaches, entry.season, entry.mvp, entry.lca].join(
-          "\t"
-        );
-      })
-      .join("\n");
+const copyAwards = async () => {
+  const sorted = [...(data ?? [])].sort((a, b) => {
+    const seasonDiff = (seasonOrder[a.season] ?? 99) - (seasonOrder[b.season] ?? 99);
+    if (seasonDiff !== 0) return seasonDiff;
+    return a.team.localeCompare(b.team);
+  });
 
-    await navigator.clipboard.writeText(formatted);
-  };
+  const header = ["Team", "Coaches", "Season", "LCA", "MVP"].join("\t");
+
+  const formatted = [header, ...sorted.map((entry) => {
+    const coaches = entry.coaches
+      .split("\n")
+      .map((coach) => coach.trim())
+      .filter(Boolean)
+      .join(",");
+
+    return [entry.team, coaches, entry.season, entry.lca, entry.mvp].join("\t");
+  })].join("\n");
+
+  await navigator.clipboard.writeText(formatted);
+};
 
   return (
     <>

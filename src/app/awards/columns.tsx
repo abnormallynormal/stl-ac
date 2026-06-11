@@ -41,11 +41,11 @@ export const columns: ColumnDef<Awards>[] = [
     },
   },
   {
-    accessorKey: "mvp",
-    header: "MVP",
-  },
-  {
     accessorKey: "lca",
     header: "LCA",
+  },
+  {
+    accessorKey: "mvp",
+    header: "MVP",
   },
 ];
