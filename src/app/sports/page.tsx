@@ -8,7 +8,7 @@ import {
 } from "../functions/sports";
 import { createColumns, Sport } from "./columns";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { DataTable } from "./data-table";
 import {
   Dialog,
@@ -47,6 +47,13 @@ export default function Sports() {
   const [sportId, setSportId] = useState<number>();
   const [data, setData] = useState<Sport[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -56,7 +63,7 @@ export default function Sports() {
           setData(result);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        setLoadError("Failed to load sports. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -115,6 +122,8 @@ export default function Sports() {
     },
   });
   const addOnSubmit = async (values: z.infer<typeof addFormSchema>) => {
+    setAddError(null);
+    setIsAdding(true);
     try {
       await insertData({
         name: values.name,
@@ -129,12 +138,16 @@ export default function Sports() {
 
       addForm.reset();
     } catch (error) {
-      console.error("Error adding data:", error);
+      setAddError("Failed to add sport. Please try again.");
+    } finally {
+      setIsAdding(false);
     }
   };
   const editOnSubmit = async (values: z.infer<typeof editFormSchema>) => {
     if (sportId === undefined) return;
 
+    setEditError(null);
+    setIsSaving(true);
     try {
       await updateData({
         id: sportId,
@@ -142,7 +155,6 @@ export default function Sports() {
         points: values.points,
       });
 
-      // Update local state
       setData((prevData) =>
         prevData.map((team) =>
           team.id === sportId
@@ -151,27 +163,29 @@ export default function Sports() {
         )
       );
 
-      // Close the dialog
       setEditIsOpen(false);
 
-      // Reset the form
       editForm.reset();
     } catch (error) {
-      console.error("Error updating data:", error);
+      setEditError("Failed to update sport. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
   const deleteOnSubmit = async (sportId: number | undefined) => {
     if (sportId === undefined) return;
+    setDeleteError(null);
+    setIsDeleting(true);
     try {
       await deleteData({
         id: sportId,
       });
-      // Update local state
       setData((prevData) => prevData.filter((sport) => sport.id !== sportId));
-      // Close the dialog
       setDeleteIsOpen(false);
     } catch (error) {
-      console.error("Error deleting data:", error);
+      setDeleteError("Failed to delete sport. Please try again.");
+    } finally {
+      setIsDeleting(false);
     }
   };
   const handleEdit = (sport: Sport) => {
@@ -190,18 +204,6 @@ export default function Sports() {
     onEdit: handleEdit,
     onDelete: handleDelete,
   });
-
-  if (loading) {
-    return (
-      <div className="px-16 py-8">
-        <div className="max-w-4xl justify-self-center w-full">
-          <div className="flex justify-center items-center h-32">
-            <div>Loading...</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -270,8 +272,17 @@ export default function Sports() {
                       >
                         Cancel
                       </Button>
-                      <Button type="submit">Add</Button>
+                      <Button type="submit" disabled={isAdding}>
+                        {isAdding ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          "Add"
+                        )}
+                      </Button>
                     </div>
+                    {addError && (
+                      <p className="text-sm text-destructive">{addError}</p>
+                    )}
                   </form>
                 </Form>
               </DialogContent>
@@ -329,8 +340,17 @@ export default function Sports() {
                       >
                         Cancel
                       </Button>
-                      <Button type="submit">Save</Button>
+                      <Button type="submit" disabled={isSaving}>
+                        {isSaving ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          "Save"
+                        )}
+                      </Button>
                     </div>
+                    {editError && (
+                      <p className="text-sm text-destructive">{editError}</p>
+                    )}
                   </form>
                 </Form>
               </DialogContent>
@@ -346,16 +366,29 @@ export default function Sports() {
                     This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
+                {deleteError && (
+                  <p className="text-sm text-destructive">{deleteError}</p>
+                )}
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => deleteOnSubmit(sportId)}>
-                    Continue
+                  <AlertDialogAction
+                    onClick={() => deleteOnSubmit(sportId)}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Continue"
+                    )}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           </div>
-          <DataTable columns={columns} data={data} />
+          {loadError && (
+            <p className="text-sm text-destructive mb-2">{loadError}</p>
+          )}
+          <DataTable columns={columns} data={data} isLoading={loading} />
         </div>
       </div>
     </>

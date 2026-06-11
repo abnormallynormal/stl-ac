@@ -44,11 +44,6 @@ export const columns = (
       </div>
     ),
   },
-  //   {
-  //     accessorKey: "season",
-  //     header: "Season",
-  //     cell: ({row}) => <span>{row.original.season}</span>,
-  //   },
   {
     id: "select",
     header: ({ table }) => {

@@ -9,14 +9,13 @@ import { useSchoolYear } from "@/lib/school-year-context";
 export default function SeasonHighlights() {
   const { selectedYear } = useSchoolYear();
   const [data, setData] = useState<Highlights[]>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const getHighlights = async () => {
       try {
         const data = await selectData();
-        if (!data) {
-          console.log("Error fetching players");
-        }
         setData(
           data
             ?.filter((team) => team.year === selectedYear)
@@ -26,11 +25,13 @@ export default function SeasonHighlights() {
             name: `${team.sport?.name} ${team.grade} ${team.gender}`,
             highlight: team.seasonHighlights
               ? `"${team.seasonHighlights.trim()}"`
-              : "⚠️ No message yet ⚠️",
+              : "No message yet",
             }))
         );
       } catch {
-        console.log("Error fetching players");
+        setError("Failed to load data. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
     getHighlights();
@@ -55,7 +56,8 @@ export default function SeasonHighlights() {
             </Button>
           </div>
         </div>
-        <DataTable columns={columns} data={data ?? []} />
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <DataTable columns={columns} data={data ?? []} isLoading={loading} />
       </div>
     </>
   );

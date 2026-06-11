@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/dialog";
 import { useSchoolYear } from "@/lib/school-year-context";
 export default function TeamList() {
-  const { selectedYear, setSelectedYear } = useSchoolYear();
+  const { selectedYear } = useSchoolYear();
   const [data, setData] = useState<Team[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [addFormOpen, setAddFormOpen] = useState(false);
   const filteredData = data.filter((team) => team.year === selectedYear);
 
@@ -27,8 +28,8 @@ export default function TeamList() {
         if (result) {
           setData(result);
         }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      } catch {
+        setError("Failed to load teams. Please refresh and try again.");
       } finally {
         setLoading(false);
       }
@@ -36,17 +37,6 @@ export default function TeamList() {
 
     loadData();
   }, []);
-  if (loading) {
-    return (
-      <div className="px-16 py-8">
-        <div className="max-w-4xl justify-self-center w-full">
-          <div className="flex justify-center items-center h-32">
-            <div>Loading...</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -56,7 +46,8 @@ export default function TeamList() {
           <div className="text-3xl font-bold">Team List</div>
           <Button onClick={() => setAddFormOpen(true)}>Add Team</Button>
         </div>
-        <DataTable columns={columns} data={filteredData} />
+        {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+        <DataTable columns={columns} data={filteredData} isLoading={loading} />
         <Dialog open={addFormOpen} onOpenChange={setAddFormOpen}>
           <DialogContent>
             <DialogHeader>
@@ -71,8 +62,8 @@ export default function TeamList() {
                     if (result) {
                       setData(result);
                     }
-                  } catch (error) {
-                    console.error("Error refreshing data:", error);
+                  } catch {
+                    setError("Failed to refresh teams. Please refresh the page.");
                   }
                 }}
               />

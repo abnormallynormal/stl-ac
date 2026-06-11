@@ -23,6 +23,7 @@ export default function AdminsPage() {
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState(true);
   const [showLoginForm, setShowLoginForm] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadAdmins = async () => {
@@ -34,7 +35,7 @@ export default function AdminsPage() {
           .range(0, 5000);
 
         if (error) {
-          console.error("Error fetching users:", error);
+          setLoadError("Failed to load admins. Please try again.");
           return;
         }
 
@@ -70,6 +71,9 @@ export default function AdminsPage() {
               <LoginForm defaultTab="signup" />
             </div>
           ) : null}
+          {loadError && (
+            <p className="text-sm text-destructive mb-2">{loadError}</p>
+          )}
           <div className="overflow-hidden rounded-md border-2">
             <Table>
               <TableHeader>

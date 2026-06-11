@@ -91,19 +91,15 @@ export const createManagerColumns = ({
           );
         }
 
-        // CASE 3: Paid on another team -> Link to that team’s page
-        // if (paidTeamId !== manager.team_id) {
-          return (
-            <Button className="text-xs h-8 opacity-70" asChild>
-              <a>
-                Paid - {paidTeam?.grade.charAt(0)}
-                {paidTeam?.gender.charAt(0)} {paidTeam?.sport?.name}
-              </a>
-            </Button>
-          );
-        // }
-
-        // return null;
+        // CASE 3: Paid on another team -> show the team they paid on
+        return (
+          <Button className="text-xs h-8 opacity-70" asChild>
+            <a>
+              Paid - {paidTeam?.grade.charAt(0)}
+              {paidTeam?.gender.charAt(0)} {paidTeam?.sport?.name}
+            </a>
+          </Button>
+        );
       },
     },
     {

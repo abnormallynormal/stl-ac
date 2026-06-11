@@ -14,6 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   Select,
@@ -79,10 +80,19 @@ export default function AddTeamForm({
   const { selectedYear } = useSchoolYear();
   const [sports, setSports] = useState<Sport[]>([]);
   const [existingTeams, setExistingTeams] = useState<Team[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
-    selectSports().then((data) => setSports(data || []));
-    selectData().then((data) => setExistingTeams(data || []));
+    const loadOptions = async () => {
+      const [sportsData, teamsData] = await Promise.all([
+        selectSports(),
+        selectData(),
+      ]);
+      setSports(sportsData || []);
+      setExistingTeams(teamsData || []);
+    };
+    loadOptions();
   }, []);
 
   const formSchema = createFormSchema(existingTeams);
@@ -103,6 +113,8 @@ export default function AddTeamForm({
   }, [form, selectedYear]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setSubmitError(null);
+    setIsSubmitting(true);
     try {
       const result = await addTeam({
         sport: values.sport,
@@ -116,9 +128,13 @@ export default function AddTeamForm({
       if (result) {
         form.reset();
         onSuccess?.();
+      } else {
+        setSubmitError("Unable to create team. Please try again.");
       }
-    } catch (error) {
-      console.error("Error creating team:", error);
+    } catch {
+      setSubmitError("Failed to create team. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   }
   return (
@@ -134,34 +150,32 @@ export default function AddTeamForm({
           name="sport"
           render={({ field }) => (
             <FormItem>
-              <FormItem>
-                <FormLabel>Sport</FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    // Find the selected sport and set its points
-                    const selectedSport = sports.find((s) => s.name === value);
-                    if (selectedSport) {
-                      form.setValue("points", selectedSport.points);
-                    }
-                  }}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select sport" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="max-h-[300px] overflow-y-auto">
-                    {sports.map(({ name, points }) => (
-                      <SelectItem key={name} value={name}>
-                        {name} ({points} points)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
+              <FormLabel>Sport</FormLabel>
+              <Select
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  // Find the selected sport and set its points
+                  const selectedSport = sports.find((s) => s.name === value);
+                  if (selectedSport) {
+                    form.setValue("points", selectedSport.points);
+                  }
+                }}
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select sport" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="max-h-[300px] overflow-y-auto">
+                  {sports.map(({ name, points }) => (
+                    <SelectItem key={name} value={name}>
+                      {name} ({points} points)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -231,10 +245,14 @@ export default function AddTeamForm({
             </FormItem>
           )}
         />
+        {submitError && (
+          <p className="text-sm text-destructive">{submitError}</p>
+        )}
         <div className="flex justify-end gap-2">
           <Button
             type="button"
             variant="secondary"
+            disabled={isSubmitting}
             onClick={() => {
               form.reset();
               onCancel?.();
@@ -242,17 +260,15 @@ export default function AddTeamForm({
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            onClick={() => {
-              form.handleSubmit(onSubmit);
-            }}
-          >
-            Submit
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "Submit"
+            )}
           </Button>
         </div>
       </form>
-
     </Form>
   );
 }

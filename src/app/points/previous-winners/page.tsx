@@ -8,22 +8,21 @@ import { Input } from "@/components/ui/input";
 export default function PreviousWinners() {
   const [winners, setWinners] = useState<PreviousWinner[]>();
   const [filter, setFilter] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   useEffect(() => {
     const getPoints = async () => {
       try {
         const data = await selectPreviousWinners();
-        if (!data) {
-          console.log("Error fetching players");
-        }
         setWinners(
           data.map((winner) => {
             const name = winner.student_points.name;
             // Convert "Last First Middle..." to "Last, First Middle..."
             const parts = name.trim().split(" ");
-            const formattedName = parts.length >= 2 
+            const formattedName = parts.length >= 2
               ? `${parts[0]}, ${parts.slice(1).join(" ")}`
               : name;
-            
+
             return {
               student_id: winner.id,
               name: formattedName,
@@ -33,9 +32,11 @@ export default function PreviousWinners() {
             };
           })
         );
-        
+
       } catch {
-        console.log("Error fetching players");
+        setFetchError("Failed to load previous winners. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
     getPoints();
@@ -65,6 +66,9 @@ export default function PreviousWinners() {
       <div className="px-16 py-8">
         <div className="justify-self-center w-full">
           <div className="font-bold text-3xl mb-4">Previous Award Winners</div>
+          {fetchError && (
+            <p className="text-sm text-destructive mb-2">{fetchError}</p>
+          )}
           <div className="flex items-center gap-4 mb-2">
             <Input
               placeholder="Filter by name"
@@ -73,7 +77,7 @@ export default function PreviousWinners() {
             />
           </div>
         </div>
-        <DataTable columns={columns} data={filteredData ?? []} />
+        <DataTable columns={columns} data={filteredData ?? []} isLoading={loading} />
       </div>
     </>
   );

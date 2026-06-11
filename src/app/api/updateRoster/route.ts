@@ -31,15 +31,11 @@ async function sendSingleEmail(
 }
 
 export async function POST(req: Request) {
-  const timestamp = new Date().toISOString();
-  console.log(`\n[${timestamp}] 📩 Incoming bulk email request`);
-
   try {
     const { to, subject, text, html } = await req.json();
 
     // Validate request body
     if (!to || !Array.isArray(to) || to.length === 0) {
-      console.warn("⚠️ Invalid 'to' field - must be a non-empty array");
       return NextResponse.json(
         { success: false, error: "'to' must be a non-empty array of email addresses" },
         { status: 400 }
@@ -47,7 +43,6 @@ export async function POST(req: Request) {
     }
 
     if (!subject || !text) {
-      console.warn("⚠️ Missing required fields", { subject, text });
       return NextResponse.json(
         { success: false, error: "Missing required fields (subject, text)" },
         { status: 400 }
@@ -59,15 +54,11 @@ export async function POST(req: Request) {
     const emailPassPresent = !!process.env.EMAIL_PASS;
 
     if (!emailUserPresent || !emailPassPresent) {
-      console.error("❌ Missing EMAIL_USER or EMAIL_PASS environment variable");
       return NextResponse.json(
         { success: false, error: "Server misconfiguration: missing email credentials" },
         { status: 500 }
       );
     }
-
-    console.log(`📧 Preparing to send ${to.length} emails`);
-    console.log("✅ Environment variables loaded correctly");
 
     // Create transporter
     const transporter = nodemailer.createTransport({
@@ -84,9 +75,7 @@ export async function POST(req: Request) {
 
     // Verify SMTP connection
     try {
-      console.log("🔌 Verifying SMTP connection...");
       await transporter.verify();
-      console.log("✅ SMTP connection verified successfully");
     } catch (verifyError) {
       console.error("❌ SMTP verification failed:", verifyError);
       return NextResponse.json(
@@ -102,21 +91,15 @@ export async function POST(req: Request) {
     };
 
     // Process emails in batches with rate limiting
-    console.log(`🚀 Sending emails in batches of ${BATCH_SIZE}...`);
-    
     for (let i = 0; i < to.length; i += BATCH_SIZE) {
       const batch = to.slice(i, i + BATCH_SIZE);
-      const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
-      const totalBatches = Math.ceil(to.length / BATCH_SIZE);
-      
-      console.log(`📦 Processing batch ${batchNumber}/${totalBatches} (${batch.length} emails)`);
 
       // Send emails in current batch with individual delays
       for (let j = 0; j < batch.length; j++) {
         const email = batch[j];
         
         try {
-          const info = await sendSingleEmail(
+          await sendSingleEmail(
             transporter,
             email,
             subject,
@@ -126,8 +109,7 @@ export async function POST(req: Request) {
           );
           
           results.successful.push(email);
-          console.log(`✅ Sent to ${email} (${i + j + 1}/${to.length}) - MessageID: ${info.messageId}`);
-          
+
           // Add delay between individual emails (except for the last email in the last batch)
           if (i + j < to.length - 1) {
             await delay(DELAY_BETWEEN_EMAILS);
@@ -143,7 +125,6 @@ export async function POST(req: Request) {
 
       // Add delay between batches (except after the last batch)
       if (i + BATCH_SIZE < to.length) {
-        console.log(`⏳ Waiting ${DELAY_BETWEEN_BATCHES}ms before next batch...`);
         await delay(DELAY_BETWEEN_BATCHES);
       }
     }
@@ -156,8 +137,6 @@ export async function POST(req: Request) {
       successful: results.successful.length,
       failed: results.failed.length,
     };
-
-    console.log("📊 Email sending complete:", summary);
 
     return NextResponse.json({
       success: true,

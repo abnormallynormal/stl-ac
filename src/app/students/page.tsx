@@ -23,7 +23,7 @@ import { selectData } from "@/app/functions/students";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Filter, Plus } from "lucide-react";
+import { Filter, Plus, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
@@ -53,6 +53,9 @@ const formSchema = z.object({
 
 export default function Students() {
   const [data, setData] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
   const [isAddByCSVOpen, setIsAddByCSVOpen] = useState(false);
   const [isAddByManualOpen, setIsAddByManualOpen] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
@@ -74,7 +77,9 @@ export default function Students() {
           setData([]);
         }
       } catch (error) {
-        console.log(error);
+        setData([]);
+      } finally {
+        setLoading(false);
       }
     };
     loadData();
@@ -98,6 +103,8 @@ export default function Students() {
     }));
   };
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setAddError(null);
+    setIsAdding(true);
     try {
       await addPlayer({
         name: values.name,
@@ -112,7 +119,9 @@ export default function Students() {
       setIsAddByManualOpen(false);
       form.reset();
     } catch (error) {
-      console.error("Error adding data:", error);
+      setAddError("Failed to add student. Please try again.");
+    } finally {
+      setIsAdding(false);
     }
   };
   const clearFilters = () => {
@@ -362,13 +371,22 @@ export default function Students() {
                   >
                     Cancel
                   </Button>
-                  <Button type="submit">Add</Button>
+                  <Button type="submit" disabled={isAdding}>
+                    {isAdding ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Add"
+                    )}
+                  </Button>
                 </div>
+                {addError && (
+                  <p className="text-sm text-destructive">{addError}</p>
+                )}
               </form>
             </Form>
           </DialogContent>
         </Dialog>
-        <DataTable columns={columns} data={filteredData} />
+        <DataTable columns={columns} data={filteredData} isLoading={loading} />
       </div>
     </>
   );
